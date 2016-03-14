@@ -6,6 +6,21 @@ from Bio import SeqIO # module needed for sequence input
 
 
 
+
+####################################################################
+excludeReadsFromFasta(in,reads,out):
+
+    fasta_sequences = SeqIO.parse(open(in),'fasta')
+    with open(out, "w") as f:
+        for seq in fasta_sequences:
+            name = seq.name
+            if name not in reads:
+                SeqIO.write([seq], f, "fasta")
+
+
+
+
+
 ap = argparse.ArgumentParser()
 ap.add_argument('unmappedReads', help='unmapped Reads in the fastq format')
 ap.add_argument('dir', help='directory to save results')
@@ -81,15 +96,14 @@ cmd=codeDir+"/tools/seqclean-x86_64/seqclean %s -l 50 -M -o %s" %(lowQFileFasta,
 print "Run ", cmd
 os.system(cmd)
 print "Save reads after filtering low complexity (e.g. ACACACAC...) reads to ", lowQCFile
-f.write(cmd+"\n" ) # python will convert \n to os.linesep
-
+f.write(cmd+"\n" )
 
 #megablast rRNA
 print "*****************************Identify reads from RNA repeat unit******************************"
 cmd="%s/tools/blastn -task megablast -index_name %s/db/rRNA/rRNA -use_index true -query %s -db %s/db/rRNA/rRNA  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s" %(codeDir,codeDir,lowQCFile,codeDir,rRNAFile)
 print "Run :", cmd
 os.system(cmd)
-f.write(cmd+"\n" ) # python will convert \n to os.linesep
+f.write(cmd+"\n")
 
 
 rRNAReads = set()
@@ -104,14 +118,9 @@ with open(rRNAFile,'r') as f:
         if eValue<1e-05 and alignmentLength==100 and identity>=94:
             rRNAReads.add(element)
 
-print rRNAReads
+excludeReadsFromFasta(lowQCFile,rRNAReads,afterrRNAFasta)
 
-fasta_sequences = SeqIO.parse(open(lowQCFile),'fasta')
-with open(afterrRNAFasta, "w") as f:
-    for seq in fasta_sequences:
-        name = seq.name
-        if name not in rRNAReads:
-            SeqIO.write([seq], f, "fasta")
+
 
 f.close()
 
