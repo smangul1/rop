@@ -25,11 +25,21 @@ basename=os.path.splitext(os.path.basename(args.unmappedReads))[0]
 print "Number of unmapped reads",n
 
 
+#codeDir
+codeDir=os.path.dirname(os.path.realpath(__file__))
+
+#run file to save all commands
+runFile=args.dir+"/commands_"+basename+".sh"
+
+
 #intermediate files
 lowQFileFasta=QCDir+basename+"_lowQ.fa"
 lowQCFile=QCDir+basename+"_lowQC.fa"
 rRNAFile=QCDir+basename+"_rRNA_blastFormat6.csv"
 afterrRNAFasta=QCDir+basename+"_after_rRNA.fasta"
+
+runFile=args.dir+"/commands_"+basename+".sh"
+
 
 #analysis directories
 QCDir=args.dir+"/QC/"
@@ -40,15 +50,7 @@ if not os.path.exists(lostHumanDir):
     os.makedirs(lostHumanDir)
 
 
-
-codeDir=os.path.dirname(os.path.realpath(__file__))
-
-
-
-
-runLowQ=args.dir+"/runLowQ_"+basename+".sh"
-
-f = open(runLowQ,'w')
+f = open(runFile,'w')
 
 #lowQ
 print "*****************************Running FASTX to filter low quality reads******************************"
@@ -56,7 +58,7 @@ cmd=codeDir+"/tools/fastq_quality_filter -v -Q 33 -q 20 -p 75 -i %s -o %s \n" %(
 print "Run ", cmd
 os.system(cmd)
 print "Save reads after filtering low quality reads to ", lowQFile
-f.write(cmd+"\n" ) # python will convert \n to os.linesep
+f.write(cmd+"\n" )
 
 
 #Convert from fastq to fasta
@@ -69,6 +71,8 @@ for record in SeqIO.parse(fastqfile,"fastq"):
     fastafile.write(str(">"+record.name)+"\n")
     fastafile.write(str(record.seq)+"\n")
 fastafile.close()
+
+#need to add command to commands_....sh
 
 
 #lowC
