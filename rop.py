@@ -26,21 +26,24 @@ print "Number of unmapped reads",n
 
 
 #intermediate files
-QCDir=args.dir+"/QC/"
-lowQFile=QCDir+basename+"_lowQ.fastq"
 lowQFileFasta=QCDir+basename+"_lowQ.fa"
 lowQCFile=QCDir+basename+"_lowQC.fa"
 rRNAFile=QCDir+basename+"_rRNA_blastFormat6.csv"
 afterrRNAFasta=QCDir+basename+"_after_rRNA.fasta"
 
-
+#analysis directories
+QCDir=args.dir+"/QC/"
+lostHumanDir=args.dir+"/lostHuman/"
+if not os.path.exists(QCDir):
+    os.makedirs(QCDir)
+if not os.path.exists(lostHumanDir):
+    os.makedirs(lostHumanDir)
 
 
 
 codeDir=os.path.dirname(os.path.realpath(__file__))
 
-if not os.path.exists(QCDir):
-    os.makedirs(QCDir)
+
 
 
 runLowQ=args.dir+"/runLowQ_"+basename+".sh"
