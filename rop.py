@@ -51,11 +51,14 @@ runFile=args.dir+"/commands_"+basename+".sh"
 #analysis directories
 QCDir=args.dir+"/QC/"
 lostHumanDir=args.dir+"/lostHuman/"
+lostRepeatDir=args.dir+"/lostRepeat/"
+
 if not os.path.exists(QCDir):
     os.makedirs(QCDir)
 if not os.path.exists(lostHumanDir):
     os.makedirs(lostHumanDir)
-
+if not os.path.exists(lostRepeatDir):
+    os.makedirs(lostRepeatDir)
 
 #intermediate files
 lowQFile=QCDir+basename+"_lowQ.fastq"
@@ -64,6 +67,9 @@ lowQCFile=QCDir+basename+"_lowQC.fa"
 rRNAFile=QCDir+basename+"_rRNA_blastFormat6.csv"
 afterrRNAFasta=QCDir+basename+"_after_rRNA.fasta"
 afterlostHumanFasta=lostHumanDir+basename+"_after_lostHuman.fasta"
+gBamFile=lostHumanDir+basename+"_genome.bam"
+tBamFile=lostHumanDir+basename+"_transcriptome.bam"
+repeatFile=lostRepeatDir+basename+"_lostRepeats_blastFormat6.csv"
 
 
 runFile=args.dir+"/commands_"+basename+".sh"
@@ -132,8 +138,7 @@ excludeReadsFromFasta(lowQCFile,rRNAReads,afterrRNAFasta)
 print "*****************************Identify lost human reads******************************"
 
 
-gBamFile=lostHumanDir+basename+"_genome.bam"
-tBamFile=lostHumanDir+basename+"_transcriptome.bam"
+
 
 
 os.system(". /u/local/Modules/default/init/modules.sh \n")
@@ -172,4 +177,13 @@ for r in samfile.fetch():
 
 excludeReadsFromFasta(afterrRNAFasta,lostHumanReads,afterlostHumanFasta)
 
+print "*****************************Identify lost repeat reads******************************"
+cmd="%s/tools/blastn -task megablast -index_name %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa -use_index true -query %s -db %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s" %(codeDir,codeDir,afterlostHumanFasta,codeDir,repeatFile)
+print "Run :", cmd
+os.system(cmd)
 
+
+
+
+
+f.close()
