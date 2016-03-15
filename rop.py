@@ -52,6 +52,9 @@ runFile=args.dir+"/commands_"+basename+".sh"
 QCDir=args.dir+"/QC/"
 lostHumanDir=args.dir+"/lostHuman/"
 lostRepeatDir=args.dir+"/lostRepeat/"
+bcrDir=args.dir+"/BCR/"
+ighDir=args.dir+"/BCR/IGH/"
+
 
 if not os.path.exists(QCDir):
     os.makedirs(QCDir)
@@ -59,6 +62,10 @@ if not os.path.exists(lostHumanDir):
     os.makedirs(lostHumanDir)
 if not os.path.exists(lostRepeatDir):
     os.makedirs(lostRepeatDir)
+if not os.path.exists(bcrDir):
+    os.makedirs(bcrDir)
+if not os.path.exists(ighDir):
+    os.makedirs(ighDir)
 
 #intermediate files
 lowQFile=QCDir+basename+"_lowQ.fastq"
@@ -71,6 +78,8 @@ gBamFile=lostHumanDir+basename+"_genome.bam"
 tBamFile=lostHumanDir+basename+"_transcriptome.bam"
 repeatFile=lostRepeatDir+basename+"_lostRepeats_blastFormat6.csv"
 afterlostRepeatFasta=lostRepeatDir+basename+"_after_lostRepeat.fasta"
+ighFile=ighDir+basename+"_IGH_igblast.csv"
+
 
 runFile=args.dir+"/commands_"+basename+".sh"
 
@@ -200,8 +209,15 @@ print "*****************************Identify NCL events*************************
 #TO DO
 
 print "*****************************Identify VDJ recombinations from BCR and TCR******************************"
+cmd="%s//db/BCRTCR/internal_data/ ./" %(codeDir)
+os.system(cmd)
+cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/IGHV.fa -germline_db_D %s/db/BCRTCR/IGHD.fa  -germline_db_J %s/db/BCRTCR/IGHJ.fa -query %s -outfmt 7 -evalue 1e-05 | awk '{if(\$13<1e-05 && (\$1==\"V\" || \$1==\"D\" || \$1==\"J\")) print }'>%s" %(codeDir,codeDir,codeDir,afterlostRepeatFasta,ighFile)
+os.system(cmd)
+print "Run: ",cmd
 
 
+
+#echo "/u/home/s/serghei/project/code/import/ncbi-igblast-1.4.0/bin/igblastn -germline_db_V ${v} -germline_db_D ${d} -germline_db_J ${j} -organism human  -query ${1}/${line}.fa*  -outfmt 7 -evalue 1e-05 | awk '{if(\$13<1e-05 && (\$1==\"V\" || \$1==\"D\" || \$1==\"J\")) print }' >${dir}/${line}/${line}.out">>run_${line}.sh
 
 
 
