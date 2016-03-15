@@ -70,7 +70,7 @@ afterlostHumanFasta=lostHumanDir+basename+"_after_lostHuman.fasta"
 gBamFile=lostHumanDir+basename+"_genome.bam"
 tBamFile=lostHumanDir+basename+"_transcriptome.bam"
 repeatFile=lostRepeatDir+basename+"_lostRepeats_blastFormat6.csv"
-
+afterlostRepeatFasta=lostRepeatDir+basename+"_after_lostRepeat.fasta"
 
 runFile=args.dir+"/commands_"+basename+".sh"
 
@@ -181,6 +181,26 @@ print "*****************************Identify lost repeat reads******************
 cmd="%s/tools/blastn -task megablast -index_name %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa -use_index true -query %s -db %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s" %(codeDir,codeDir,afterlostHumanFasta,codeDir,repeatFile)
 print "Run :", cmd
 os.system(cmd)
+
+lostRepeatReads = set()
+
+with open(repeatFile,'r') as f:
+    reader=csv.reader(f,delimiter='\t')
+    for line in reader:
+        element=line[0]
+        identity=float(line[2])
+        alignmentLength=float(line[3])
+        eValue=float(line[10])
+        if eValue<1e-05 and alignmentLength>=80 and identity>=90:
+            lostRepeatReads.add(element)
+
+excludeReadsFromFasta(afterlostHumanFasta,lostRepeatReads,afterlostRepeatFasta)
+
+print "*****************************Identify NCL events******************************"
+
+
+
+
 
 
 
