@@ -48,12 +48,24 @@ codeDir=os.path.dirname(os.path.realpath(__file__))
 runFile=args.dir+"/commands_"+basename+".sh"
 
 
+
+
 #analysis directories
 QCDir=args.dir+"/QC/"
 lostHumanDir=args.dir+"/lostHuman/"
 lostRepeatDir=args.dir+"/lostRepeat/"
 bcrDir=args.dir+"/BCR/"
+tcrDir=args.dir+"/TCR/"
+
+
 ighDir=args.dir+"/BCR/IGH/"
+igkDir=args.dir+"/BCR/IGK/"
+iglDir=args.dir+"/BCR/IGL/"
+
+tcraDir=args.dir+"/TCR/TRA/"
+tcrbDir=args.dir+"/TCR/TRB/"
+tcrdDir=args.dir+"/TCR/TRD/"
+tcrgDir=args.dir+"/TCR/TRG/"
 
 
 if not os.path.exists(QCDir):
@@ -64,8 +76,12 @@ if not os.path.exists(lostRepeatDir):
     os.makedirs(lostRepeatDir)
 if not os.path.exists(bcrDir):
     os.makedirs(bcrDir)
-if not os.path.exists(ighDir):
-    os.makedirs(ighDir)
+if not os.path.exists(tcrDir):
+    os.makedirs(tcrDir)
+for i in [ighDir,igkDir,iglDir,tcraDir,tcrbDir,tcrdDir,tcrgDir]:
+    if not os.path.exists(i):
+        os.makedirs(i)
+
 
 #intermediate files
 lowQFile=QCDir+basename+"_lowQ.fastq"
@@ -79,6 +95,12 @@ tBamFile=lostHumanDir+basename+"_transcriptome.bam"
 repeatFile=lostRepeatDir+basename+"_lostRepeats_blastFormat6.csv"
 afterlostRepeatFasta=lostRepeatDir+basename+"_after_lostRepeat.fasta"
 ighFile=ighDir+basename+"_IGH_igblast.csv"
+igkFile=ighDir+basename+"_IGK_igblast.csv"
+iglFile=ighDir+basename+"_IGL_igblast.csv"
+tcraFile=ighDir+basename+"_TCRA_igblast.csv"
+tcrbFile=ighDir+basename+"_TCRB_igblast.csv"
+tcrdFile=ighDir+basename+"_TCRD_igblast.csv"
+tcrgFile=ighDir+basename+"_TCRG_igblast.csv"
 
 
 runFile=args.dir+"/commands_"+basename+".sh"
@@ -206,23 +228,55 @@ with open(repeatFile,'r') as f:
 excludeReadsFromFasta(afterlostHumanFasta,lostRepeatReads,afterlostRepeatFasta)
 
 print "*****************************Identify NCL events******************************"
-#TO DO
+#TO DO!!!!!!!!!
 
 print "*****************************Identify VDJ recombinations from BCR and TCR******************************"
-cmd="%s//db/BCRTCR/internal_data/ ./" %(codeDir)
+cmd="ln -s %s//db/BCRTCR/internal_data/ ./" %(codeDir)
 os.system(cmd)
-cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/IGHV.fa -germline_db_D %s/db/BCRTCR/IGHD.fa  -germline_db_J %s/db/BCRTCR/IGHJ.fa -query %s -outfmt 7 -evalue 1e-05 | awk '{if(\$13<1e-05 && (\$1==\"V\" || \$1==\"D\" || \$1==\"J\")) print }'>%s" %(codeDir,codeDir,codeDir,afterlostRepeatFasta,ighFile)
+
+#IGH
+os.system(cmd)
+cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/IGHV.fa -germline_db_D %s/db/BCRTCR/IGHD.fa  -germline_db_J %s/db/BCRTCR/IGHJ.fa -query %s -outfmt 7 -evalue 1e-05  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"D\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,ighFile)
+os.system(cmd)
+print "Run: ",cmd
+
+#IGK
+os.system(cmd)
+cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/IGKV.fa -germline_db_D %s/db/BCRTCR/IGHD.fa  -germline_db_J %s/db/BCRTCR/IGKJ.fa -query %s -outfmt 7 -evalue 1e-05  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,igkFile)
+os.system(cmd)
+print "Run: ",cmd
+
+#IGL
+os.system(cmd)
+cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/IGLV.fa -germline_db_D %s/db/BCRTCR/IGHD.fa  -germline_db_J %s/db/BCRTCR/IGLJ.fa -query %s -outfmt 7 -evalue 1e-05  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,igLFile)
+os.system(cmd)
+print "Run: ",cmd
+
+#TCRA
+os.system(cmd)
+cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/TRAV.fa -germline_db_D %s/db/BCRTCR/TRBD.fa  -germline_db_J %s/db/BCRTCR/TRAJ.fa -query %s -outfmt 7 -evalue 1e-05  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,tcraFile)
 os.system(cmd)
 print "Run: ",cmd
 
 
+#TCRB
+os.system(cmd)
+cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/TRBV.fa -germline_db_D %s/db/BCRTCR/TRBD.fa  -germline_db_J %s/db/BCRTCR/TRBJ.fa -query %s -outfmt 7 -evalue 1e-05  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,tcrbFile)
+os.system(cmd)
+print "Run: ",cmd
 
-#echo "/u/home/s/serghei/project/code/import/ncbi-igblast-1.4.0/bin/igblastn -germline_db_V ${v} -germline_db_D ${d} -germline_db_J ${j} -organism human  -query ${1}/${line}.fa*  -outfmt 7 -evalue 1e-05 | awk '{if(\$13<1e-05 && (\$1==\"V\" || \$1==\"D\" || \$1==\"J\")) print }' >${dir}/${line}/${line}.out">>run_${line}.sh
 
+#TCRD
+os.system(cmd)
+cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/TRDV.fa -germline_db_D %s/db/BCRTCR/TRBD.fa  -germline_db_J %s/db/BCRTCR/TRDJ.fa -query %s -outfmt 7 -evalue 1e-05  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,tcrdFile)
+os.system(cmd)
+print "Run: ",cmd
 
-
-
-
+#TCRG
+os.system(cmd)
+cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/TRGV.fa -germline_db_D %s/db/BCRTCR/TRBD.fa  -germline_db_J %s/db/BCRTCR/TRGJ.fa -query %s -outfmt 7 -evalue 1e-05  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,tcrgFile)
+os.system(cmd)
+print "Run: ",cmd
 
 
 f.close()
