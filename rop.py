@@ -3,15 +3,16 @@ import csv
 import os
 import argparse
 from Bio import SeqIO # module needed for sequence input
+import pysam
 
 
 
 
 ####################################################################
-excludeReadsFromFasta(in,reads,out):
+def excludeReadsFromFasta(inFasta,reads,outFasta):
 
-    fasta_sequences = SeqIO.parse(open(in),'fasta')
-    with open(out, "w") as f:
+    fasta_sequences = SeqIO.parse(open(inFasta),'fasta')
+    with open(outFasta, "w") as f:
         for seq in fasta_sequences:
             name = seq.name
             if name not in reads:
@@ -47,15 +48,6 @@ codeDir=os.path.dirname(os.path.realpath(__file__))
 runFile=args.dir+"/commands_"+basename+".sh"
 
 
-#intermediate files
-lowQFileFasta=QCDir+basename+"_lowQ.fa"
-lowQCFile=QCDir+basename+"_lowQC.fa"
-rRNAFile=QCDir+basename+"_rRNA_blastFormat6.csv"
-afterrRNAFasta=QCDir+basename+"_after_rRNA.fasta"
-
-runFile=args.dir+"/commands_"+basename+".sh"
-
-
 #analysis directories
 QCDir=args.dir+"/QC/"
 lostHumanDir=args.dir+"/lostHuman/"
@@ -63,6 +55,21 @@ if not os.path.exists(QCDir):
     os.makedirs(QCDir)
 if not os.path.exists(lostHumanDir):
     os.makedirs(lostHumanDir)
+
+
+#intermediate files
+lowQFile=QCDir+basename+"_lowQ.fastq"
+lowQFileFasta=QCDir+basename+"_lowQ.fa"
+lowQCFile=QCDir+basename+"_lowQC.fa"
+rRNAFile=QCDir+basename+"_rRNA_blastFormat6.csv"
+afterrRNAFasta=QCDir+basename+"_after_rRNA.fasta"
+afterlostHumanFasta=lostHumanDir+basename+"_after_lostHuman.fasta"
+
+
+runFile=args.dir+"/commands_"+basename+".sh"
+
+
+
 
 
 f = open(runFile,'w')
@@ -122,32 +129,47 @@ excludeReadsFromFasta(lowQCFile,rRNAReads,afterrRNAFasta)
 
 
 
-f.close()
+print "*****************************Identify lost human reads******************************"
 
 
-
-sys.exit(1)
-
-#bowtie2
-
-bowtie2Dir=args.dir+"/lostHuman/"
-if not os.path.exists(bowtie2Dir):
-    os.makedirs(bowtie2Dir)
-runBowtie2=args.dir+"/runBowtie2_"+basename+".sh"
-gBamFile=bowtie2Dir+basename+"_genome.bam"
-tBamFile=bowtie2Dir+basename+"_transcriptome.bam"
+gBamFile=lostHumanDir+basename+"_genome.bam"
+tBamFile=lostHumanDir+basename+"_transcriptome.bam"
 
 
+os.system(". /u/local/Modules/default/init/modules.sh \n")
+os.system("module load bowtie2/2.1.0 \n")
+os.system("module load samtools \n")
 
-f = open(runBowtie2,'w')
-f.write(". /u/local/Modules/default/init/modules.sh \n")
-f.write("module load bowtie2/2.1.0 \n")
-f.write("module load samtools \n")
-f.write("bowtie2 -k 10 --very-sensitive -p 8 -x ~/project/Homo_sapiens/Ensembl/GRCh37/Sequence/Bowtie2Index/genome -U %s | samtools view -bSF4 - | samtools sort -  %s \n" %(lowQFile,os.path.splitext(gBamFile)[0]) )
-f.write("samtools index %s \n" %gBamFile)
-f.write("bowtie2 -k 10 --very-sensitive -p 8 -x /u/home/s/serghei/project/Homo_sapiens/hg19KnownIsoforms/Bowtie2Index/hg19KnownGene.exon_polya200 -U %s | samtools view -bSF4 -  | samtools sort -  %s \n" %(lowQFile,os.path.splitext(tBamFile)[0]) )
-f.write("samtools index %s \n" %tBamFile)
 
-f.close()
+#genome
+cmd="bowtie2 -k 1 --very-sensitive -p 8 -f -x %s/db/human/Bowtie2Index/genome -U %s | samtools view -bSF4 - | samtools sort -  %s" %(codeDir, afterrRNAFasta,os.path.splitext(gBamFile)[0])
+os.system(cmd)
+print "Run: ",cmd
+os.system("samtools index %s \n" %gBamFile)
+
+#transcriptome
+cmd="bowtie2 -k 1 --very-sensitive -f -p 8 -x %s/db/human/Bowtie2Index/hg19KnownGene.exon_polya200 -U %s | samtools view -bSF4 - | samtools sort -  %s" %(codeDir, afterrRNAFasta,os.path.splitext(tBamFile)[0])
+os.system(cmd)
+print "Run: ",cmd
+os.system("samtools index %s \n" %tBamFile)
+
+
+lostHumanReads = set()
+
+
+samfile = pysam.AlignmentFile(gBamFile, "rb")
+for r in samfile.fetch():
+    for tag in r.tags:
+        if tag[0] == 'NM':
+            if int(tag[1])<=6:
+                lostHumanReads.add(r.query_name)
+samfile = pysam.AlignmentFile(tBamFile, "rb")
+for r in samfile.fetch():
+    for tag in r.tags:
+        if tag[0] == 'NM':
+            if int(tag[1])<=6:
+                lostHumanReads.add(r.query_name)
+
+excludeReadsFromFasta(afterrRNAFasta,lostHumanReads,afterlostHumanFasta)
 
 
