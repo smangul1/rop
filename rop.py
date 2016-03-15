@@ -197,6 +197,9 @@ with open(repeatFile,'r') as f:
 excludeReadsFromFasta(afterlostHumanFasta,lostRepeatReads,afterlostRepeatFasta)
 
 print "*****************************Identify NCL events******************************"
+#TO DO
+
+print "*****************************Identify VDJ recombinations from BCR and TCR******************************"
 
 
 
