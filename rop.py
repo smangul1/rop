@@ -28,36 +28,23 @@ ap.add_argument('dir', help='directory to save results of the analysis')
 
 ap.add_argument("--qsub", help="submit qsub jobs on hoffman2 cluster",
                     action="store_true")
-
+ap.add_argument("--b", help="unmapped reads in bam format",
+                action="store_true")
 args = ap.parse_args()
 
 
 
-#if args.qsub:
-#    print "weklwjerklwjerlkjw
 
 
 
-
-
-#number of reads
-with open(args.unmappedReads) as f:
-    for i, l in enumerate(f):
-        pass
-n=(i + 1)/4
-
-
-basename=os.path.splitext(os.path.basename(args.unmappedReads))[0]
-
-
-print "Number of unmapped reads",n
 
 
 #codeDir
 codeDir=os.path.dirname(os.path.realpath(__file__))
 
-#run file to save all commands
-runFile=args.dir+"/commands_"+basename+".sh"
+#basename
+basename=os.path.splitext(os.path.basename(args.unmappedReads))[0]
+
 
 
 
@@ -107,6 +94,7 @@ if not os.path.exists(virusDir):
     os.makedirs(virusDir)
 
 #intermediate files
+unmappedFastq=""
 lowQFile=QCDir+basename+"_lowQ.fastq"
 lowQFileFasta=QCDir+basename+"_lowQ.fa"
 lowQCFile=QCDir+basename+"_lowQC.fa"
@@ -130,9 +118,8 @@ virusFile=virusDir+basename+"_virus_blastFormat6.csv"
 
 
 #runFiles
-runFile=args.dir+"/commands_"+basename+".sh"
 runLostHumanFile=lostHumanDir+"/runLostHuman_"+basename+".sh"
-runLosRepeatFile=lostRepeatDir+"/runLostRepeat_"+basename+".sh"
+runLostRepeatFile=lostRepeatDir+"/runLostRepeat_"+basename+".sh"
 runIGHFile=ighDir+"/runIGH_"+basename+".sh"
 runIGKFile=igkDir+"/runIGK_"+basename+".sh"
 runIGLFile=iglDir+"/runIGL_"+basename+".sh"
@@ -145,18 +132,44 @@ runVirusFile=virusDir +"/runVirus_"+basename+".sh"
 
 
 
-f = open(runFile,'w')
+
+#######################################################################################################################################
+if args.b:
+    print "*****************************Convert unmapped bam to fastq ******************************"
+    os.system(". /u/local/Modules/default/init/modules.sh \n")
+    os.system("module load bamtools \n")
+    unmappedFastq=args.dir+"/unmapped_"+basename+".fastq"
+    cmdConvertBam2Fastq="bamtools convert -in %s -format fastq >%s" %(args.unmappedReads,unmappedFastq)
+    print "Run:",cmdConvertBam2Fastq
+    os.system(cmdConvertBam2Fastq)
+else:
+    unmappedFastq=args.unmappedReads
+
+
+
+
+#number of reads
+with open(unmappedFastq) as f:
+    for i, l in enumerate(f):
+        pass
+n=(i + 1)/4
+
+
+
+
+print "Number of unmapped reads",n
 
 
 #######################################################################################################################################
 
 #lowQ
 print "*****************************Running FASTX to filter low quality reads******************************"
-cmd=codeDir+"/tools/fastq_quality_filter -v -Q 33 -q 20 -p 75 -i %s -o %s \n" %(args.unmappedReads,lowQFile)
+cmd=codeDir+"/tools/fastq_quality_filter -v -Q 33 -q 20 -p 75 -i %s -o %s \n" %(unmappedFastq,lowQFile)
 print "Run ", cmd
 os.system(cmd)
+if args.b:
+    os.remove(unmappedFastq)
 print "Save reads after filtering low quality reads to ", lowQFile
-f.write(cmd+"\n" )
 
 
 #Convert from fastq to fasta
@@ -179,14 +192,12 @@ cmd=codeDir+"/tools/seqclean-x86_64/seqclean %s -l 50 -M -o %s" %(lowQFileFasta,
 print "Run ", cmd
 os.system(cmd)
 print "Save reads after filtering low complexity (e.g. ACACACAC...) reads to ", lowQCFile
-f.write(cmd+"\n" )
 
 #megablast rRNA
 print "*****************************Identify reads from RNA repeat unit******************************"
 cmd="%s/tools/blastn -task megablast -index_name %s/db/rRNA/rRNA -use_index true -query %s -db %s/db/rRNA/rRNA  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s" %(codeDir,codeDir,lowQCFile,codeDir,rRNAFile)
 print "Run :", cmd
 os.system(cmd)
-f.write(cmd+"\n")
 
 
 rRNAReads = set()
@@ -229,7 +240,7 @@ if args.qsub:
     f.write("module load bowtie2/2.1.0 \n")
     f.write("module load samtools \n")
     f.write(cmdGenome+"\n")
-    f.write(cmdGenome+"\n")
+    f.write(cmdTranscriptome+"\n")
     f.write("samtools index %s \n" %gBamFile)
     f.write("samtools index %s \n" %tBamFile)
 
@@ -239,18 +250,6 @@ else:
     os.system(cmdTranscriptome)
     os.system("samtools index %s \n" %gBamFile)
 
-
-
-if args.qsub:
-    f.write(". /u/local/Modules/default/init/modules.sh \n")
-    f.write("module load bowtie2/2.1.0 \n")
-    f.write("module load samtools \n")
-    f.write(cmd+"\n")
-    f.write("samtools index %s \n" %tBamFile)
-    f.close()
-else:
-    os.system(cmd)
-    os.system("samtools index %s \n" %tBamFile)
 
 
 
@@ -276,23 +275,32 @@ if not args.qsub:
 
 #######################################################################################################################################
 print "*****************************Identify lost repeat reads******************************"
-cmd="%s/tools/blastn -task megablast -index_name %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa -use_index true -query %s -db %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s" %(codeDir,codeDir,afterlostHumanFasta,codeDir,repeatFile)
+cmd="%s/tools/blastn -task megablast -index_name %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa -use_index true -query %s -db %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s" %(codeDir,codeDir,lowQFileFasta,codeDir,repeatFile)
 print "Run :", cmd
-os.system(cmd)
 
-lostRepeatReads = set()
+if args.qsub:
+    f = open(runLostRepeatFile,'w')
+    f.write(cmd+"\n")
+    f.close()
+else:
+    os.system(cmd)
 
-with open(repeatFile,'r') as f:
-    reader=csv.reader(f,delimiter='\t')
-    for line in reader:
-        element=line[0]
-        identity=float(line[2])
-        alignmentLength=float(line[3])
-        eValue=float(line[10])
-        if eValue<1e-05 and alignmentLength>=80 and identity>=90:
-            lostRepeatReads.add(element)
 
-excludeReadsFromFasta(afterlostHumanFasta,lostRepeatReads,afterlostRepeatFasta)
+if not args.qsub:
+
+    lostRepeatReads = set()
+
+    with open(repeatFile,'r') as f:
+        reader=csv.reader(f,delimiter='\t')
+        for line in reader:
+            element=line[0]
+            identity=float(line[2])
+            alignmentLength=float(line[3])
+            eValue=float(line[10])
+            if eValue<1e-05 and alignmentLength>=80 and identity>=90:
+                lostRepeatReads.add(element)
+
+    excludeReadsFromFasta(afterlostHumanFasta,lostRepeatReads,afterlostRepeatFasta)
 
 #######################################################################################################################################
 print "*****************************Identify NCL events******************************"
@@ -306,54 +314,114 @@ os.system(cmd)
 
 #IGH
 cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/IGHV.fa -germline_db_D %s/db/BCRTCR/IGHD.fa  -germline_db_J %s/db/BCRTCR/IGHJ.fa -query %s -outfmt 7 -evalue 1e-05  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"D\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,ighFile)
-os.system(cmd)
 print "Run: ",cmd
+            
+if args.qsub:
+    f = open(runIGHFile,'w')
+    f.write(cmd+"\n")
+    f.close()
+else:
+    os.system(cmd)
+                    
 
+            
 #IGK
 cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/IGKV.fa -germline_db_D %s/db/BCRTCR/IGHD.fa  -germline_db_J %s/db/BCRTCR/IGKJ.fa -query %s -outfmt 7 -evalue 1e-05  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,igkFile)
-os.system(cmd)
 print "Run: ",cmd
-
+            
+if args.qsub:
+    f = open(runIGKFile,'w')
+    f.write("ln -s %s//db/BCRTCR/internal_data/ ./ \n" %(codeDir))
+    f.write(cmd+"\n")
+    f.close()
+else:
+    os.system(cmd)
+            
+            
 #IGL
 cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/IGLV.fa -germline_db_D %s/db/BCRTCR/IGHD.fa  -germline_db_J %s/db/BCRTCR/IGLJ.fa -query %s -outfmt 7 -evalue 1e-05  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,iglFile)
-os.system(cmd)
 print "Run: ",cmd
-
+if args.qsub:
+    f = open(runIGLFile,'w')
+    f.write("ln -s %s//db/BCRTCR/internal_data/ ./ \n" %(codeDir))
+    f.write(cmd+"\n")
+    f.close()
+else:
+    os.system(cmd)
+            
 #TCRA
 cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/TRAV.fa -germline_db_D %s/db/BCRTCR/TRBD.fa  -germline_db_J %s/db/BCRTCR/TRAJ.fa -query %s -outfmt 7 -evalue 1e-05  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,tcraFile)
-os.system(cmd)
 print "Run: ",cmd
-
+if args.qsub:
+    f = open(runTCRAFile,'w')
+    f.write("ln -s %s//db/BCRTCR/internal_data/ ./ \n" %(codeDir))
+    f.write(cmd+"\n")
+    f.close()
+else:
+    os.system(cmd)
+            
+            
 
 #TCRB
 cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/TRBV.fa -germline_db_D %s/db/BCRTCR/TRBD.fa  -germline_db_J %s/db/BCRTCR/TRBJ.fa -query %s -outfmt 7 -evalue 1e-05  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,tcrbFile)
-os.system(cmd)
 print "Run: ",cmd
-
+if args.qsub:
+    f = open(runTCRBFile,'w')
+    f.write("ln -s %s//db/BCRTCR/internal_data/ ./ \n" %(codeDir))
+    f.write(cmd+"\n")
+    f.close()
+else:
+    os.system(cmd)
+            
+            
 
 #TCRD
 cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/TRDV.fa -germline_db_D %s/db/BCRTCR/TRBD.fa  -germline_db_J %s/db/BCRTCR/TRDJ.fa -query %s -outfmt 7 -evalue 1e-05  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,tcrdFile)
-os.system(cmd)
 print "Run: ",cmd
-
+if args.qsub:
+    f = open(runTCRDFile,'w')
+    f.write("ln -s %s//db/BCRTCR/internal_data/ ./ \n" %(codeDir))
+    f.write(cmd+"\n")
+    f.close()
+else:
+    os.system(cmd)
+            
+            
 #TCRG
 cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/TRGV.fa -germline_db_D %s/db/BCRTCR/TRBD.fa  -germline_db_J %s/db/BCRTCR/TRGJ.fa -query %s -outfmt 7 -evalue 1e-05  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,tcrgFile)
-os.system(cmd)
 print "Run: ",cmd
-
+            
+if args.qsub:
+    f = open(runTCRGFile,'w')
+    f.write("ln -s %s//db/BCRTCR/internal_data/ ./ \n" %(codeDir))
+    f.write(cmd+"\n")
+    f.close()
+else:
+    os.system(cmd)
+            
+            
 #######################################################################################################################################
 print "*****************************Identify microbial reads**********************************************************"
 #bacteria
 cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/bacteria/bacteria -use_index true -query %s -db %s/db/microbiome/bacteria/bacteria  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s" %(codeDir,codeDir,afterrRNAFasta,codeDir,bacteriaFile)
 print "Run :", cmd
-os.system(cmd)
+if args.qsub:
+    f = open(runBacteriaFile,'w')
+    f.write(cmd+"\n")
+    f.close()
+else:
+    os.system(cmd)
+
 
 #virus
 cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/virus/viruses -use_index true -query %s -db %s/db/microbiome/virus/viruses  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s" %(codeDir,codeDir,afterrRNAFasta,codeDir,bacteriaFile)
 print "Run :", cmd
-os.system(cmd)
+if args.qsub:
+    f = open(runVirusFile,'w')
+    f.write(cmd+"\n")
+    f.close()
+else:
+    os.system(cmd)
 
 
 
-
-f.close()
