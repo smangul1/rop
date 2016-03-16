@@ -24,8 +24,20 @@ def excludeReadsFromFasta(inFasta,reads,outFasta):
 
 ap = argparse.ArgumentParser()
 ap.add_argument('unmappedReads', help='unmapped Reads in the fastq format')
-ap.add_argument('dir', help='directory to save results')
+ap.add_argument('dir', help='directory to save results of the analysis')
+
+ap.add_argument("--qsub", help="submit qsub jobs on hoffman2 cluster",
+                    action="store_true")
+
 args = ap.parse_args()
+
+
+
+#if args.qsub:
+#    print "weklwjerklwjerlkjw
+
+
+
 
 
 #number of reads
@@ -67,6 +79,12 @@ tcrbDir=args.dir+"/TCR/TRB/"
 tcrdDir=args.dir+"/TCR/TRD/"
 tcrgDir=args.dir+"/TCR/TRG/"
 
+microbiomeDir=args.dir+"/microbiome/"
+
+bacteriaDir=args.dir+"/microbiome/bacteria/"
+virusDir=args.dir+"/microbiome/virus/"
+
+
 
 if not os.path.exists(QCDir):
     os.makedirs(QCDir)
@@ -81,7 +99,12 @@ if not os.path.exists(tcrDir):
 for i in [ighDir,igkDir,iglDir,tcraDir,tcrbDir,tcrdDir,tcrgDir]:
     if not os.path.exists(i):
         os.makedirs(i)
-
+if not os.path.exists(microbiomeDir):
+    os.makedirs(microbiomeDir)
+if not os.path.exists(bacteriaDir):
+    os.makedirs(bacteriaDir)
+if not os.path.exists(virusDir):
+    os.makedirs(virusDir)
 
 #intermediate files
 lowQFile=QCDir+basename+"_lowQ.fastq"
@@ -95,21 +118,37 @@ tBamFile=lostHumanDir+basename+"_transcriptome.bam"
 repeatFile=lostRepeatDir+basename+"_lostRepeats_blastFormat6.csv"
 afterlostRepeatFasta=lostRepeatDir+basename+"_after_lostRepeat.fasta"
 ighFile=ighDir+basename+"_IGH_igblast.csv"
-igkFile=ighDir+basename+"_IGK_igblast.csv"
-iglFile=ighDir+basename+"_IGL_igblast.csv"
-tcraFile=ighDir+basename+"_TCRA_igblast.csv"
-tcrbFile=ighDir+basename+"_TCRB_igblast.csv"
-tcrdFile=ighDir+basename+"_TCRD_igblast.csv"
-tcrgFile=ighDir+basename+"_TCRG_igblast.csv"
+igkFile=igkDir+basename+"_IGK_igblast.csv"
+iglFile=iglDir+basename+"_IGL_igblast.csv"
+tcraFile=tcraDir+basename+"_TCRA_igblast.csv"
+tcrbFile=tcrbDir+basename+"_TCRB_igblast.csv"
+tcrdFile=tcrdDir+basename+"_TCRD_igblast.csv"
+tcrgFile=tcrgDir+basename+"_TCRG_igblast.csv"
+
+bacteriaFile=bacteriaDir+basename+"_bacteria_blastFormat6.csv"
+virusFile=virusDir+basename+"_virus_blastFormat6.csv"
 
 
+#runFiles
 runFile=args.dir+"/commands_"+basename+".sh"
-
-
+runLostHumanFile=lostHumanDir+"/runLostHuman_"+basename+".sh"
+runLosRepeatFile=lostRepeatDir+"/runLostRepeat_"+basename+".sh"
+runIGHFile=ighDir+"/runIGH_"+basename+".sh"
+runIGKFile=igkDir+"/runIGK_"+basename+".sh"
+runIGLFile=iglDir+"/runIGL_"+basename+".sh"
+runTCRAFile=tcraDir+"/runTCRA_"+basename+".sh"
+runTCRBFile=tcrbDir+"/runTCRB_"+basename+".sh"
+runTCRDFile=tcrdDir+"/runTCRD_"+basename+".sh"
+runTCRGFile=tcrgDir+"/runTCRG_"+basename+".sh"
+runBacteriaFile=bacteriaDir +"/runBacteria_"+basename+".sh"
+runVirusFile=virusDir +"/runVirus_"+basename+".sh"
 
 
 
 f = open(runFile,'w')
+
+
+#######################################################################################################################################
 
 #lowQ
 print "*****************************Running FASTX to filter low quality reads******************************"
@@ -165,7 +204,7 @@ with open(rRNAFile,'r') as f:
 excludeReadsFromFasta(lowQCFile,rRNAReads,afterrRNAFasta)
 
 
-
+#######################################################################################################################################
 print "*****************************Identify lost human reads******************************"
 
 
@@ -178,36 +217,64 @@ os.system("module load samtools \n")
 
 
 #genome
-cmd="bowtie2 -k 1 --very-sensitive -p 8 -f -x %s/db/human/Bowtie2Index/genome -U %s | samtools view -bSF4 - | samtools sort -  %s" %(codeDir, afterrRNAFasta,os.path.splitext(gBamFile)[0])
-os.system(cmd)
+cmdGenome="bowtie2 -k 1 --very-sensitive -p 8 -f -x %s/db/human/Bowtie2Index/genome -U %s | samtools view -bSF4 - | samtools sort -  %s" %(codeDir, afterrRNAFasta,os.path.splitext(gBamFile)[0])
 print "Run: ",cmd
-os.system("samtools index %s \n" %gBamFile)
-
 #transcriptome
-cmd="bowtie2 -k 1 --very-sensitive -f -p 8 -x %s/db/human/Bowtie2Index/hg19KnownGene.exon_polya200 -U %s | samtools view -bSF4 - | samtools sort -  %s" %(codeDir, afterrRNAFasta,os.path.splitext(tBamFile)[0])
-os.system(cmd)
+cmdTranscriptome="bowtie2 -k 1 --very-sensitive -f -p 8 -x %s/db/human/Bowtie2Index/hg19KnownGene.exon_polya200 -U %s | samtools view -bSF4 - | samtools sort -  %s" %(codeDir, afterrRNAFasta,os.path.splitext(tBamFile)[0])
 print "Run: ",cmd
-os.system("samtools index %s \n" %tBamFile)
+
+if args.qsub:
+    f = open(runLostHumanFile,'w')
+    f.write(". /u/local/Modules/default/init/modules.sh \n")
+    f.write("module load bowtie2/2.1.0 \n")
+    f.write("module load samtools \n")
+    f.write(cmdGenome+"\n")
+    f.write(cmdGenome+"\n")
+    f.write("samtools index %s \n" %gBamFile)
+    f.write("samtools index %s \n" %tBamFile)
+
+    f.close()
+else:
+    os.system(cmdGenome)
+    os.system(cmdTranscriptome)
+    os.system("samtools index %s \n" %gBamFile)
 
 
-lostHumanReads = set()
+
+if args.qsub:
+    f.write(". /u/local/Modules/default/init/modules.sh \n")
+    f.write("module load bowtie2/2.1.0 \n")
+    f.write("module load samtools \n")
+    f.write(cmd+"\n")
+    f.write("samtools index %s \n" %tBamFile)
+    f.close()
+else:
+    os.system(cmd)
+    os.system("samtools index %s \n" %tBamFile)
 
 
-samfile = pysam.AlignmentFile(gBamFile, "rb")
-for r in samfile.fetch():
-    for tag in r.tags:
-        if tag[0] == 'NM':
-            if int(tag[1])<=6:
-                lostHumanReads.add(r.query_name)
-samfile = pysam.AlignmentFile(tBamFile, "rb")
-for r in samfile.fetch():
-    for tag in r.tags:
-        if tag[0] == 'NM':
-            if int(tag[1])<=6:
-                lostHumanReads.add(r.query_name)
 
-excludeReadsFromFasta(afterrRNAFasta,lostHumanReads,afterlostHumanFasta)
+if not args.qsub:
 
+    lostHumanReads = set()
+
+
+    samfile = pysam.AlignmentFile(gBamFile, "rb")
+    for r in samfile.fetch():
+        for tag in r.tags:
+            if tag[0] == 'NM':
+                if int(tag[1])<=6:
+                    lostHumanReads.add(r.query_name)
+    samfile = pysam.AlignmentFile(tBamFile, "rb")
+    for r in samfile.fetch():
+        for tag in r.tags:
+            if tag[0] == 'NM':
+                if int(tag[1])<=6:
+                    lostHumanReads.add(r.query_name)
+
+    excludeReadsFromFasta(afterrRNAFasta,lostHumanReads,afterlostHumanFasta)
+
+#######################################################################################################################################
 print "*****************************Identify lost repeat reads******************************"
 cmd="%s/tools/blastn -task megablast -index_name %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa -use_index true -query %s -db %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s" %(codeDir,codeDir,afterlostHumanFasta,codeDir,repeatFile)
 print "Run :", cmd
@@ -227,56 +294,66 @@ with open(repeatFile,'r') as f:
 
 excludeReadsFromFasta(afterlostHumanFasta,lostRepeatReads,afterlostRepeatFasta)
 
+#######################################################################################################################################
 print "*****************************Identify NCL events******************************"
 #TO DO!!!!!!!!!
+
+#######################################################################################################################################
 
 print "*****************************Identify VDJ recombinations from BCR and TCR******************************"
 cmd="ln -s %s//db/BCRTCR/internal_data/ ./" %(codeDir)
 os.system(cmd)
 
 #IGH
-os.system(cmd)
 cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/IGHV.fa -germline_db_D %s/db/BCRTCR/IGHD.fa  -germline_db_J %s/db/BCRTCR/IGHJ.fa -query %s -outfmt 7 -evalue 1e-05  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"D\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,ighFile)
 os.system(cmd)
 print "Run: ",cmd
 
 #IGK
-os.system(cmd)
 cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/IGKV.fa -germline_db_D %s/db/BCRTCR/IGHD.fa  -germline_db_J %s/db/BCRTCR/IGKJ.fa -query %s -outfmt 7 -evalue 1e-05  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,igkFile)
 os.system(cmd)
 print "Run: ",cmd
 
 #IGL
-os.system(cmd)
-cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/IGLV.fa -germline_db_D %s/db/BCRTCR/IGHD.fa  -germline_db_J %s/db/BCRTCR/IGLJ.fa -query %s -outfmt 7 -evalue 1e-05  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,igLFile)
+cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/IGLV.fa -germline_db_D %s/db/BCRTCR/IGHD.fa  -germline_db_J %s/db/BCRTCR/IGLJ.fa -query %s -outfmt 7 -evalue 1e-05  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,iglFile)
 os.system(cmd)
 print "Run: ",cmd
 
 #TCRA
-os.system(cmd)
 cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/TRAV.fa -germline_db_D %s/db/BCRTCR/TRBD.fa  -germline_db_J %s/db/BCRTCR/TRAJ.fa -query %s -outfmt 7 -evalue 1e-05  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,tcraFile)
 os.system(cmd)
 print "Run: ",cmd
 
 
 #TCRB
-os.system(cmd)
 cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/TRBV.fa -germline_db_D %s/db/BCRTCR/TRBD.fa  -germline_db_J %s/db/BCRTCR/TRBJ.fa -query %s -outfmt 7 -evalue 1e-05  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,tcrbFile)
 os.system(cmd)
 print "Run: ",cmd
 
 
 #TCRD
-os.system(cmd)
 cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/TRDV.fa -germline_db_D %s/db/BCRTCR/TRBD.fa  -germline_db_J %s/db/BCRTCR/TRDJ.fa -query %s -outfmt 7 -evalue 1e-05  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,tcrdFile)
 os.system(cmd)
 print "Run: ",cmd
 
 #TCRG
-os.system(cmd)
 cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/TRGV.fa -germline_db_D %s/db/BCRTCR/TRBD.fa  -germline_db_J %s/db/BCRTCR/TRGJ.fa -query %s -outfmt 7 -evalue 1e-05  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,tcrgFile)
 os.system(cmd)
 print "Run: ",cmd
+
+#######################################################################################################################################
+print "*****************************Identify microbial reads**********************************************************"
+#bacteria
+cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/bacteria/bacteria -use_index true -query %s -db %s/db/microbiome/bacteria/bacteria  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s" %(codeDir,codeDir,afterrRNAFasta,codeDir,bacteriaFile)
+print "Run :", cmd
+os.system(cmd)
+
+#virus
+cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/virus/viruses -use_index true -query %s -db %s/db/microbiome/virus/viruses  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s" %(codeDir,codeDir,afterrRNAFasta,codeDir,bacteriaFile)
+print "Run :", cmd
+os.system(cmd)
+
+
 
 
 f.close()
