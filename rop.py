@@ -135,9 +135,9 @@ os.chdir(args.dir)
 
 #######################################################################################################################################
 if args.b:
-    print "*****************************Convert unmapped bam to fastq ******************************"
-    os.system(". /u/local/Modules/default/init/modules.sh \n")
-    os.system("module load bamtools \n")
+    print "1111*****************************Convert unmapped bam to fastq ******************************"
+    os.system(". /u/local/Modules/default/init/modules.sh")
+    os.system("module load bamtools")
     unmappedFastq=args.dir+"/unmapped_"+basename+".fastq"
     cmdConvertBam2Fastq="bamtools convert -in %s -format fastq >%s" %(args.unmappedReads,unmappedFastq)
     print "Run:",cmdConvertBam2Fastq
