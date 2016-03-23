@@ -430,4 +430,30 @@ else:
     os.system(cmd)
 
 
+#http://eupathdb.org/eupathdb/
+#eukaryotic pathogens
+
+dbList=["ameoba",
+        "crypto",
+        "fungi",
+        "giardia",
+        "microsporidia",
+        "piroplasma",
+        "plasmo",
+        "toxo",
+        "trich",
+        "tritryp"]
+
+for db in dbList:
+    cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/virus/viruses -use_index true -query %s -db %s/db/microbiome/virus/viruses  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s" %(codeDir,codeDir,afterrRNAFasta,codeDir,virusFile)
+print "Run :", cmd
+if args.qsub:
+    f = open(runVirusFile,'w')
+    f.write(cmd+"\n")
+    f.close()
+else:
+    os.system(cmd)
+
+
+
 
