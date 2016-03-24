@@ -1,0 +1,60 @@
+{PDOC00113}
+{PS00123; ALKALINE_PHOSPHATASE}
+{BEGIN}
+************************************
+* Alkaline phosphatase active site *
+************************************
+
+Alkaline phosphatase (EC 3.1.3.1) (ALP) [1] is a zinc and magnesium-containing
+metalloenzyme  which hydrolyzes phosphate esters, optimally at high pH.  It is
+found in nearly  all living organisms,  with the exception of some plants.  In
+Escherichia coli, ALP (gene phoA) is found in the periplasmic space.  In yeast
+it (gene  PHO8)  is  found  in  lysosome-like vacuoles and in mammals, it is a
+glycoprotein attached to the membrane by a GPI-anchor.
+
+In mammals, four different isozymes are currently known [2]. Three of them are
+tissue-specific:  the  placental,  placental-like (germ cell)   and intestinal
+isozymes.  The fourth form is  tissue non-specific and was previously known as
+the liver/bone/kidney isozyme.
+
+Streptomyces' species  involved  in  the  synthesis  of  streptomycin (SM), an
+antibiotic, express  a  phosphatase (EC 3.1.3.39) (gene strK) which is  highly
+related to ALP.   It specifically cleaves  both  streptomycin-6-phosphate and,
+more slowly, streptomycin-3"-phosphate.
+
+A serine is involved   in the catalytic activity of ALP. The region around the
+active site serine is relatively well conserved and can be used as a signature
+pattern.
+
+-Consensus pattern: [IV]-x-D-S-[GAS]-[GASC]-[GAST]-[GA]-T
+                    [S is the active site residue]
+-Sequences known to belong to this class detected by the pattern: ALL.
+-Other sequence(s) detected in Swiss-Prot: 3.
+-Last update: June 1994 / Text revised.
+
+[ 1] Trowsdale J., Martin D., Bicknell D., Campbell I.
+     "Alkaline phosphatases."
+     Biochem. Soc. Trans. 18:178-180(1990).
+     PubMed=2379681
+[ 2] Manes T., Glade K., Ziomek C.A., Millan J.L.
+     "Genomic structure and comparison of mouse tissue-specific alkaline
+     phosphatase genes."
+     Genomics 8:541-554(1990).
+     PubMed=2286375
+[ 3] Mansouri K., Piepersberg W.
+     "Genetics of streptomycin production in Streptomyces griseus:
+     nucleotide sequence of five genes, strFGHIK, including a phosphatase
+     gene."
+     Mol. Gen. Genet. 228:459-469(1991).
+     PubMed=1654502
+
++------------------------------------------------------------------------+
+PROSITE is copyright.   It  is  produced  by  the  Swiss  Institute   of
+Bioinformatics (SIB). There are no restrictions on its use by non-profit
+institutions as long as its  content is in no way modified. Usage by and
+for commercial  entities requires a license agreement.   For information
+about  the  licensing  scheme   send  an  email to license@isb-sib.ch or
+see: http://www.expasy.org/prosite/prosite_license.htm.
++------------------------------------------------------------------------+
+
+{END}

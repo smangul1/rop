@@ -1,0 +1,7 @@
+ID   5.1.2.1
+DE   Lactate racemase.
+AN   Hydroxyacid racemase.
+AN   Lactic acid racemase.
+AN   Lacticoracemase.
+CA   (S)-lactate = (R)-lactate.
+//

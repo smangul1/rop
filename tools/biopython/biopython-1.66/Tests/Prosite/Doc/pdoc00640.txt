@@ -1,0 +1,77 @@
+{PDOC00640}
+{PS00812; GLYCOSYL_HYDROL_F8}
+{BEGIN}
+******************************************
+* Glycosyl hydrolases family 8 signature *
+******************************************
+
+The microbial degradation  of cellulose and  xylans requires  several types of
+enzymes such as endoglucanases (EC 3.2.1.4),  cellobiohydrolases (EC 3.2.1.91)
+(exoglucanases), or xylanases (EC 3.2.1.8) [1,2].  Fungi and bacteria produces
+a spectrum of cellulolytic  enzymes (cellulases)  and  xylanases which, on the
+basis of sequence similarities,  can be classified into families. One of these
+families is known as the cellulase family D [3] or as  the glycosyl hydrolases
+family 8  [4,E1].  The  enzymes  which  are  currently known to belong to this
+family are listed below.
+
+ - Acetobacter xylinum endonuclease cmcAX.
+ - Bacillus strain KSM-330 acidic endonuclease K (Endo-K).
+ - Cellulomonas josui endoglucanase 2 (celB).
+ - Cellulomonas uda endoglucanase.
+ - Clostridium cellulolyticum endoglucanases C (celcCC).
+ - Clostridium thermocellum endoglucanases A (celA).
+ - Erwinia chrysanthemi minor endoglucanase y (celY).
+ - Bacillus circulans beta-glucanase (EC 3.2.1.73).
+ - Escherichia coli hypothetical protein yhjM.
+
+The most conserved region in  these enzymes is  a stretch of about 20 residues
+that contains  two conserved aspartate. The first asparatate is thought [5] to
+act as the nucleophile in the catalytic mechanism. We have used this region as
+a signature pattern.
+
+-Consensus pattern: A-[ST]-D-[AG]-D-x(2)-[IM]-A-x-[SA]-[LIVM]-[LIVMG]-x-A-
+                    x(3)-[FW]
+                    [The first D is an active site residue]
+-Sequences known to belong to this class detected by the pattern: ALL.
+-Other sequence(s) detected in Swiss-Prot: NONE.
+
+-Expert(s) to contact by email:
+           Henrissat B.; bernie@afmb.cnrs-mrs.fr
+
+-Last update: November 1997 / Text revised.
+
+[ 1] Beguin P.
+     "Molecular biology of cellulose degradation."
+     Annu. Rev. Microbiol. 44:219-248(1990).
+     PubMed=2252383; DOI=10.1146/annurev.mi.44.100190.001251
+[ 2] Gilkes N.R., Henrissat B., Kilburn D.G., Miller R.C. Jr., Warren R.A.J.
+     "Domains in microbial beta-1, 4-glycanases: sequence conservation,
+     function, and enzyme families."
+     Microbiol. Rev. 55:303-315(1991).
+     PubMed=1886523
+[ 3] Henrissat B., Claeyssens M., Tomme P., Lemesle L., Mornon J.-P.
+     "Cellulase families revealed by hydrophobic cluster analysis."
+     Gene 81:83-95(1989).
+     PubMed=2806912
+[ 4] Henrissat B.
+     "A classification of glycosyl hydrolases based on amino acid sequence
+     similarities."
+     Biochem. J. 280:309-316(1991).
+     PubMed=1747104
+[ 5] Alzari P.M., Souchon H., Dominguez R.
+     "The crystal structure of endoglucanase CelA, a family 8 glycosyl
+     hydrolase from Clostridium thermocellum."
+     Structure 4:265-275(1996).
+     PubMed=8805535
+[E1] http://www.expasy.org/cgi-bin/lists?glycosid.txt
+
++------------------------------------------------------------------------+
+PROSITE is copyright.   It  is  produced  by  the  Swiss  Institute   of
+Bioinformatics (SIB). There are no restrictions on its use by non-profit
+institutions as long as its  content is in no way modified. Usage by and
+for commercial  entities requires a license agreement.   For information
+about  the  licensing  scheme   send  an  email to license@isb-sib.ch or
+see: http://www.expasy.org/prosite/prosite_license.htm.
++------------------------------------------------------------------------+
+
+{END}
