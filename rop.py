@@ -2,8 +2,28 @@ import sys
 import csv
 import os
 import argparse
+
+
+
+#codeDir
+codeDir=os.path.dirname(os.path.realpath(__file__))
+
+print '%s/tools/biopython/biopython-1.66/' %(codeDir)
+
+
+sys.path.append('%s/tools/biopython/biopython-1.66/' %(codeDir))
+
+
+import Bio
 from Bio import SeqIO # module needed for sequence input
-import pysam
+
+sys.path.append('/u/home/s/serghei/project/code/import/pysam-master/')
+
+
+
+
+#import pysam
+
 
 
 
@@ -30,6 +50,10 @@ ap.add_argument("--qsub", help="submit qsub jobs on hoffman2 cluster",
                     action="store_true")
 ap.add_argument("--b", help="unmapped reads in bam format",
                 action="store_true")
+ap.add_argument("--skipLowq", help="skip step filtering ",
+                action="store_true")
+
+
 args = ap.parse_args()
 
 
@@ -39,8 +63,7 @@ args = ap.parse_args()
 
 
 
-#codeDir
-codeDir=os.path.dirname(os.path.realpath(__file__))
+
 
 #basename
 basename=os.path.splitext(os.path.basename(args.unmappedReads))[0]
@@ -135,55 +158,65 @@ os.chdir(args.dir)
 
 #######################################################################################################################################
 if args.b:
-    print "1111*****************************Convert unmapped bam to fastq ******************************"
-    os.system(". /u/local/Modules/default/init/modules.sh")
-    os.system("module load bamtools")
-    unmappedFastq=args.dir+"/unmapped_"+basename+".fastq"
-    cmdConvertBam2Fastq="bamtools convert -in %s -format fastq >%s" %(args.unmappedReads,unmappedFastq)
-    print "Run:",cmdConvertBam2Fastq
-    os.system(cmdConvertBam2Fastq)
+    
+    if args.skipLowq:
+        print "*****************************Convert unmapped bam to fasta ******************************"
+        cmdConvertBam2Fastq="%s/tools/bamtools convert -in %s -format fasta >%s" %(codeDir,args.unmappedReads,lowQFileFasta)
+        print "Run:",cmdConvertBam2Fastq
+        os.system(cmdConvertBam2Fastq)
+    else:
+        print "*****************************Convert unmapped bam to fastq ******************************"
+        #os.system(". /u/local/Modules/default/init/modules.sh")
+        #os.system("module load bamtools")
+        unmappedFastq=args.dir+"/unmapped_"+basename+".fastq"
+        cmdConvertBam2Fastq="%s/tools/bamtools convert -in %s -format fastq >%s" %(codeDir,args.unmappedReads,unmappedFastq)
+        print "Run:",cmdConvertBam2Fastq
+        os.system(cmdConvertBam2Fastq)
 else:
     unmappedFastq=args.unmappedReads
 
 
-
-
-#number of reads
-with open(unmappedFastq) as f:
-    for i, l in enumerate(f):
-        pass
-n=(i + 1)/4
-
-
-
-
-print "Number of unmapped reads",n
-
-
 #######################################################################################################################################
 
-#lowQ
-print "*****************************Running FASTX to filter low quality reads******************************"
-cmd=codeDir+"/tools/fastq_quality_filter -v -Q 33 -q 20 -p 75 -i %s -o %s \n" %(unmappedFastq,lowQFile)
-print "Run ", cmd
-os.system(cmd)
-if args.b:
-    os.remove(unmappedFastq)
-print "Save reads after filtering low quality reads to ", lowQFile
+
+if args.skipLowq==False:
+
+    #number of reads
+    with open(unmappedFastq) as f:
+        for i, l in enumerate(f):
+            pass
+    n=(i + 1)/4
 
 
-#Convert from fastq to fasta
-print "**********************************Convert ",lowQFile,"to ",lowQFileFasta,"****************************"
 
-fastafile=open(lowQFileFasta,'w')
 
-fastqfile = open(lowQFile, "rU")
-for record in SeqIO.parse(fastqfile,"fastq"):
-    fastafile.write(str(">"+record.name)+"\n")
-    fastafile.write(str(record.seq)+"\n")
-fastafile.close()
+    print "Number of unmapped reads",n
 
-#need to add command to commands_....sh
+
+
+
+    #lowQ
+    print "*****************************Running FASTX to filter low quality reads******************************"
+    cmd=codeDir+"/tools/fastq_quality_filter -v -Q 33 -q 20 -p 75 -i %s -o %s \n" %(unmappedFastq,lowQFile)
+    print "Run ", cmd
+    os.system(cmd)
+    if args.b:
+        os.remove(unmappedFastq)
+    print "Save reads after filtering low quality reads to ", lowQFile
+
+
+    #Convert from fastq to fasta
+    print "**********************************Convert ",lowQFile,"to ",lowQFileFasta,"****************************"
+
+    fastafile=open(lowQFileFasta,'w')
+
+    fastqfile = open(lowQFile, "rU")
+    for record in SeqIO.parse(fastqfile,"fastq"):
+        fastafile.write(str(">"+record.name)+"\n")
+        fastafile.write(str(record.seq)+"\n")
+    fastafile.close()
+
+    #need to add command to commands_....sh
 
 
 #lowC
@@ -444,11 +477,15 @@ dbList=["ameoba",
         "trich",
         "tritryp"]
 
+eupathdbDir=args.dir+"/microbiome/eupathdb/"
+
 for db in dbList:
-    cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/virus/viruses -use_index true -query %s -db %s/db/microbiome/virus/viruses  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s" %(codeDir,codeDir,afterrRNAFasta,codeDir,virusFile)
+    eupathdbFile=eupathdbDir+basename+"_"+db+"_blastFormat6.csv"
+
+    cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/eupathdb/%s -use_index true -query %s -db %s/db/microbiome/eupathdb/%s  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s" %(codeDir,db,codeDir,afterrRNAFasta,codeDir,virusFile)
 print "Run :", cmd
 if args.qsub:
-    f = open(runVirusFile,'w')
+    f = open(eupathdbFile,'w')
     f.write(cmd+"\n")
     f.close()
 else:
