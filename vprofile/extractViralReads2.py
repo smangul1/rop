@@ -56,3 +56,34 @@ for key, value in dict.iteritems():
 f.close()
 
 
+#-------------------------------------------
+#viral profiling
+
+#genomes
+
+
+
+#H0A9DADXX130405:2:2202:19273:35203/2    gi|548558394|ref|NC_022518.1|   95.89   73      3       0       1       73      248     176     1e-26    119
+
+
+with open(args.virusMegablastSample,'r') as f:
+    reader=csv.reader(f,delimiter='\t')
+    for line in reader:
+        genomes[line[1]].append(line)
+        element=line[0]
+        identity=float(line[2])
+        alignmentLength=float(line[7])-float(line[6])
+        eValue=float(line[10])
+        genomesList.append(line[1])
+        dict[element]=[alignmentLength,identity,eValue]
+
+
+
+for key,value in genomes.iteritems():
+    print key,len(value)
+
+
+print "Number of genomes",len(genomesList)
+
+
+
