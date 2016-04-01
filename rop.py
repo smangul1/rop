@@ -74,7 +74,7 @@ ap.add_argument("--skipLowq", help="skip step filtering ",
                 action="store_true")
 ap.add_argument("--skipQC", help="skip entire QC step : filtering  low-quality, low-complexity and rRNA reads (reads mathing rRNA repeat unit)",
                 action="store_true")
-
+ap.add_argument("--NCL_CIRI", help="enable CIRI for non-co-linear RNA sequence analysis", action="store_true")
 args = ap.parse_args()
 
 
@@ -102,6 +102,7 @@ lostRepeatDir=humanDir+"/lostRepeat/"
 bcrDir=args.dir+"/BCR/"
 tcrDir=args.dir+"/TCR/"
 
+NCL_CIRI_Dir=args.dir+"/NCL_CIRI/" 
 
 ighDir=args.dir+"/BCR/IGH/"
 igkDir=args.dir+"/BCR/IGK/"
@@ -130,6 +131,8 @@ if not os.path.exists(bcrDir):
     os.makedirs(bcrDir)
 if not os.path.exists(tcrDir):
     os.makedirs(tcrDir)
+if not os.path.exists(NCL_CIRI_Dir):
+    os.makedirs(NCL_CIRI_Dir)
 for i in [ighDir,igkDir,iglDir,tcraDir,tcrbDir,tcrdDir,tcrgDir]:
     if not os.path.exists(i):
         os.makedirs(i)
@@ -154,6 +157,8 @@ gBamFile=lostHumanDir+basename+"_genome.bam"
 tBamFile=lostHumanDir+basename+"_transcriptome.bam"
 repeatFile=lostRepeatDir+basename+"_lostRepeats_blastFormat6.csv"
 afterlostRepeatFasta=lostRepeatDir+basename+"_after_lostRepeat.fasta"
+NCL_CIRI_file=NCL_CIRI_Dir + basename + "_NCL_CIRI_after_bwa.sam"
+after_NCL_CIRI_file_prefix = basename + "NCL_CIRI_AFTER"
 ighFile=ighDir+basename+"_IGH_igblast.csv"
 igkFile=igkDir+basename+"_IGK_igblast.csv"
 iglFile=iglDir+basename+"_IGL_igblast.csv"
@@ -169,6 +174,7 @@ virusFile=virusDir+basename+"_virus_blastFormat6.csv"
 #runFiles
 runLostHumanFile=lostHumanDir+"/runLostHuman_"+basename+".sh"
 runLostRepeatFile=lostRepeatDir+"/runLostRepeat_"+basename+".sh"
+runNCL_CIRIfile = NCL_CIRI_Dir + "/run_NCL_CIRI" + basename + ".sh" 
 runIGHFile=ighDir+"/runIGH_"+basename+".sh"
 runIGKFile=igkDir+"/runIGK_"+basename+".sh"
 runIGLFile=iglDir+"/runIGL_"+basename+".sh"
@@ -364,7 +370,52 @@ if not args.qsub and not args.qsubArray:
 
 #######################################################################################################################################
 print "*****************************Identify NCL events******************************"
-#TO DO!!!!!!!!!
+if args.NCL_CIRI:
+    cmd="%s/tools/bwa mem -T -S %s/db/human/BWAIndex/genome.fa %s > %s \n" %(codeDir,codeDir,afterrRNAFasta,NCL_CIRI_file)
+    cmd = cmd + "pearl %s/tools/CIRI_v1.2.pl -S -I %s -O %s -F %s/db/human/BWAIndex/genome.fa" %(codeDir,NCL_CIRI_file,after_NCL_CIRI_file_prefix,codeDir)
+    if args.qsub or args.qsubArray:
+        f = open(runNCL_CIRIfile,'w')
+        f.write(cmd+"\n")
+        f.write("echo \"done!\">NCL_CIRI.done"+ "\n")
+        f.close()
+        if args.qsub:
+            cmdQsub="qsub -cwd -V -N NCL_CIRI -l h_data=8G,time=10:00:00 %s" %(runNCL_CIRIfile)
+            os.system(cmdQsub)
+    else:
+        os.system(cmd)
+
+
+# if not args.qsub and not args.qsubArray:
+
+#     lostRepeatReads = set()
+
+#     with open(repeatFile,'r') as f:
+#         reader=csv.reader(f,delimiter='\t')
+#         for line in reader:
+#             element=line[0]
+#             identity=float(line[2])
+#             alignmentLength=float(line[3])
+#             eValue=float(line[10])
+#             if eValue<1e-05 and alignmentLength>=80 and identity>=90:
+#                 lostRepeatReads.add(element)
+"""
+Should we exclude??? FIX IT
+"""
+    # excludeReadsFromFasta(afterlostHumanFasta,lostRepeatReads,afterlostRepeatFasta)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #######################################################################################################################################
 
