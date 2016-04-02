@@ -1,0 +1,1 @@
+/u/home/s/serghei/project/eupathdb/generate_db.sh
