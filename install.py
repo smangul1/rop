@@ -19,6 +19,7 @@ if args.immune:
 	print "Immune only option selected"
 	print "Unzipping Immune Databases (i.e. BCR/TCR)"
 	call(["tar","-zxvf", './db/immune.tar'])
+
 elif args.standard: 
 	checksum_original="" # update checksum 
 	print "Standard installation option selected"
@@ -32,10 +33,10 @@ elif args.standard:
 	checksum_downloaded = checsum_test.communicate()[0].split()[0]
 
 	if checksum_downloaded != checksum_original:
-		return "DOWNLOAD failed. Please re-run the script"
+		print "DOWNLOAD failed. Please re-run the script"
 		sys.exit(23)
 	else:
-		return "MD5 Checksum matches"
+		print "MD5 Checksum matches"
 
 	print "Unzipping the databases"
 	call(["tar","-zxvf", 'database.tar'])
@@ -43,8 +44,9 @@ elif args.standard:
 
 	print "Unzipping the databases"
 	call(["tar", "-zxvf", './db/'])
+
 else:
 	print "No option is selected. Please use -h option to see available options"
-
+	sys.exit(233)
 
 
