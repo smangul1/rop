@@ -1,7 +1,7 @@
 import sys
 import os 
 import argparse
-from subprocess import call	
+from subprocess import call, Popen, PIPE
 
 
 """
@@ -18,15 +18,33 @@ args = ap.parse_args()
 if args.immune:
 	print "Immune only option selected"
 	print "Unzipping Immune Databases (i.e. BCR/TCR)"
-	call(["tar","-zxvf", "./db/immune.tar"])
+	call(["tar","-zxvf", './db/immune.tar'])
 elif args.standard: 
+	checksum_original="" # update checksum 
 	print "Standard installation option selected"
+	
 	print "Downloading the gtex files"
+	os.chdir('./db/')
 	call(["wget", ""]) # FIX IT - ADD THE HTTPS ADDRESS
+	
+	print "Checking md5sum of the databases" 
+	downlaoded = Popen(["md5sum",'./db/database.tar'],stdout=PIPE)
+	checksum_downloaded = checsum_test.communicate()[0].split()[0]
+
+	if checksum_downloaded != checksum_original:
+		return "DOWNLOAD failed. Please re-run the script"
+		sys.exit(23)
+	else:
+		return "MD5 Checksum matches"
+
 	print "Unzipping the databases"
-	call(["tar", "-zxvf", '../db'])
+	call(["tar","-zxvf", 'database.tar'])
+
+
+	print "Unzipping the databases"
+	call(["tar", "-zxvf", './db/'])
 else:
-	print "wrong"
+	print "No option is selected. Please use -h option to see available options"
 
 
 
