@@ -18,18 +18,19 @@ args = ap.parse_args()
 if args.immune:
 	print "Immune only option selected"
 	print "Unzipping Immune Databases (i.e. BCR/TCR)"
-	call(["tar","-zxvf", './db/immune.tar'])
+	os.chdir('./db/')
+	call(["tar","-zxvf", './immune.tar'])
 
 elif args.standard: 
-	checksum_original="" # update checksum 
+	checksum_original="1052af7849f099ed77fa6e668278a4ec" 
 	print "Standard installation option selected"
 	
 	print "Downloading the gtex files"
 	os.chdir('./db/')
-	call(["wget", ""]) # FIX IT - ADD THE HTTPS ADDRESS
+	call(["wget", "https://googledrive.com/host/0B_NUyiE86yDwaUxoVjhlSjN5SkE/database.tar"]) 
 	
 	print "Checking md5sum of the databases" 
-	downlaoded = Popen(["md5sum",'./db/database.tar'],stdout=PIPE)
+	downlaoded = Popen(["md5sum",'./database.tar'], stdout=PIPE)
 	checksum_downloaded = checsum_test.communicate()[0].split()[0]
 
 	if checksum_downloaded != checksum_original:
@@ -41,9 +42,7 @@ elif args.standard:
 	print "Unzipping the databases"
 	call(["tar","-zxvf", 'database.tar'])
 
-
-	print "Unzipping the databases"
-	call(["tar", "-zxvf", './db/'])
+	print "Installation Completed! Please use rop.py"
 
 else:
 	print "No option is selected. Please use -h option to see available options"
