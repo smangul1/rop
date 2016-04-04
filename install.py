@@ -40,7 +40,7 @@ elif args.standard:
 		print "MD5 Checksum matches"
 
 	print "Unzipping the databases"
-	call(["tar","-zxvf", 'database.tar'])
+	call(["tar","-xvf", 'database.tar'])
 
 	print "Installation Completed! Please use rop.py"
 
