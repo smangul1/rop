@@ -75,6 +75,7 @@ ap.add_argument("--skipLowq", help="skip step filtering ",
 ap.add_argument("--skipQC", help="skip entire QC step : filtering  low-quality, low-complexity and rRNA reads (reads mathing rRNA repeat unit)",
                 action="store_true")
 ap.add_argument("--NCL_CIRI", help="enable CIRI for non-co-linear RNA sequence analysis", action="store_true")
+ap.add_argument("--immune", help = "Only TCR/BCR immune gene analysis will be performed", action = "store_true")
 args = ap.parse_args()
 
 
@@ -377,8 +378,9 @@ if not args.qsub and not args.qsubArray:
     excludeReadsFromFasta(afterlostHumanFasta,lostRepeatReads,afterlostRepeatFasta)
 
 #######################################################################################################################################
-print "*****************************Identify NCL events******************************"
-if args.NCL_CIRI:
+
+if args.NCL_CIRI and not args.immune:
+    print "*****************************Identify NCL events******************************"
     cmd="%s/tools/bwa mem -T -S %s/db/human/BWAIndex/genome.fa %s > %s \n" %(codeDir,codeDir,afterrRNAFasta,NCL_CIRI_file)
     cmd = cmd + "pearl %s/tools/CIRI_v1.2.pl -S -I %s -O %s -F %s/db/human/BWAIndex/genome.fa" %(codeDir,NCL_CIRI_file,after_NCL_CIRI_file_prefix,codeDir)
     if args.qsub or args.qsubArray:
@@ -562,72 +564,73 @@ else:
             
             
 #######################################################################################################################################
-print "*****************************Identify microbial reads**********************************************************"
-#bacteria
-cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/bacteria/bacteria -use_index true -query %s -db %s/db/microbiome/bacteria/bacteria  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s" %(codeDir,codeDir,afterrRNAFasta,codeDir,bacteriaFile)
-#print "Run :", cmd
-if args.qsub or args.qsubArray:
-    f = open(runBacteriaFile,'w')
-    f.write(cmd+"\n")
-    f.write("echo \"done!\">bacteria.done"+ "\n")
-    f.close()
-    if args.qsub:
-        cmdQsub="qsub -cwd -V -N bacteria -l h_data=16G,time=24:00:00 %s" %(runBacteriaFile)
-        os.system(cmdQsub)
-else:
-    os.system(cmd)
-
-
-#virus
-cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/virus/viruses -use_index true -query %s -db %s/db/microbiome/virus/viruses  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s" %(codeDir,codeDir,afterrRNAFasta,codeDir,virusFile)
-#print "Run :", cmd
-if args.qsub or args.qsubArray:
-    f = open(runVirusFile,'w')
-    f.write(cmd+"\n")
-    f.write("echo \"done!\">virus.done"+ "\n")
-    f.close()
-    if args.qsub:
-        cmdQsub="qsub -cwd -V -N virus -l h_data=16G,time=24:00:00 %s" %(runVirusFile)
-        os.system(cmdQsub)
-else:
-    os.system(cmd)
-
-
-#http://eupathdb.org/eupathdb/
-#eukaryotic pathogens
-
-dbList=["ameoba",
-        "crypto",
-        "fungi",
-        "giardia",
-        "microsporidia",
-        "piroplasma",
-        "plasmo",
-        "toxo",
-        "trich",
-        "tritryp"]
-
-print dbList
-
-
-for db in dbList:
-    print db
-    eupathdbFile=eupathdbDir+basename+"_"+db+"_blastFormat6.csv"
-    runEupathdbFile=eupathdbDir+"/run_"+basename+"_"+db+".sh"
-
-
-    cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/eupathdb/%s -use_index true -query %s -db %s/db/microbiome/eupathdb/%s  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s" %(codeDir,codeDir,db,afterrRNAFasta,codeDir,db,eupathdbFile)
-    ##print "Run :", cmd
+if not args.immune:
+    print "*****************************Identify microbial reads**********************************************************"
+    #bacteria
+    cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/bacteria/bacteria -use_index true -query %s -db %s/db/microbiome/bacteria/bacteria  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s" %(codeDir,codeDir,afterrRNAFasta,codeDir,bacteriaFile)
+    #print "Run :", cmd
     if args.qsub or args.qsubArray:
-        f = open(runEupathdbFile,'w')
+        f = open(runBacteriaFile,'w')
         f.write(cmd+"\n")
-        f.write("echo \"done!\">%s.done" %(db)+ "\n")
+        f.write("echo \"done!\">bacteria.done"+ "\n")
         f.close()
         if args.qsub:
-            cmdQsub="qsub -cwd -V -N %s -l h_data=16G,time=24:00:00 %s" %(db,runEupathdbFile)
+            cmdQsub="qsub -cwd -V -N bacteria -l h_data=16G,time=24:00:00 %s" %(runBacteriaFile)
             os.system(cmdQsub)
     else:
         os.system(cmd)
+
+
+    #virus
+    cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/virus/viruses -use_index true -query %s -db %s/db/microbiome/virus/viruses  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s" %(codeDir,codeDir,afterrRNAFasta,codeDir,virusFile)
+    #print "Run :", cmd
+    if args.qsub or args.qsubArray:
+        f = open(runVirusFile,'w')
+        f.write(cmd+"\n")
+        f.write("echo \"done!\">virus.done"+ "\n")
+        f.close()
+        if args.qsub:
+            cmdQsub="qsub -cwd -V -N virus -l h_data=16G,time=24:00:00 %s" %(runVirusFile)
+            os.system(cmdQsub)
+    else:
+        os.system(cmd)
+
+
+    #http://eupathdb.org/eupathdb/
+    #eukaryotic pathogens
+
+    dbList=["ameoba",
+            "crypto",
+            "fungi",
+            "giardia",
+            "microsporidia",
+            "piroplasma",
+            "plasmo",
+            "toxo",
+            "trich",
+            "tritryp"]
+
+    print dbList
+
+
+    for db in dbList:
+        print db
+        eupathdbFile=eupathdbDir+basename+"_"+db+"_blastFormat6.csv"
+        runEupathdbFile=eupathdbDir+"/run_"+basename+"_"+db+".sh"
+
+
+        cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/eupathdb/%s -use_index true -query %s -db %s/db/microbiome/eupathdb/%s  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s" %(codeDir,codeDir,db,afterrRNAFasta,codeDir,db,eupathdbFile)
+        ##print "Run :", cmd
+        if args.qsub or args.qsubArray:
+            f = open(runEupathdbFile,'w')
+            f.write(cmd+"\n")
+            f.write("echo \"done!\">%s.done" %(db)+ "\n")
+            f.close()
+            if args.qsub:
+                cmdQsub="qsub -cwd -V -N %s -l h_data=16G,time=24:00:00 %s" %(db,runEupathdbFile)
+                os.system(cmdQsub)
+        else:
+            os.system(cmd)
 
 
 
