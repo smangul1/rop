@@ -310,7 +310,7 @@ if args.qsub or args.qsubArray:
     f.write(cmdTranscriptome+"\n")
     f.write("samtools index %s \n" %gBamFile)
     f.write("samtools index %s \n" %tBamFile)
-    f.write("echo \"done!\">lostHuman.done"+ "\n")
+    f.write("echo \"done!\">%s/%s_lostHuman.done \n" %(lostHumanDir,basename))
     f.close()
     if args.qsub:
         cmdQsub="qsub -cwd -V -N lostHuman -l h_data=16G,time=10:00:00 %s" %(runLostHumanFile)
@@ -352,7 +352,7 @@ cmd="%s/tools/blastn -task megablast -index_name %s/db/repeats/human_repbase_20_
 if args.qsub or args.qsubArray:
     f = open(runLostRepeatFile,'w')
     f.write(cmd+"\n")
-    f.write("echo \"done!\">lostRepeat.done"+ "\n")
+    f.write("echo \"done!\">%s/%s_lostRepeat.done \n" %(lostRepeatDir,basename))
     f.close()
     if args.qsub:
         cmdQsub="qsub -cwd -V -N lostRepeat -l h_data=16G,time=10:00:00 %s" %(runLostRepeatFile)
@@ -386,7 +386,7 @@ if args.NCL_CIRI and not args.immune:
     if args.qsub or args.qsubArray:
         f = open(runNCL_CIRIfile,'w')
         f.write(cmd+"\n")
-        f.write("echo \"done!\">NCL_CIRI.done"+ "\n")
+        f.write("echo \"done!\">%s/%s_NCL_CIRI.done \n" %(NCL_CIRI_Dir,basename))
         f.close()
         if args.qsub:
             cmdQsub="qsub -cwd -V -N NCL_CIRI -l h_data=8G,time=10:00:00 %s" %(runNCL_CIRIfile)
@@ -442,7 +442,7 @@ if args.qsub or args.qsubArray:
     f = open(runIGHFile,'w')
     f.write("ln -s %s//db/BCRTCR/internal_data/ ./ \n" %(codeDir))
     f.write(cmd+"\n")
-    f.write("echo \"done!\">igh.done"+ "\n")
+    f.write("echo \"done!\"> %s/%s_igh.done \n" %(ighDir,basename))
     f.close()
     if args.qsub:
         cmdQsub="qsub -cwd -V -N igh -l h_data=16G,time=24:00:00 %s" %(runIGHFile)
@@ -462,7 +462,7 @@ if args.qsub or args.qsubArray:
     f = open(runIGKFile,'w')
     f.write("ln -s %s//db/BCRTCR/internal_data/ ./ \n" %(codeDir))
     f.write(cmd+"\n")
-    f.write("echo \"done!\">igk.done"+ "\n")
+    f.write("echo \"done!\"> %s/%s_igk.done \n" %(igkDir,basename))
     f.close()
     if args.qsub:
         cmdQsub="qsub -cwd -V -N igk -l h_data=16G,time=24:00:00 %s" %(runIGKFile)
@@ -480,7 +480,7 @@ if args.qsub or args.qsubArray:
     f = open(runIGLFile,'w')
     f.write("ln -s %s//db/BCRTCR/internal_data/ ./ \n" %(codeDir))
     f.write(cmd+"\n")
-    f.write("echo \"done!\">igl.done"+ "\n")
+    f.write("echo \"done!\">%s/%s_igl.done \n" %(iglDir,basename))
     f.close()
     if args.qsub:
         cmdQsub="qsub -cwd -V -N igl -l h_data=16G,time=24:00:00 %s" %(runIGLFile)
@@ -497,7 +497,7 @@ if args.qsub or args.qsubArray:
     f = open(runTCRAFile,'w')
     f.write("ln -s %s//db/BCRTCR/internal_data/ ./ \n" %(codeDir))
     f.write(cmd+"\n")
-    f.write("echo \"done!\">tcra.done"+ "\n")
+    f.write("echo \"done!\">%s/%s_tcra.done \n"%(tcraDir,basename))
     f.close()
     if args.qsub:
         cmdQsub="qsub -cwd -V -N tcra -l h_data=16G,time=24:00:00 %s" %(runTCRAFile)
@@ -516,7 +516,7 @@ if args.qsub or args.qsubArray:
     f = open(runTCRBFile,'w')
     f.write("ln -s %s//db/BCRTCR/internal_data/ ./ \n" %(codeDir))
     f.write(cmd+"\n")
-    f.write("echo \"done!\">tcrb.done"+ "\n")
+    f.write("echo \"done!\">%s/%s_tcrb.done \n"%(tcrbDir,basename))
     f.close()
     if args.qsub:
         cmdQsub="qsub -cwd -V -N tcrb -l h_data=16G,time=24:00:00 %s" %(runTCRBFile)
@@ -535,7 +535,7 @@ if args.qsub or args.qsubArray:
     f = open(runTCRDFile,'w')
     f.write("ln -s %s//db/BCRTCR/internal_data/ ./ \n" %(codeDir))
     f.write(cmd+"\n")
-    f.write("echo \"done!\">tcrd.done"+ "\n")
+    f.write("echo \"done!\">%s/%s_tcrd.done \n" %(tcrdDir, basename))
     f.close()
     if args.qsub:
         cmdQsub="qsub -cwd -V -N tcrd -l h_data=16G,time=24:00:00 %s" %(runTCRDFile)
@@ -554,7 +554,7 @@ if args.qsub or args.qsubArray:
     f = open(runTCRGFile,'w')
     f.write("ln -s %s//db/BCRTCR/internal_data/ ./ \n" %(codeDir))
     f.write(cmd+"\n")
-    f.write("echo \"done!\">tcrg.done"+ "\n")
+    f.write("echo \"done!\">%s/%s_tcrg.done \n" %(tcrgDir,basename))
     f.close()
     if args.qsub:
         cmdQsub="qsub -cwd -V -N tcrg -l h_data=16G,time=24:00:00 %s" %(runTCRGFile)
@@ -572,7 +572,7 @@ if not args.immune:
     if args.qsub or args.qsubArray:
         f = open(runBacteriaFile,'w')
         f.write(cmd+"\n")
-        f.write("echo \"done!\">bacteria.done"+ "\n")
+        f.write("echo \"done!\">%s/%s_bacteria.done \n"%(bacteriaDir, basename))
         f.close()
         if args.qsub:
             cmdQsub="qsub -cwd -V -N bacteria -l h_data=16G,time=24:00:00 %s" %(runBacteriaFile)
@@ -587,7 +587,7 @@ if not args.immune:
     if args.qsub or args.qsubArray:
         f = open(runVirusFile,'w')
         f.write(cmd+"\n")
-        f.write("echo \"done!\">virus.done"+ "\n")
+        f.write("echo \"done!\">%s/%s_virus.done \n" %(virusDir, basename))
         f.close()
         if args.qsub:
             cmdQsub="qsub -cwd -V -N virus -l h_data=16G,time=24:00:00 %s" %(runVirusFile)
@@ -624,7 +624,7 @@ if not args.immune:
         if args.qsub or args.qsubArray:
             f = open(runEupathdbFile,'w')
             f.write(cmd+"\n")
-            f.write("echo \"done!\">%s.done" %(db)+ "\n")
+            f.write("echo \"done!\">%s/%s.done" %(eupathdbDir, db)+ "\n")
             f.close()
             if args.qsub:
                 cmdQsub="qsub -cwd -V -N %s -l h_data=16G,time=24:00:00 %s" %(db,runEupathdbFile)
