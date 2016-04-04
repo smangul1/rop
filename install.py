@@ -30,8 +30,8 @@ elif args.standard:
 	call(["wget", "https://googledrive.com/host/0B_NUyiE86yDwaUxoVjhlSjN5SkE/database.tar"]) 
 	
 	print "Checking md5sum of the databases" 
-	downlaoded = Popen(["md5sum",'./database.tar'], stdout=PIPE)
-	checksum_downloaded = checsum_test.communicate()[0].split()[0]
+	downloaded = Popen(["md5sum",'./database.tar'], stdout=PIPE)
+	checksum_downloaded = downloaded.communicate()[0].split()[0]
 
 	if checksum_downloaded != checksum_original:
 		print "DOWNLOAD failed. Please re-run the script"
