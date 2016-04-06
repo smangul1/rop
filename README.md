@@ -13,7 +13,7 @@ ROP prococol consist of six steps to characterize the unmapped reads:
 3. Identify lost repeat reads, by mapping unmapped reads to the database of repeat sequences (Repbase 20.7)
 4. Identify ‘non-co-linear’ RNAs reads from circRNAs, gene fusions, and trans-splicing events, which combine sequence from distant elements.
 5. Identify reads from recomobinations of B and T cell receptors i.e. V(D)J recombinations
-6. Identify mircobial reads using microbial genomes and phylogenetic marker genes to identify microbial reads and assign them to corresponding taxa
+6. Profile  taxonomic composition of microbial communities using the microbial reads mapped onto the  microbial genomes and marker genes
 
 If you use this software, please cite :
 
