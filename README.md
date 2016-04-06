@@ -21,6 +21,11 @@ If you use this software, please cite :
 
 ##Installation
 
+```bash
+#Get the Docker container
+docker pull dkoslicki/metapalette
+```
+
 ##Contact
 
 For issues with this software, contact smangul@ucla.edu. Otherwise, submit an issue directly through Github.
