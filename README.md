@@ -21,6 +21,13 @@ If you use this software, please cite :
 
 ##Installation
 
+No instalation is required 
+
+##How to run ROP
+
+
+
+
 ```bash
 #Get the Docker container
 docker pull dkoslicki/metapalette
