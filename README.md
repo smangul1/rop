@@ -1,5 +1,5 @@
 # ROP 1.0 : Read origin protocol
-Author: Serghei Mangul (smangul@ucla.edu), Harry Yang (Taegyun) (harry2416@gmail.com)
+Authors: Serghei Mangul (smangul@ucla.edu), Harry Yang (Taegyun) (harry2416@gmail.com)
 
 ##Description
 ROP is a computational protocol for profiling the composition of unmapped reads, which failed to map to the human references. 
