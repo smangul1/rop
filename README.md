@@ -21,3 +21,10 @@ If you use this software, please cite :
 
 ##Installation
 
+##Contact
+
+For issues with this software, contact smangul@ucla.edu. Otherwise, submit an issue directly through Github.
+
+##License
+
+This project is released under the GPL-3 License. Please view the LICENSE file for more details.
