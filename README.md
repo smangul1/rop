@@ -29,8 +29,7 @@ No instalation is required
 
 
 ```bash
-#Get the Docker container
-docker pull dkoslicki/metapalette
+test
 ```
 
 ##Contact
