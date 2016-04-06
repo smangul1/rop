@@ -1,4 +1,4 @@
-# ROP 1.0 : Read origin protocol
+# ROP : Read origin protocol
 Authors: Serghei Mangul (smangul@ucla.edu), Harry Yang (Taegyun) (harry2416@gmail.com)
 
 ##Description
