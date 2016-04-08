@@ -23,7 +23,12 @@ No instalation is required
 
 ##How to run ROP
 
+##3rd party software
 
+ROP is distributed with several open source components that were developed by other groups.
+These components are (c) their respective developers and are redistributed with PhyloSift to provide ease-of-use.
+
+Please see the following web sites for licensing details and source code for these other components:
 
 
 ```bash
