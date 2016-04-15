@@ -9,7 +9,6 @@ import argparse
 #codeDir
 codeDir=os.path.dirname(os.path.realpath(__file__))
 
-print '%s/tools/biopython/biopython-1.66/' %(codeDir)
 
 
 sys.path.append('%s/tools/biopython/biopython-1.66/' %(codeDir))
@@ -60,7 +59,7 @@ def bam2fastq(codeDir,inFile,outFile):
 
 
 
-ap = argparse.ArgumentParser()
+ap = argparse.ArgumentParser('python rop.py')
 ap.add_argument('unmappedReads', help='unmapped Reads in the fastq format')
 ap.add_argument('dir', help='directory (absolute path) to save results of the analysis')
 
@@ -76,9 +75,17 @@ ap.add_argument("--skipQC", help="skip entire QC step : filtering  low-quality, 
                 action="store_true")
 ap.add_argument("--NCL_CIRI", help="enable CIRI for non-co-linear RNA sequence analysis", action="store_true")
 ap.add_argument("--immune", help = "Only TCR/BCR immune gene analysis will be performed", action = "store_true")
+
+
+
 args = ap.parse_args()
 
 
+
+#move to halp message
+print "For more details see:"
+print "<https://github.com/smangul1/rop>"
+print "<https://github.com/smangul1/rop/ROPmanual.pdf>"
 
 
 
