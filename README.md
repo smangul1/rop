@@ -35,6 +35,14 @@ Please see the following web sites for licensing details and source code for the
 test
 ```
 
+##Extract VDJ combinations from IgBLAST for miltiple samples
+
+```bash
+for f in data/*csv; do python <pathROP>/rop/src/iprofile/extract_VDJ.py ${f} $PWD/VJ_e20/ IGK 1e-20;done
+```
+
+
+
 ##Contact
 
 For issues with this software, contact smangul@ucla.edu. Otherwise, submit an issue directly through Github.
