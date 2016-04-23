@@ -2,7 +2,7 @@
 Authors: Serghei Mangul (smangul@ucla.edu), Harry Yang (Taegyun) (harry2416@gmail.com)
 
 ##Description
-ROP is a computational protocol for profiling the composition of unmapped reads, which failed to map to the human references. ROP profiles  repeats, circRNAs, gene fusions,trans-splicing events, recombined B and T cell receptors  and microbial communities. ROP leverages accurate alignment methods for both host and microbial sequences and able to account for 98.6%  of the reads compared to 83.8% by conventional reference-based protocols. The ‘dumpster diving’ profile of unmapped reads output by our method is not limited to RNA-Seq technology and might be applied to whole-exome and whole-genome sequencing. 
+ROP is a computational protocol for profiling the composition of unmapped reads, which failed to map to the human references. ROP profiles  repeats, circRNAs, gene fusions, trans-splicing events, recombined B and T cell receptors  and microbial communities. ROP leverages accurate alignment methods for both host and microbial sequences and able to account for 98.6%  of the reads compared to 83.8% by conventional reference-based protocols. The ‘dumpster diving’ profile of unmapped reads output by our method is not limited to RNA-Seq technology and might be applied to whole-exome and whole-genome sequencing. 
  
 ROP prococol consist of six steps to characterize the unmapped reads:
 
