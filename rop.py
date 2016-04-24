@@ -76,6 +76,7 @@ ap.add_argument("--skipQC", help="skip entire QC step : filtering  low-quality, 
                 action="store_true")
 ap.add_argument("--NCL_CIRI", help="enable CIRI for non-co-linear RNA sequence analysis", action="store_true")
 ap.add_argument("--immune", help = "Only TCR/BCR immune gene analysis will be performed", action = "store_true")
+ap.add_argument("--gzip", help = "Gzip the fasta files after filtering step", action = "store_true")
 args = ap.parse_args()
 
 
