@@ -1,0 +1,5 @@
+makeblastdb -in rRNA.fa -dbtype nucl -parse_seqids -hash_index -out rRNA -title rRNA -max_file_sz 1GB
+
+#make index 
+makembindex -input rRNA -output  rRNA -iformat blastdb
+

@@ -242,9 +242,17 @@ else:
 
     #lowC
     print "*****************************Running FASTX to filter low complexity reads******************************"
+    cmd="export PATH=$PATH:%s/tools/seqclean-x86_64/bin" %(codeDir)
+    print "Run ", cmd
+    os.system(cmd)
+
     cmd=codeDir+"/tools/seqclean-x86_64/seqclean %s -l 50 -M -o %s" %(lowQFileFasta, lowQCFile)
     print "Run ", cmd
     os.system(cmd)
+
+    cmd="export PATH=$PATH:%s/tools/seqclean-x86_64/bin" %(codeDir)
+
+
     print "Save reads after filtering low complexity (e.g. ACACACAC...) reads to ", lowQCFile
 
     #megablast rRNA
