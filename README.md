@@ -13,6 +13,10 @@ ROP prococol consist of six steps to characterize the unmapped reads:
 5. Identify reads from recomobinations of B and T cell receptors i.e. V(D)J recombinations
 6. Profile  taxonomic composition of microbial communities using the microbial reads mapped onto the  microbial genomes and marker genes
 
+ROP prococol consist of two steps to characterize mapped reads:
+1. We developed gProfile. This tools categorize human reads into genomic categories (CDS, UTR, intons, etc).   
+2. We developed rProfile, a tool to profile repetitive elements (e.g. SINEs, LINEs, LTRs) 
+
 If you use this software, please cite :
 
 ##Pre-requisites
@@ -20,6 +24,12 @@ If you use this software, please cite :
 ##Installation
 
 No instalation is required 
+
+##Training Dataset
+
+Use RNA-Seq sample of normal skin (SRR1146076) as a training sample. RNA-Seq sample was downlaoded from here:
+http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE54456
+
 
 ##How to run ROP
 
