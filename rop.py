@@ -59,41 +59,44 @@ def bam2fastq(codeDir,inFile,outFile):
 
 print "*********************************************"
 print "ROP is a computational protocol aimed to discover the source of all reads, originated from complex RNA molecules, recombinant antibodies and microbial communities. Written by Serghei Mangul (smangul@ucla.edu) and Harry Taegyun Yang (harry2416@gmail.com), University of California, Los Angeles (UCLA). (c) 2016. Released under the terms of the General Public License version 3.0 (GPLv3)"
+print ""
+print "For more details see:"
+print "http://serghei.bioinformatics.ucla.edu/rop/"
+print "https://github.com/smangul1/rop/ROPmanual.pdf"
 print "*********************************************"
 
 
+
+
 ap = argparse.ArgumentParser('python rop.py')
-ap.add_argument('unmappedReads', help='unmapped Reads in the fastq format')
-ap.add_argument('dir', help='directory (absolute path) to save results of the analysis')
 
-ap.add_argument("--qsub", help="submit qsub jobs on hoffman2 cluster",
+if len(sys.argv) < 2:
+    ap.add_argument('unmappedReads', help='unmapped Reads in the fastq format')
+    ap.add_argument('dir', help='directory (absolute path) to save results of the analysis')
+
+    ap.add_argument("--qsub", help="submit qsub jobs on hoffman2 cluster",
+                        action="store_true")
+    ap.add_argument("--qsubArray", help="prepare qsub scripts to be run latetr using job array",
                     action="store_true")
-ap.add_argument("--qsubArray", help="prepare qsub scripts to be run latetr using job array",
-                action="store_true")
-ap.add_argument("--b", help="unmapped reads in bam format",
-                action="store_true")
-ap.add_argument("--skipLowq", help="skip step filtering ",
-                action="store_true")
-ap.add_argument("--skipQC", help="skip entire QC step : filtering  low-quality, low-complexity and rRNA reads (reads mathing rRNA repeat unit)",
-                action="store_true")
-ap.add_argument("--NCL_CIRI", help="enable CIRI for non-co-linear RNA sequence analysis", action="store_true")
-ap.add_argument("--immune", help = "Only TCR/BCR immune gene analysis will be performed", action = "store_true")
-ap.add_argument("--gzip", help = "Gzip the fasta files after filtering step", action = "store_true")
+    ap.add_argument("--b", help="unmapped reads in bam format",
+                    action="store_true")
+    ap.add_argument("--skipLowq", help="skip step filtering ",
+                    action="store_true")
+    ap.add_argument("--skipQC", help="skip entire QC step : filtering  low-quality, low-complexity and rRNA reads (reads mathing rRNA repeat unit)",
+                    action="store_true")
+    ap.add_argument("--NCL_CIRI", help="enable CIRI for non-co-linear RNA sequence analysis", action="store_true")
+    ap.add_argument("--immune", help = "Only TCR/BCR immune gene analysis will be performed", action = "store_true")
+    ap.add_argument("--gzip", help = "Gzip the fasta files after filtering step", action = "store_true")
 
 
 
-args = ap.parse_args()
+    args = ap.parse_args()
 
 
+##################################
+#main code
+##################################
 
-#move to halp message
-print "For more details see :"
-print "<http://serghei.bioinformatics.ucla.edu/rop/>"
-print "<https://github.com/smangul1/rop/ROPmanual.pdf>"
-
-
-print "Written by Serghei Mangul (smangul@ucla.edu) and Harry Taegyun Yang (harry2416@gmail.com),"
-print "University of California, Los Angeles (UCLA). (c) 2016. Released under the terms of the General Public License version 3.0 (GPLv3)"
 
 
 
