@@ -14,6 +14,7 @@ ROP prococol consist of six steps to characterize the unmapped reads:
 6. Profile  taxonomic composition of microbial communities using the microbial reads mapped onto the  microbial genomes and marker genes
 
 ROP prococol consist of two steps to characterize mapped reads:
+
 1. We developed gProfile. This tools categorize human reads into genomic categories (CDS, UTR, intons, etc).   
 2. We developed rProfile, a tool to profile repetitive elements (e.g. SINEs, LINEs, LTRs) 
 
