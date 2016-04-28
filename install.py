@@ -11,7 +11,7 @@ option requirements - TCR/BCR only option - in terms of database
 """
 
 ap = argparse.ArgumentParser()
-ap.add_argument("--immune", help="Set up database for immune reads only (i.e. TCR/BCR", action="store_true")
+ap.add_argument("--immune", help="Set up database for immune reads only (i.e. TCR/BCR) ", action="store_true")
 ap.add_argument("--standard", help="standard installation option", action="store_true")
 args = ap.parse_args()
 
