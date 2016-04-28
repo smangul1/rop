@@ -183,7 +183,7 @@ tcrgFile=tcrgDir+basename+"_TCRG_igblast.csv"
 
 #log files
 loglowQ=QCDir+basename+"_lowQ.log"
-
+logrRNA=QCDir + basename + "_rRNA.log"
 bacteriaFile=bacteriaDir+basename+"_bacteria_blastFormat6.csv"
 virusFile=virusDir+basename+"_virus_blastFormat6.csv"
 
@@ -297,6 +297,12 @@ else:
                 rRNAReads.add(element)
 
     excludeReadsFromFasta(lowQCFile,rRNAReads,afterrRNAFasta)
+    # Writing to logrRNA file
+    # TODO - make more descriptive (i.e. - num_rRNA = SOME NUMBER)
+    log_temp = open(logrRNA, 'w')
+    log_temp.write(len(rRNAReads))
+    log_temp.close()
+
 
 
     os.remove(lowQFile)
