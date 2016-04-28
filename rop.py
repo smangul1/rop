@@ -233,7 +233,7 @@ else:
 
         #lowQ
         print "*****************************Running FASTX to filter low quality reads******************************"
-        cmd=codeDir+"/tools/fastq_quality_filter -v -Q 33 -q 20 -p 75 -i %s -o %s \n>$s" %(unmappedFastq,lowQFile,loglowQ)
+        cmd=codeDir+"/tools/fastq_quality_filter -v -Q 33 -q 20 -p 75 -i %s -o %s \n> %s" %(unmappedFastq,lowQFile,loglowQ)
         print "Run ", cmd
         os.system(cmd)
         if args.b:
