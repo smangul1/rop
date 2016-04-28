@@ -298,11 +298,12 @@ else:
 
     excludeReadsFromFasta(lowQCFile,rRNAReads,afterrRNAFasta)
     # Writing to logrRNA file
+    # TODO - make more descriptive (i.e. - num_rRNA = SOME NUMBER)
     log_temp = open(logrRNA, 'w')
     log_temp.write(len(rRNAReads))
     log_temp.close()
 
-    
+
 
     os.remove(lowQFile)
     os.remove(lowQCFile)
