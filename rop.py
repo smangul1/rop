@@ -257,6 +257,8 @@ else:
 
     #lowC
     print "*****************************Running FASTX to filter low complexity reads******************************"
+    print "moving to directory: %s" %(QCDir)
+    os.chdir(QCDir)
     cmd="export PATH=$PATH:%s/tools/seqclean-x86_64/bin" %(codeDir)
     print "Run ", cmd
     os.system(cmd)
@@ -265,11 +267,16 @@ else:
     print "Run ", cmd
     os.system(cmd)
 
-    cmd="export PATH=$PATH:%s/tools/seqclean-x86_64/bin" %(codeDir)
-
+    cmd = "rm -rf %s/cleaning_1/ ; rm -f %s/*.cln ; rm -f %s/*.cidx; rm -f %s/*.sort" % (QCDir,QCDir,QCDir,QCDir, )
+    print "Removing intermediate files (.cln, .sort , .cidx). CMD: ", cmd
+    os.system(cmd)
 
     print "Save reads after filtering low complexity (e.g. ACACACAC...) reads to ", lowQCFile
 
+
+    print "Moving Dir to %s" %(args.dir)
+
+    os.chdir(args.dir)
     #megablast rRNA
     print "*****************************Identify reads from RNA repeat unit******************************"
     cmd="%s/tools/blastn -task megablast -index_name %s/db/rRNA/rRNA -use_index true -query %s -db %s/db/rRNA/rRNA  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s" %(codeDir,codeDir,lowQCFile,codeDir,rRNAFile)
