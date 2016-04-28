@@ -27,12 +27,12 @@ If you use this software, please cite :
 For standard installation: 
 ```bash 
 python install.py --standard
-''' 
+```
 
 For immune (i.e. TCR, BCR) analysis only: 
 ```bash
 python install.py --immune
-''' 
+``` 
 
 
 ##Training Dataset
