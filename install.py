@@ -41,7 +41,7 @@ elif args.standard:
 
 	print "Unzipping the databases"
 	call(["tar","-xvf", 'database.tar'])
-
+	os.remove('database.tar')
 	print "Installation Completed! Please use rop.py"
 
 else:
