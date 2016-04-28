@@ -181,6 +181,9 @@ tcrbFile=tcrbDir+basename+"_TCRB_igblast.csv"
 tcrdFile=tcrdDir+basename+"_TCRD_igblast.csv"
 tcrgFile=tcrgDir+basename+"_TCRG_igblast.csv"
 
+#log files
+loglowQ=QCDir+basename+"_lowQ.log"
+
 bacteriaFile=bacteriaDir+basename+"_bacteria_blastFormat6.csv"
 virusFile=virusDir+basename+"_virus_blastFormat6.csv"
 
@@ -230,7 +233,7 @@ else:
 
         #lowQ
         print "*****************************Running FASTX to filter low quality reads******************************"
-        cmd=codeDir+"/tools/fastq_quality_filter -v -Q 33 -q 20 -p 75 -i %s -o %s \n" %(unmappedFastq,lowQFile)
+        cmd=codeDir+"/tools/fastq_quality_filter -v -Q 33 -q 20 -p 75 -i %s -o %s \n>$s" %(unmappedFastq,lowQFile,loglowQ)
         print "Run ", cmd
         os.system(cmd)
         if args.b:
