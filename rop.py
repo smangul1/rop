@@ -2,6 +2,7 @@ import sys
 import csv
 import os
 import argparse
+import subprocess
 
 
 
@@ -57,6 +58,16 @@ def bam2fastq(codeDir,inFile,outFile):
     os.system(cmdConvertBam2Fastq)
 
 
+
+#######################################################################
+def write2Log(message,logFile,option):
+    if not option:
+        print message
+    logFile.write(message)
+    logFile.write("\n")
+
+
+
 print "*********************************************"
 print "ROP is a computational protocol aimed to discover the source of all reads, originated from complex RNA molecules, recombinant antibodies and microbial communities. Written by Serghei Mangul (smangul@ucla.edu) and Harry Taegyun Yang (harry2416@gmail.com), University of California, Los Angeles (UCLA). (c) 2016. Released under the terms of the General Public License version 3.0 (GPLv3)"
 print ""
@@ -87,16 +98,15 @@ ap.add_argument("--skipQC", help="skip entire QC step : filtering  low-quality, 
 ap.add_argument("--NCL_CIRI", help="enable CIRI for non-co-linear RNA sequence analysis", action="store_true")
 ap.add_argument("--immune", help = "Only TCR/BCR immune gene analysis will be performed", action = "store_true")
 ap.add_argument("--gzip", help = "Gzip the fasta files after filtering step", action = "store_true")
-
-
-
+ap.add_argument("--quiet", help = "uppress progress report and warnings", action = "store_true")
 args = ap.parse_args()
+
+
 
 
 ##################################
 #main code
 ##################################
-
 
 
 
@@ -182,10 +192,16 @@ tcrdFile=tcrdDir+basename+"_TCRD_igblast.csv"
 tcrgFile=tcrgDir+basename+"_TCRG_igblast.csv"
 
 #log files
-loglowQ=QCDir+basename+"_lowQ.log"
+logQC=QCDir+basename+"_QC.log"
 logrRNA=QCDir + basename + "_rRNA.log"
 bacteriaFile=bacteriaDir+basename+"_bacteria_blastFormat6.csv"
 virusFile=virusDir+basename+"_virus_blastFormat6.csv"
+
+gLog=args.dir+"/"+basename+"_general.log"
+gLogfile=open(gLog,'w')
+
+cmdLog=args.dir+"/"+basename+"_commands.log"
+cmdLogfile=open(cmdLog,'w')
 
 
 #runFiles
@@ -226,66 +242,67 @@ else:
             for i, l in enumerate(f):
                 pass
         n=(i + 1)/4
-        print "Number of unmapped reads",n
+
+        message="Processing %s unmapped reads" %(n)
+        write2Log(message,gLogfile,args.quiet)
 
 
 
 
         #lowQ
-        print "*****************************Running FASTX to filter low quality reads******************************"
-        cmd=codeDir+"/tools/fastq_quality_filter -v -Q 33 -q 20 -p 75 -i %s -o %s > %s \n" %(unmappedFastq,lowQFile,loglowQ)
-        print "Run ", cmd
+        write2Log("1. Quality Control",gLogfile,args.quiet)
+        cmd=codeDir+"/tools/fastq_quality_filter -v -Q 33 -q 20 -p 75 -i %s -o %s > %s \n" %(unmappedFastq,lowQFile,logQC)
+        write2Log(cmd,cmdLogfile,"False")
         os.system(cmd)
         if args.b:
             os.remove(unmappedFastq)
-        print "Save reads after filtering low quality reads to ", lowQFile
+
 
 
         #Convert from fastq to fasta
-        print "**********************************Convert ",lowQFile,"to ",lowQFileFasta,"****************************"
-
         fastafile=open(lowQFileFasta,'w')
-
         fastqfile = open(lowQFile, "rU")
+        nLowQReads=0
         for record in SeqIO.parse(fastqfile,"fastq"):
             fastafile.write(str(">"+record.name)+"\n")
             fastafile.write(str(record.seq)+"\n")
+            nLowQReads+=1
         fastafile.close()
+        write2Log("Filter %s low quality reads (FASTX-Toolkit)" %(n-nLowQReads) ,gLogfile,args.quiet)
 
-        #need to add command to commands_....sh
 
 
-    #lowC
-    print "*****************************Running FASTX to filter low complexity reads******************************"
-    print "moving to directory: %s" %(QCDir)
+
+
     os.chdir(QCDir)
+    #lowC
     cmd="export PATH=$PATH:%s/tools/seqclean-x86_64/bin" %(codeDir)
-    print "Run ", cmd
     os.system(cmd)
 
-    cmd=codeDir+"/tools/seqclean-x86_64/seqclean %s -l 50 -M -o %s" %(lowQFileFasta, lowQCFile)
-    print "Run ", cmd
+    cmd=codeDir+"/tools/seqclean-x86_64/seqclean %s -l 50 -M -o %s 2>>%s" %(lowQFileFasta, lowQCFile,logQC)
+    write2Log(cmd,cmdLogfile,"False")
     os.system(cmd)
 
-    cmd = "rm -rf %s/cleaning_1/ ; rm -f %s/*.cln ; rm -f %s/*.cidx; rm -f %s/*.sort" % (QCDir,QCDir,QCDir,QCDir, )
-    print "Removing intermediate files (.cln, .sort , .cidx). CMD: ", cmd
+    cmd = "rm -rf %s/cleaning_1/ ; rm -f %s/*.cln ; rm -f %s/*.cidx; rm -f %s/*.sort" % (QCDir,QCDir,QCDir,QCDir)
+    write2Log("Removing intermediate files (.cln, .sort , .cidx). CMD: ",cmdLogfile,"False")
     os.system(cmd)
+    proc = subprocess.Popen(["grep trashed %s | awk -F \":\" '{print $2}'" %(logQC) ], stdout=subprocess.PIPE, shell=True)
+    (nLowCReads, err) = proc.communicate()
+    write2Log("Filter %s low complexity reads (e.g. ACACACAC...) (SeqClean)" %(nLowCReads.rstrip().strip()) ,gLogfile,args.quiet)
 
-    print "Save reads after filtering low complexity (e.g. ACACACAC...) reads to ", lowQCFile
 
 
-    print "Moving Dir to %s" %(args.dir)
 
-    os.chdir(args.dir)
-    #megablast rRNA
-    print "*****************************Identify reads from RNA repeat unit******************************"
+
+
+
+
+    #rRNA
     cmd="%s/tools/blastn -task megablast -index_name %s/db/rRNA/rRNA -use_index true -query %s -db %s/db/rRNA/rRNA  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s" %(codeDir,codeDir,lowQCFile,codeDir,rRNAFile)
-    #print "Run :", cmd
     os.system(cmd)
 
 
     rRNAReads = set()
-
     with open(rRNAFile,'r') as f:
         reader=csv.reader(f,delimiter='\t')
         for line in reader:
@@ -297,17 +314,20 @@ else:
                 rRNAReads.add(element)
 
     excludeReadsFromFasta(lowQCFile,rRNAReads,afterrRNAFasta)
-    # Writing to logrRNA file
-    # TODO - make more descriptive (i.e. - num_rRNA = SOME NUMBER)
-    log_temp = open(logrRNA, 'w')
-    log_temp.write(len(rRNAReads))
-    log_temp.close()
+    write2Log("Filter %s rRNA reads (mapped to human ribosomal DNA complete repeating unit)" %(len(rRNAReads)) ,gLogfile,args.quiet)
+
 
 
 
     os.remove(lowQFile)
     os.remove(lowQCFile)
     os.remove(lowQFileFasta)
+    os.remove(rRNAFile)
+
+
+cmdLogfile.close()
+gLogfile.close()
+sys.exit()
 
 
 
