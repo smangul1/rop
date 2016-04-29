@@ -18,7 +18,8 @@ sys.path.append('%s/tools/biopython/biopython-1.66/' %(codeDir))
 import Bio
 from Bio import SeqIO # module needed for sequence input
 
-sys.path.append('/u/home/s/serghei/project/code/import/pysam-master/')
+sys.path.append('%s/tools/pysam-master/' %(codeDir))
+import pysam
 
 
 
@@ -284,7 +285,6 @@ else:
     os.system(cmd)
 
     cmd = "rm -rf %s/cleaning_1/ ; rm -f %s/*.cln ; rm -f %s/*.cidx; rm -f %s/*.sort" % (QCDir,QCDir,QCDir,QCDir)
-    write2Log("Removing intermediate files (.cln, .sort , .cidx). CMD: ",cmdLogfile,"False")
     os.system(cmd)
     proc = subprocess.Popen(["grep trashed %s | awk -F \":\" '{print $2}'" %(logQC) ], stdout=subprocess.PIPE, shell=True)
     (nLowCReads, err) = proc.communicate()
@@ -299,6 +299,7 @@ else:
 
     #rRNA
     cmd="%s/tools/blastn -task megablast -index_name %s/db/rRNA/rRNA -use_index true -query %s -db %s/db/rRNA/rRNA  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s" %(codeDir,codeDir,lowQCFile,codeDir,rRNAFile)
+    write2Log(cmd,cmdLogfile,"False")
     os.system(cmd)
 
 
@@ -325,30 +326,21 @@ else:
     os.remove(rRNAFile)
 
 
-cmdLogfile.close()
-gLogfile.close()
-sys.exit()
+
 
 
 
 #######################################################################################################################################
-print "*****************************Identify lost human reads******************************"
-
-
-
-
-
-os.system(". /u/local/Modules/default/init/modules.sh \n")
-os.system("module load bowtie2/2.1.0 \n")
-os.system("module load samtools \n")
-
 
 #genome
-cmdGenome="bowtie2 -k 1 --very-sensitive -p 8 -f -x %s/db/human/Bowtie2Index/genome -U %s | samtools view -bSF4 - | samtools sort -  %s" %(codeDir, afterrRNAFasta,os.path.splitext(gBamFile)[0])
-#print "Run: ",cmdGenome
+cmdGenome="%s/tools/bowtie2 -k 1 --very-sensitive -p 8 -f -x %s/db/human/Bowtie2Index/genome -U %s | %s/tools/samtools view -bSF4 - | %s/tools/samtools sort  >%s" %(codeDir,codeDir, afterrRNAFasta,codeDir,codeDir,gBamFile)
+
 #transcriptome
-cmdTranscriptome="bowtie2 -k 1 --very-sensitive -f -p 8 -x %s/db/human/Bowtie2Index/hg19KnownGene.exon_polya200 -U %s | samtools view -bSF4 - | samtools sort -  %s" %(codeDir, afterrRNAFasta,os.path.splitext(tBamFile)[0])
-#print "Run: ",cmdGenome
+cmdTranscriptome="%s/tools/bowtie2  -k 1 --very-sensitive -f -p 8 -x %s/db/human/Bowtie2Index/hg19KnownGene.exon_polya200 -U %s | %s/tools/samtools view -bSF4 - | %s/tools/samtools sort >  %s" %(codeDir,codeDir, afterrRNAFasta,codeDir,codeDir,tBamFile)
+write2Log(cmdGenome,cmdLogfile,"False")
+write2Log(cmdTranscriptome,cmdLogfile,"False")
+
+
 
 if args.qsub or args.qsubArray:
     f = open(runLostHumanFile,'w')
@@ -369,6 +361,7 @@ else:
     os.system(cmdGenome)
     os.system(cmdTranscriptome)
     os.system("samtools index %s \n" %gBamFile)
+    os.system("samtools index %s \n" %tBamFile)
 
 
 
@@ -392,6 +385,11 @@ if not args.qsub and not args.qsubArray:
                     lostHumanReads.add(r.query_name)
 
     excludeReadsFromFasta(afterrRNAFasta,lostHumanReads,afterlostHumanFasta)
+
+
+
+
+
 
 #######################################################################################################################################
 print "*****************************Identify lost repeat reads******************************"

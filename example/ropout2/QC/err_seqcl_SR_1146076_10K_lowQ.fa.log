@@ -1,0 +1,26 @@
+seqclean running options: 
+seqclean /u/home/s/serghei/code2/rop/trainingDataset/ropout2/QC/SR_1146076_10K_lowQ.fa -l 50 -M -o /u/home/s/serghei/code2/rop/trainingDataset/ropout2/QC/SR_1146076_10K_lowQC.fa
+ Standard log file: seqcl_SR_1146076_10K_lowQ.fa.log
+ Error log file:    err_seqcl_SR_1146076_10K_lowQ.fa.log
+ Using 1 CPUs for cleaning
+-= Rebuilding SR_1146076_10K_lowQ.fa cdb index =-
+306 entries from file /u/home/s/serghei/code2/rop/trainingDataset/ropout2/QC/SR_1146076_10K_lowQ.fa were indexed in file SR_1146076_10K_lowQ.fa.cidx
+ Launching actual cleaning process:
+ psx -p 1  -n 1000  -i /u/home/s/serghei/code2/rop/trainingDataset/ropout2/QC/SR_1146076_10K_lowQ.fa -d cleaning -C '/u/home/s/serghei/code2/rop/trainingDataset/ropout2/QC/SR_1146076_10K_lowQ.fa:ANLS50:::11:0' -c '/u/home/s/serghei/code2/rop/tools/seqclean-x86_64/seqclean.psx'
+WAITING for all children to finish before starting last child!
+WAITING for all children to finish!
+Collecting cleaning reports
+
+**************************************************
+Sequences analyzed:       306
+-----------------------------------
+                   valid:       304  (1 trimmed)
+                 trashed:         2
+**************************************************
+----= Trashing summary =------
+              by 'shortq':        1
+                by 'dust':        1
+------------------------------
+Output file containing only valid and trimmed sequences: /u/home/s/serghei/code2/rop/trainingDataset/ropout2/QC/SR_1146076_10K_lowQC.fa
+For trimming and trashing details see cleaning report  : SR_1146076_10K_lowQ.fa.cln
+--------------------------------------------------
