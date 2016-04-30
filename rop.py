@@ -46,18 +46,21 @@ def excludeReadsFromFastaGzip(inFasta,reads,outFasta):
 
 ####################################################################
 def bam2fasta(codeDir,inFile,outFile):
-    message="Convert %s to fasta" %(inFile)
+    message="Convert bam to fasta"
     cmdConvertBam2Fastq="%s/tools/bamtools convert -in %s -format fasta >%s" %(codeDir,inFile,outFile)
     write2Log(cmdConvertBam2Fastq,cmdLogfile,"False")
     os.system(cmdConvertBam2Fastq)
 
+
 ####################################################################
 def bam2fastq(codeDir,inFile,outFile):
-    message="Convert %s to fastq" %(inFile)
+    message="Convert bam to fastq"
     write2Log(message,gLogfile,args.quiet)
     cmdConvertBam2Fastq="%s/tools/bamtools convert -in %s -format fastq >%s" %(codeDir,inFile,outFile)
     write2Log(cmdConvertBam2Fastq,cmdLogfile,"False")
     os.system(cmdConvertBam2Fastq)
+    if not args.dev:
+        os.remove(inFile)
 
 
 
@@ -266,6 +269,7 @@ else:
 
 
 
+        
 
         #lowQ
         write2Log("1. Quality Control",gLogfile,args.quiet)
@@ -276,18 +280,18 @@ else:
             os.remove(unmappedFastq)
 
 
-
+        readLength=0
         #Convert from fastq to fasta
         fastafile=open(lowQFileFasta,'w')
         fastqfile = open(lowQFile, "rU")
         nLowQReads=0
         for record in SeqIO.parse(fastqfile,"fastq"):
+            readLength=len(record) #assumes the same length, will not work for Ion Torrent or Pac Bio
             fastafile.write(str(">"+record.name)+"\n")
             fastafile.write(str(record.seq)+"\n")
             nLowQReads+=1
         fastafile.close()
         write2Log("Filter %s low quality reads" %(n-nLowQReads) ,gLogfile,args.quiet)
-
 
 
 
@@ -328,15 +332,15 @@ else:
             identity=float(line[2])
             alignmentLength=float(line[3])
             eValue=float(line[10])
-            if eValue<1e-05 and alignmentLength==100 and identity>=94:
+            if eValue<1e-05 and alignmentLength==readLength and identity>=0.94*readLength:
                 rRNAReads.add(element)
 
     excludeReadsFromFasta(lowQCFile,rRNAReads,afterrRNAFasta)
     n_rRNAReads=len(rRNAReads)
     write2Log("Filter %s rRNA reads" %(len(rRNAReads)) ,gLogfile,args.quiet)
 
-    message="Number of lines in %s is %s" %(rRNAFile,rRNAReads)
-    write2Log(cmd,cmdLogfile,"False")
+    message="Number of entries in %s is %s" %(rRNAFile,n_rRNATotal)
+    write2Log(message,cmdLogfile,"False")
 
     if not args.dev:
         os.remove(lowQFile)
