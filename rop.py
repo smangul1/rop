@@ -46,18 +46,17 @@ def excludeReadsFromFastaGzip(inFasta,reads,outFasta):
 
 ####################################################################
 def bam2fasta(codeDir,inFile,outFile):
-    print "*****************************Convert unmapped bam to fasta ******************************"
+    message="Convert %s to fasta" %(inFile)
     cmdConvertBam2Fastq="%s/tools/bamtools convert -in %s -format fasta >%s" %(codeDir,inFile,outFile)
-    print "Run:",cmdConvertBam2Fastq
+    write2Log(cmdConvertBam2Fastq,cmdLogfile,"False")
     os.system(cmdConvertBam2Fastq)
 
 ####################################################################
 def bam2fastq(codeDir,inFile,outFile):
-    print "*****************************Convert unmapped bam to fastq ******************************"
-    #os.system(". /u/local/Modules/default/init/modules.sh")
-    #os.system("module load bamtools")
+    message="Convert %s to fastq" %(inFile)
+    write2Log(message,gLogfile,args.quiet)
     cmdConvertBam2Fastq="%s/tools/bamtools convert -in %s -format fastq >%s" %(codeDir,inFile,outFile)
-    print "Run:",cmdConvertBam2Fastq
+    write2Log(cmdConvertBam2Fastq,cmdLogfile,"False")
     os.system(cmdConvertBam2Fastq)
 
 
@@ -102,6 +101,8 @@ ap.add_argument("--NCL_CIRI", help="enable CIRI for non-co-linear RNA sequence a
 ap.add_argument("--immune", help = "Only TCR/BCR immune gene analysis will be performed", action = "store_true")
 ap.add_argument("--gzip", help = "Gzip the fasta files after filtering step", action = "store_true")
 ap.add_argument("--quiet", help = "uppress progress report and warnings", action = "store_true")
+ap.add_argument("--dev", help = "keep intermediate files", action = "store_true")
+
 args = ap.parse_args()
 
 
@@ -212,10 +213,12 @@ virusFile=virusDir+basename+"_virus_blastFormat6.csv"
 gLog=args.dir+"/"+basename+"_general.log"
 gLogfile=open(gLog,'w')
 
-tLog=args.dir+"/"+basename+"_table.log"
+tLog=args.dir+"/"+basename+"_numberReads.log"
 tLogfile=open(tLog,'w')
 
-cmdLog=args.dir+"/"+basename+"_commands.log"
+
+
+cmdLog=args.dir+"/"+basename+"_dev.log"
 cmdLogfile=open(cmdLog,'w')
 
 
@@ -315,11 +318,12 @@ else:
     write2Log(cmd,cmdLogfile,"False")
     os.system(cmd)
 
-
+    n_rRNATotal=0
     rRNAReads = set()
     with open(rRNAFile,'r') as f:
         reader=csv.reader(f,delimiter='\t')
         for line in reader:
+            n_rRNATotal+=1
             element=line[0]
             identity=float(line[2])
             alignmentLength=float(line[3])
@@ -331,13 +335,14 @@ else:
     n_rRNAReads=len(rRNAReads)
     write2Log("Filter %s rRNA reads" %(len(rRNAReads)) ,gLogfile,args.quiet)
 
+    message="Number of lines in %s is %s" %(rRNAFile,rRNAReads)
+    write2Log(cmd,cmdLogfile,"False")
 
-
-
-    os.remove(lowQFile)
-    os.remove(lowQCFile)
-    os.remove(lowQFileFasta)
-    os.remove(rRNAFile)
+    if not args.dev:
+        os.remove(lowQFile)
+        os.remove(lowQCFile)
+        os.remove(lowQFileFasta)
+        os.remove(rRNAFile)
 
 
 
@@ -391,9 +396,10 @@ nlostHumanReads=len(lostHumanReads)
 write2Log("Filter %s lost human reads" %(len(lostHumanReads)) ,gLogfile,args.quiet)
 
 
-os.remove(afterrRNAFasta)
-os.remove(gBamFile)
-os.remove(tBamFile)
+if not args.dev:
+    os.remove(afterrRNAFasta)
+    os.remove(gBamFile)
+    os.remove(tBamFile)
 
 
 message=basename+","+str(n)+","+str(n-nLowQReads)+","+str(nLowCReads.rstrip().strip())+","+str(n_rRNAReads)+","+str(nlostHumanReads)
