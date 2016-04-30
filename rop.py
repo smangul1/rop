@@ -3,23 +3,16 @@ import csv
 import os
 import argparse
 import subprocess
-
-
-
+import gzip
 
 #codeDir
 codeDir=os.path.dirname(os.path.realpath(__file__))
 
-
-
 sys.path.append('%s/tools/biopython/biopython-1.66/' %(codeDir))
-
-
 import Bio
 from Bio import SeqIO # module needed for sequence input
 
-sys.path.append('%s/tools/pysam-master/' %(codeDir))
-import pysam
+
 
 
 
@@ -36,6 +29,15 @@ def excludeReadsFromFasta(inFasta,reads,outFasta):
 
     fasta_sequences = SeqIO.parse(open(inFasta),'fasta')
     with open(outFasta, "w") as f:
+        for seq in fasta_sequences:
+            name = seq.name
+            if name not in reads:
+                SeqIO.write([seq], f, "fasta")
+
+def excludeReadsFromFastaGzip(inFasta,reads,outFasta):
+    
+    fasta_sequences = SeqIO.parse(open(inFasta),'fasta')
+    with gzip.open(outFasta, "w") as f:
         for seq in fasta_sequences:
             name = seq.name
             if name not in reads:
@@ -110,6 +112,10 @@ args = ap.parse_args()
 ##################################
 
 
+#relative path to absolute path
+args.unmappedReads=os.path.abspath(args.unmappedReads)
+args.dir=os.path.abspath(args.dir)
+
 
 #basename
 basename=os.path.splitext(os.path.basename(args.unmappedReads))[0]
@@ -120,6 +126,9 @@ basename=os.path.splitext(os.path.basename(args.unmappedReads))[0]
 
 #analysis directories
 QCDir=args.dir+"/QC/"
+
+
+
 humanDir=args.dir+"/human/"
 
 lostHumanDir=humanDir+"/lostHuman/"
@@ -177,7 +186,7 @@ lowQFileFasta=QCDir+basename+"_lowQ.fa"
 lowQCFile=QCDir+basename+"_lowQC.fa"
 rRNAFile=QCDir+basename+"_rRNA_blastFormat6.csv"
 afterrRNAFasta=QCDir+basename+"_after_rRNA.fasta"
-afterlostHumanFasta=lostHumanDir+basename+"_after_lostHuman.fasta"
+afterlostHumanFasta=lostHumanDir+basename+"_after_rRNA_lostHuman.fasta.gz"
 gBamFile=lostHumanDir+basename+"_genome.bam"
 tBamFile=lostHumanDir+basename+"_transcriptome.bam"
 repeatFile=lostRepeatDir+basename+"_lostRepeats_blastFormat6.csv"
@@ -195,11 +204,16 @@ tcrgFile=tcrgDir+basename+"_TCRG_igblast.csv"
 #log files
 logQC=QCDir+basename+"_QC.log"
 logrRNA=QCDir + basename + "_rRNA.log"
+logHuman=lostHumanDir + basename + "_lostHuman.log"
+
 bacteriaFile=bacteriaDir+basename+"_bacteria_blastFormat6.csv"
 virusFile=virusDir+basename+"_virus_blastFormat6.csv"
 
 gLog=args.dir+"/"+basename+"_general.log"
 gLogfile=open(gLog,'w')
+
+tLog=args.dir+"/"+basename+"_table.log"
+tLogfile=open(tLog,'w')
 
 cmdLog=args.dir+"/"+basename+"_commands.log"
 cmdLogfile=open(cmdLog,'w')
@@ -269,7 +283,7 @@ else:
             fastafile.write(str(record.seq)+"\n")
             nLowQReads+=1
         fastafile.close()
-        write2Log("Filter %s low quality reads (FASTX-Toolkit)" %(n-nLowQReads) ,gLogfile,args.quiet)
+        write2Log("Filter %s low quality reads" %(n-nLowQReads) ,gLogfile,args.quiet)
 
 
 
@@ -288,8 +302,7 @@ else:
     os.system(cmd)
     proc = subprocess.Popen(["grep trashed %s | awk -F \":\" '{print $2}'" %(logQC) ], stdout=subprocess.PIPE, shell=True)
     (nLowCReads, err) = proc.communicate()
-    write2Log("Filter %s low complexity reads (e.g. ACACACAC...) (SeqClean)" %(nLowCReads.rstrip().strip()) ,gLogfile,args.quiet)
-
+    write2Log("Filter %s low complexity reads (e.g. ACACACAC...)" %(nLowCReads.rstrip().strip()) ,gLogfile,args.quiet)
 
 
 
@@ -315,7 +328,8 @@ else:
                 rRNAReads.add(element)
 
     excludeReadsFromFasta(lowQCFile,rRNAReads,afterrRNAFasta)
-    write2Log("Filter %s rRNA reads (mapped to human ribosomal DNA complete repeating unit)" %(len(rRNAReads)) ,gLogfile,args.quiet)
+    n_rRNAReads=len(rRNAReads)
+    write2Log("Filter %s rRNA reads" %(len(rRNAReads)) ,gLogfile,args.quiet)
 
 
 
@@ -333,67 +347,67 @@ else:
 #######################################################################################################################################
 
 #genome
-cmdGenome="%s/tools/bowtie2 -k 1 --very-sensitive -p 8 -f -x %s/db/human/Bowtie2Index/genome -U %s | %s/tools/samtools view -bSF4 - | %s/tools/samtools sort  >%s" %(codeDir,codeDir, afterrRNAFasta,codeDir,codeDir,gBamFile)
+
+
+cmdGenome="%s/tools/bowtie2 -k 1 -p 8 -f -x %s/db/human/Bowtie2Index/genome -U %s 2>%s | %s/tools/samtools view -SF4 -   >%s" %(codeDir,codeDir, afterrRNAFasta,logHuman,codeDir,gBamFile)
 
 #transcriptome
-cmdTranscriptome="%s/tools/bowtie2  -k 1 --very-sensitive -f -p 8 -x %s/db/human/Bowtie2Index/hg19KnownGene.exon_polya200 -U %s | %s/tools/samtools view -bSF4 - | %s/tools/samtools sort >  %s" %(codeDir,codeDir, afterrRNAFasta,codeDir,codeDir,tBamFile)
+cmdTranscriptome="%s/tools/bowtie2  -k 1 -f -p 8 -x %s/db/human/Bowtie2Index/hg19KnownGene.exon_polya200 -U %s 2>%s | %s/tools/samtools view -SF4 -  >  %s " %(codeDir,codeDir, afterrRNAFasta,logHuman, codeDir,tBamFile)
 write2Log(cmdGenome,cmdLogfile,"False")
 write2Log(cmdTranscriptome,cmdLogfile,"False")
 
 
 
-if args.qsub or args.qsubArray:
-    f = open(runLostHumanFile,'w')
-    f.write(". /u/local/Modules/default/init/modules.sh \n")
-    f.write("module load bowtie2/2.1.0 \n")
-    f.write("module load samtools \n")
-    f.write(cmdGenome+"\n")
-    f.write(cmdTranscriptome+"\n")
-    f.write("samtools index %s \n" %gBamFile)
-    f.write("samtools index %s \n" %tBamFile)
-    f.write("echo \"done!\">%s/%s_lostHuman.done \n" %(lostHumanDir,basename))
-    f.close()
-    if args.qsub:
-        cmdQsub="qsub -cwd -V -N lostHuman -l h_data=16G,time=10:00:00 %s" %(runLostHumanFile)
-        os.system(cmdQsub)
 
-else:
-    os.system(cmdGenome)
-    os.system(cmdTranscriptome)
-    os.system("samtools index %s \n" %gBamFile)
-    os.system("samtools index %s \n" %tBamFile)
+
+
+os.system(cmdGenome)
+os.system(cmdTranscriptome)
 
 
 
 
-if not args.qsub and not args.qsubArray:
+nlostHumanReads_10=0
 
-    lostHumanReads = set()
+lostHumanReads = set()
 
 
-    samfile = pysam.AlignmentFile(gBamFile, "rb")
-    for r in samfile.fetch():
-        for tag in r.tags:
-            if tag[0] == 'NM':
-                if int(tag[1])<=6:
-                    lostHumanReads.add(r.query_name)
-    samfile = pysam.AlignmentFile(tBamFile, "rb")
-    for r in samfile.fetch():
-        for tag in r.tags:
-            if tag[0] == 'NM':
-                if int(tag[1])<=6:
-                    lostHumanReads.add(r.query_name)
+with open(gBamFile,'r') as f:
+    reader=csv.reader(f,delimiter='\t')
+    for line in reader:
+        if int(line[16].split(':')[2])<3:
+            lostHumanReads.add(line[0])
 
-    excludeReadsFromFasta(afterrRNAFasta,lostHumanReads,afterlostHumanFasta)
+with open(tBamFile,'r') as f:
+    reader=csv.reader(f,delimiter='\t')
+    for line in reader:
+        if int(line[16].split(':')[2])<3:
+            lostHumanReads.add(line[0])
 
 
 
+excludeReadsFromFastaGzip(afterrRNAFasta,lostHumanReads,afterlostHumanFasta)
+nlostHumanReads=len(lostHumanReads)
+write2Log("Filter %s lost human reads" %(len(lostHumanReads)) ,gLogfile,args.quiet)
 
+
+os.remove(afterrRNAFasta)
+os.remove(gBamFile)
+os.remove(tBamFile)
+
+
+message=basename+","+str(n)+","+str(n-nLowQReads)+","+str(nLowCReads.rstrip().strip())+","+str(n_rRNAReads)+","+str(nlostHumanReads)
+
+print message
+
+tLogfile.write(message)
+tLogfile.write("\n")
+tLogfile.close()
 
 
 #######################################################################################################################################
 print "*****************************Identify lost repeat reads******************************"
-cmd="%s/tools/blastn -task megablast -index_name %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa -use_index true -query %s -db %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s" %(codeDir,codeDir,afterrRNAFasta,codeDir,repeatFile)
+cmd="%s/tools/blastn -task megablast -index_name %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa -use_index true -query %s -db %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s" %(codeDir,codeDir,afterlostHumanFasta,codeDir,repeatFile)
 #print "Run :", cmd
 
 if args.qsub or args.qsubArray:
@@ -406,6 +420,8 @@ if args.qsub or args.qsubArray:
         os.system(cmdQsub)
 else:
     os.system(cmd)
+    write2Log(cmd,cmdLogfile,"False")
+
 
 
 if not args.qsub and not args.qsubArray:
