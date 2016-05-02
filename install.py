@@ -24,7 +24,8 @@ if args.immune:
 elif args.standard: 
 	checksum_original="1052af7849f099ed77fa6e668278a4ec" 
 	print "Standard installation option selected"
-	
+	print "Downloading the database (~65GB) takes up to 45 minute"
+	print "Please wait until the installation is completed."
 	print "Downloading the gtex files"
 	os.chdir('./db/')
 	call(["wget", "https://googledrive.com/host/0B_NUyiE86yDwaUxoVjhlSjN5SkE/database.tar"]) 
