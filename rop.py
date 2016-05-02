@@ -31,8 +31,6 @@ def excludeReadsFromFasta(inFasta,reads,outFasta):
     with open(outFasta, "w") as f:
         for seq in fasta_sequences:
             name = seq.name
-            if name in reads:
-                print "exclude", name
             if name not in reads:
                 SeqIO.write([seq], f, "fasta")
 
@@ -88,8 +86,9 @@ def nReadsImmune(inFile):
     return readsImmune
 
 #######################################################################
-def nMicrobialReads(inFile,readLength):
+def nMicrobialReads(inFile,readLength,outFile):
     readsMicrobiome=set()
+    out=open(outFile,'w')
     with open(inFile,'r') as f:
         reader=csv.reader(f,delimiter='\t')
         for line in reader:
@@ -98,7 +97,10 @@ def nMicrobialReads(inFile,readLength):
             alignmentLength=float(line[3])
             eValue=float(line[10])
             if eValue<1e-05 and alignmentLength>=0.8*readLength and identity>=0.9*readLength:
-                readsMicrobiome.add(element)
+                readsMicrobiome.add(read)
+                out.write('\t'.join(line))
+                out.write("\n")
+    out.close()
     return readsMicrobiome
 
 print "*********************************************"
@@ -245,6 +247,9 @@ logHuman=lostHumanDir + basename + "_lostHuman.log"
 
 bacteriaFile=bacteriaDir+basename+"_bacteria_blastFormat6.csv"
 virusFile=virusDir+basename+"_virus_blastFormat6.csv"
+
+bacteriaFileFiltered=bacteriaDir+basename+"_bacteriaFiltered_blastFormat6.csv"
+virusFileFiltered=virusDir+basename+"_virusFiltered_blastFormat6.csv"
 
 gLog=args.dir+"/"+basename+".log"
 gLogfile=open(gLog,'w')
@@ -736,7 +741,7 @@ if not args.immune:
     else:
         os.chdir(bacteriaDir)
         os.system(cmd)
-        bacteriaReads=nMicrobialReads(bacteriaFile,readLength)
+        bacteriaReads=nMicrobialReads(bacteriaFile,readLength,bacteriaFileFiltered)
         nReadsBacteria=len(bacteriaReads)
         write2Log("--identified %s reads mapped bacterial genomes" %(nReadsBacteria) ,gLogfile,args.quiet)
         excludeReadsFromFasta(afterImmuneFasta,bacteriaReads,afterBacteraFasta)
@@ -763,7 +768,7 @@ if not args.immune:
     else:
         os.chdir(virusDir)
         os.system(cmd)
-        virusReads=nMicrobialReads(virusFile,readLength)
+        virusReads=nMicrobialReads(virusFile,readLength,virusFileFiltered)
         nReadsVirus=len(virusReads)
         write2Log("--identified %s reads mapped viral genomes" %(nReadsVirus) ,gLogfile,args.quiet)
         excludeReadsFromFasta(afterBacteraFasta,virusReads,afterVirusFasta)
@@ -788,9 +793,9 @@ if not args.immune:
 
     for db in dbList:
         eupathdbFile=eupathdbDir+basename+"_"+db+"_blastFormat6.csv"
+        eupathdbFileFiltered=eupathdbDir+basename+"_"+db+"Filtered_blastFormat6.csv"
         runEupathdbFile=eupathdbDir+"/run_"+basename+"_"+db+".sh"
 
-        print inFasta
 
         cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/eupathdb/%s -use_index true -query %s -db %s/db/microbiome/eupathdb/%s  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s 2>temp.txt" %(codeDir,codeDir,db,inFasta,codeDir,db,eupathdbFile)
         write2Log(cmd,cmdLogfile,"False")
@@ -806,9 +811,8 @@ if not args.immune:
             os.chdir(eupathdbDir)
             os.system(cmd)
             eupathdbReads=set()
-            eupathdbReads=nMicrobialReads(eupathdbFile,readLength)
+            eupathdbReads=nMicrobialReads(eupathdbFile,readLength,eupathdbFileFiltered)
             nEupathdbReads=len(eupathdbReads)
-            print eupathdbReads
             write2Log("--identified %s reads mapped %s genomes" %(nEupathdbReads,db) ,gLogfile,args.quiet)
             afterFasta=eupathdbDir+"%s_after_%s.fasta" %(basename,db)
             excludeReadsFromFasta(inFasta,eupathdbReads,afterFasta)
@@ -818,11 +822,18 @@ if not args.immune:
 
 if not args.qsub and  not args.qsubArray:
     write2Log("In toto : %s reads mapped to microbial genomes" %(nReadsBacteria+nReadsVirus+nReadsEP) ,gLogfile,args.quiet)
-    message=basename+","+str(n)+","+str(n-nLowQReads)+","+str(nLowCReads.rstrip().strip())+","+str(n_rRNAReads)+","+str(nlostHumanReads)+","+str(nRepeatReads)+","+str(nReadsImmuneTotal)+","+str(nReadsBacteria+nReadsVirus+nReadsEP)
+    nTotalReads=nLowQReads+nLowCReads+n_rRNAReads+nlostHumanReads+nRepeatReads+nReadsImmuneTotal+nReadsBacteria+nReadsVirus+nReadsEP
+    write2Log("Summary:   The ROP protocol is able to account for %s reads" %(nTotalReads) ,gLogfile,args.quiet)
+
+    message=basename+","+str(n)+","+str(nLowQReads)+","+str(nLowCReads)+","+str(n_rRNAReads)+","+str(nlostHumanReads)+","+str(nRepeatReads)+","+str(nReadsImmuneTotal)+","+str(nReadsBacteria+nReadsVirus+nReadsEP)
     tLogfile.write(message)
     tLogfile.write("\n")
-    tLogfile.close()
 
 
+
+
+tLogfile.close()
+gLogfile.close()
+cmdLogfile.close()
 
 
