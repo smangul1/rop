@@ -122,18 +122,18 @@ ap.add_argument('dir', help='directory (absolute path) to save results of the an
 
 ap.add_argument("--qsub", help="submit qsub jobs on hoffman2 cluster",
                     action="store_true")
-ap.add_argument("--qsubArray", help="prepare qsub scripts to be run latetr using job array",
+ap.add_argument("--qsubArray", help="prepare qsub scripts to be run later using job array",
                 action="store_true")
-ap.add_argument("--b", help="unmapped reads in bam format",
+ap.add_argument("--b", help="if unmapped reads are in bam format",
                 action="store_true")
-ap.add_argument("--skipLowq", help="skip step filtering ",
+ap.add_argument("--skipLowq", help="skip filtering step",
                 action="store_true")
-ap.add_argument("--skipQC", help="skip entire QC step : filtering  low-quality, low-complexity and rRNA reads (reads mathing rRNA repeat unit)",
+ap.add_argument("--skipQC", help="skip entire QC step : filtering low-quality, low-complexity and rRNA reads (reads matching rRNA repeat unit)",
                 action="store_true")
 ap.add_argument("--circRNA", help="enable CIRI for circular RNA detection ", action="store_true")
 ap.add_argument("--immune", help = "Only TCR/BCR immune gene analysis will be performed", action = "store_true")
 ap.add_argument("--gzip", help = "Gzip the fasta files after filtering step", action = "store_true")
-ap.add_argument("--quiet", help = "uppress progress report and warnings", action = "store_true")
+ap.add_argument("--quiet", help = "suppress progress report and warnings", action = "store_true")
 ap.add_argument("--dev", help = "keep intermediate files", action = "store_true")
 ap.add_argument("--license", help= "Show ROP License Information", action = "store_true")
 
