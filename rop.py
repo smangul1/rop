@@ -135,11 +135,34 @@ ap.add_argument("--immune", help = "Only TCR/BCR immune gene analysis will be pe
 ap.add_argument("--gzip", help = "Gzip the fasta files after filtering step", action = "store_true")
 ap.add_argument("--quiet", help = "uppress progress report and warnings", action = "store_true")
 ap.add_argument("--dev", help = "keep intermediate files", action = "store_true")
+ap.add_argument("--license", help= "Show ROP License Information", action = "store_true")
+
 
 args = ap.parse_args()
 
+##################################
+# LICENSE
+##################################
 
+if args.license:
+    print """
+    Read Origin Protocol is a computational protocol for profiling the composition of unmapped reads, which failed to map to the human references. ROP profiles repeats, circRNAs, gene fusions, trans-splicing events, recombined B and T cell receptors and microbial communities.
+    Copyright (C) 2016  Serghei Mangul and Harry Taegyun Yang
 
+    Read Origin Protocol is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Read Origin Protocol is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    """
+    sys.exit(0)
 
 ##################################
 #main code
