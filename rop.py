@@ -108,7 +108,7 @@ print "ROP is a computational protocol aimed to discover the source of all reads
 print ""
 print "For more details see:"
 print "http://serghei.bioinformatics.ucla.edu/rop/"
-print "https://github.com/smangul1/rop/ROPmanual.pdf"
+#print "https://github.com/smangul1/rop/ROPmanual.pdf"
 print "*********************************************"
 
 
