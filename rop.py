@@ -136,9 +136,20 @@ ap.add_argument("--gzip", help = "Gzip the fasta files after filtering step", ac
 ap.add_argument("--quiet", help = "suppress progress report and warnings", action = "store_true")
 ap.add_argument("--dev", help = "keep intermediate files", action = "store_true")
 ap.add_argument("--license", help= "Show ROP License Information", action = "store_true")
+ap.add_argument("--version", help= "Show ROP version", action = "store_true")
+
+
 
 
 args = ap.parse_args()
+
+
+##################################
+# VERSION
+##################################
+if args.version:
+    print "ROP version 1.0"
+
 
 ##################################
 # LICENSE
@@ -557,17 +568,17 @@ write2Log("4a. B lymphocytes profiling...",gLogfile,args.quiet)
 
 #IGH-------
 os.chdir(ighDir)
-cmd="ln -s %s//db/BCRTCR/internal_data/ ./" %(codeDir)
+cmd="ln -s %s//db/antibody/internal_data/ ./" %(codeDir)
 os.system(cmd)
 
 
-cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/IGHV.fa -germline_db_D %s/db/BCRTCR/IGHD.fa  -germline_db_J %s/db/BCRTCR/IGHJ.fa -query %s -outfmt 7 -evalue 1e-05  2>temp.txt | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"D\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,ighFile)
+cmd="%s/tools/igblastn -germline_db_V %s/db/antibody/IGHV.fa -germline_db_D %s/db/antibody//IGHD.fa  -germline_db_J %s/db/antibody//IGHJ.fa -query %s -outfmt 7 -evalue 1e-05  2>temp.txt | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"D\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,ighFile)
 write2Log(cmd,cmdLogfile,"False")
 
 
 if args.qsub or args.qsubArray:
     f = open(runIGHFile,'w')
-    f.write("ln -s %s//db/BCRTCR/internal_data/ ./ \n" %(codeDir))
+    f.write("ln -s %s//db/antibody//internal_data/ ./ \n" %(codeDir))
     f.write(cmd+"\n")
     f.write("echo \"done!\"> %s/%s_igh.done \n" %(ighDir,basename))
     f.close()
@@ -584,14 +595,14 @@ else:
 
 #IGK---------
 os.chdir(igkDir)
-cmd="ln -s %s//db/BCRTCR/internal_data/ ./" %(codeDir)
+cmd="ln -s %s//db/antibody//internal_data/ ./" %(codeDir)
 
-cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/IGKV.fa -germline_db_D %s/db/BCRTCR/IGHD.fa  -germline_db_J %s/db/BCRTCR/IGKJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,igkFile)
+cmd="%s/tools/igblastn -germline_db_V %s/db/antibody/IGKV.fa -germline_db_D %s/db/antibody//IGHD.fa  -germline_db_J %s/db/antibody//IGKJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,igkFile)
 write2Log(cmd,cmdLogfile,"False")
 
 if args.qsub or args.qsubArray:
     f = open(runIGKFile,'w')
-    f.write("ln -s %s//db/BCRTCR/internal_data/ ./ \n" %(codeDir))
+    f.write("ln -s %s//db/antibody//internal_data/ ./ \n" %(codeDir))
     f.write(cmd+"\n")
     f.write("echo \"done!\"> %s/%s_igk.done \n" %(igkDir,basename))
     f.close()
@@ -608,14 +619,14 @@ else:
             
 #IGL------------
 os.chdir(iglDir)
-cmd="ln -s %s//db/BCRTCR/internal_data/ ./" %(codeDir)
+cmd="ln -s %s//db/antibody//internal_data/ ./" %(codeDir)
 os.system(cmd)
-cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/IGLV.fa -germline_db_D %s/db/BCRTCR/IGHD.fa  -germline_db_J %s/db/BCRTCR/IGLJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,iglFile)
+cmd="%s/tools/igblastn -germline_db_V %s/db/antibody/IGLV.fa -germline_db_D %s/db/antibody//IGHD.fa  -germline_db_J %s/db/antibody//IGLJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,iglFile)
 write2Log(cmd,cmdLogfile,"False")
 
 if args.qsub or args.qsubArray:
     f = open(runIGLFile,'w')
-    f.write("ln -s %s//db/BCRTCR/internal_data/ ./ \n" %(codeDir))
+    f.write("ln -s %s//db/antibody//internal_data/ ./ \n" %(codeDir))
     f.write(cmd+"\n")
     f.write("echo \"done!\">%s/%s_igl.done \n" %(iglDir,basename))
     f.close()
@@ -637,13 +648,13 @@ write2Log("4b. T lymphocytes profiling...",gLogfile,args.quiet)
 
 #TCRA-----------------
 os.chdir(tcraDir)
-cmd="ln -s %s//db/BCRTCR/internal_data/ ./" %(codeDir)
+cmd="ln -s %s//db/antibody//internal_data/ ./" %(codeDir)
 os.system(cmd)
-cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/TRAV.fa -germline_db_D %s/db/BCRTCR/TRBD.fa  -germline_db_J %s/db/BCRTCR/TRAJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,tcraFile)
+cmd="%s/tools/igblastn -germline_db_V %s/db/antibody/TRAV.fa -germline_db_D %s/db/antibody//TRBD.fa  -germline_db_J %s/db/antibody//TRAJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,tcraFile)
 write2Log(cmd,cmdLogfile,"False")
 if args.qsub or args.qsubArray:
     f = open(runTCRAFile,'w')
-    f.write("ln -s %s//db/BCRTCR/internal_data/ ./ \n" %(codeDir))
+    f.write("ln -s %s//db/antibody//internal_data/ ./ \n" %(codeDir))
     f.write(cmd+"\n")
     f.write("echo \"done!\">%s/%s_tcra.done \n"%(tcraDir,basename))
     f.close()
@@ -661,13 +672,13 @@ else:
 
 #TCRB--------------
 os.chdir(tcrbDir)
-cmd="ln -s %s//db/BCRTCR/internal_data/ ./" %(codeDir)
+cmd="ln -s %s//db/antibody//internal_data/ ./" %(codeDir)
 os.system(cmd)
-cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/TRBV.fa -germline_db_D %s/db/BCRTCR/TRBD.fa  -germline_db_J %s/db/BCRTCR/TRBJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,tcrbFile)
+cmd="%s/tools/igblastn -germline_db_V %s/db/antibody/TRBV.fa -germline_db_D %s/db/antibody//TRBD.fa  -germline_db_J %s/db/antibody//TRBJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,tcrbFile)
 write2Log(cmd,cmdLogfile,"False")
 if args.qsub or args.qsubArray:
     f = open(runTCRBFile,'w')
-    f.write("ln -s %s//db/BCRTCR/internal_data/ ./ \n" %(codeDir))
+    f.write("ln -s %s//db/antibody//internal_data/ ./ \n" %(codeDir))
     f.write(cmd+"\n")
     f.write("echo \"done!\">%s/%s_tcrb.done \n"%(tcrbDir,basename))
     f.close()
@@ -686,13 +697,13 @@ else:
 
 #TCRD----------------
 os.chdir(tcrdDir)
-cmd="ln -s %s//db/BCRTCR/internal_data/ ./" %(codeDir)
+cmd="ln -s %s//db/antibody//internal_data/ ./" %(codeDir)
 os.system(cmd)
-cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/TRDV.fa -germline_db_D %s/db/BCRTCR/TRBD.fa  -germline_db_J %s/db/BCRTCR/TRDJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,tcrdFile)
+cmd="%s/tools/igblastn -germline_db_V %s/db/antibody/TRDV.fa -germline_db_D %s/db/antibody//TRBD.fa  -germline_db_J %s/db/antibody//TRDJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,tcrdFile)
 write2Log(cmd,cmdLogfile,"False")
 if args.qsub or args.qsubArray:
     f = open(runTCRDFile,'w')
-    f.write("ln -s %s//db/BCRTCR/internal_data/ ./ \n" %(codeDir))
+    f.write("ln -s %s//db/antibody//internal_data/ ./ \n" %(codeDir))
     f.write(cmd+"\n")
     f.write("echo \"done!\">%s/%s_tcrd.done \n" %(tcrdDir, basename))
     f.close()
@@ -710,14 +721,14 @@ else:
             
 #TCRG---------------------
 os.chdir(tcrgDir)
-cmd="ln -s %s//db/BCRTCR/internal_data/ ./" %(codeDir)
+cmd="ln -s %s//db/antibody//internal_data/ ./" %(codeDir)
 os.system(cmd)
-cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/TRGV.fa -germline_db_D %s/db/BCRTCR/TRBD.fa  -germline_db_J %s/db/BCRTCR/TRGJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,tcrgFile)
+cmd="%s/tools/igblastn -germline_db_V %s/db/antibody/TRGV.fa -germline_db_D %s/db/antibody/TRBD.fa  -germline_db_J %s/db/antibody/TRGJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,tcrgFile)
 write2Log(cmd,cmdLogfile,"False")
 
 if args.qsub or args.qsubArray:
     f = open(runTCRGFile,'w')
-    f.write("ln -s %s//db/BCRTCR/internal_data/ ./ \n" %(codeDir))
+    f.write("ln -s %s//db/antibody/internal_data/ ./ \n" %(codeDir))
     f.write(cmd+"\n")
     f.write("echo \"done!\">%s/%s_tcrg.done \n" %(tcrgDir,basename))
     f.close()
