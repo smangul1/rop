@@ -262,8 +262,8 @@ afterBacteraFasta=bacteriaDir+basename+"_afterBacteria.fasta"
 afterVirusFasta=virusDir+basename+"_afterVirus.fasta"
 
 
-gBamFile=lostHumanDir+basename+"_genome.bam"
-tBamFile=lostHumanDir+basename+"_transcriptome.bam"
+gBamFile=lostHumanDir+basename+"_genome.sam"
+tBamFile=lostHumanDir+basename+"_transcriptome.sam"
 repeatFile=lostRepeatDir+basename+"_lostRepeats_blastFormat6.csv"
 afterlostRepeatFasta=lostRepeatDir+basename+"_after_lostRepeat.fasta"
 NCL_CIRI_file=NCL_CIRI_Dir + basename + "_NCL_CIRI_after_bwa.sam"
@@ -545,7 +545,7 @@ write2Log("***Note : Trans-spicing and gene fusions  are currently not supported
 
 
 if args.circRNA:
-    cmd="%s/tools/bwa mem -T -S %s/db/human/BWAIndex/genome.fa %s > %s \n" %(codeDir,codeDir,afterrRNAFasta,NCL_CIRI_file)
+    cmd="%s/tools/bwa mem -T -S %s/db/human/BWAIndex/genome.fa %s > %s \n" %(codeDir,codeDir,afterlostRepeatFasta,NCL_CIRI_file)
     cmd = cmd + "pearl %s/tools/CIRI_v1.2.pl -S -I %s -O %s -F %s/db/human/BWAIndex/genome.fa" %(codeDir,NCL_CIRI_file,after_NCL_CIRI_file_prefix,codeDir)
     if args.qsub or args.qsubArray:
         f = open(runNCL_CIRIfile,'w')
