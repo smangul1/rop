@@ -1,6 +1,0 @@
-Processing 2500 unmapped reads
-1. Quality Control
-Filter 2194 low quality reads
-Filter 2 low complexity reads (e.g. ACACACAC...)
-Filter 0 rRNA reads
-Filter 6 lost human reads
