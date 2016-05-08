@@ -79,9 +79,8 @@ def nReadsImmune(inFile):
     with open(inFile,'r') as f:
         reader=csv.reader(f,delimiter='\t')
         for line in reader:
-            print line
             read=line[1]
-            eValue=float(line[10])
+            eValue=float(line[12])
             if eValue<1e-05:
                     readsImmune.add(read)
     return readsImmune
@@ -283,9 +282,14 @@ afterlostRepeatFasta=lostRepeatDir+basename+"_after_lostRepeat.fasta"
 
 afterNCLFasta=NCL_Dir+basename+"_after_NCL.fasta"
 
+unaccountedReadsFasta=args.dir+"/"+basename+"_unaccountedReads.fasta"
+
 
 NCL_CIRI_file=NCL_Dir + basename + "_NCL_CIRI_after_bwa.sam"
 after_NCL_CIRI_file_prefix = NCL_Dir + "/"+basename + "_circRNA.csv"
+print after_NCL_CIRI_file_prefix
+
+
 if os.path.exists(after_NCL_CIRI_file_prefix):
     os.remove(after_NCL_CIRI_file_prefix)
 
@@ -301,7 +305,7 @@ tcrgFile=tcrgDir+basename+"_TCRG_igblast.csv"
 logQC=QCDir+basename+"_QC.log"
 logrRNA=QCDir + basename + "_rRNA.log"
 logHuman=lostHumanDir + basename + "_lostHuman.log"
-logNCL=lostHumanDir + basename + "_lostHuman.log"
+logNCL=NCL_Dir + basename + "_NCL.log"
 
 
 bacteriaFile=bacteriaDir+basename+"_bacteria_blastFormat6.csv"
@@ -818,6 +822,8 @@ if not args.immune:
         write2Log("--identified %s reads mapped bacterial genomes" %(nReadsBacteria) ,gLogfile,args.quiet)
         excludeReadsFromFasta(afterImmuneFasta,bacteriaReads,afterBacteraFasta)
     
+    if not args.dev:
+        os.remove(afterImmuneFasta)
     
     #MetaPhlAn
     #    cmd=" python %s/tools/metaphlan.py
@@ -845,6 +851,8 @@ if not args.immune:
         write2Log("--identified %s reads mapped viral genomes" %(nReadsVirus) ,gLogfile,args.quiet)
         excludeReadsFromFasta(afterBacteraFasta,virusReads,afterVirusFasta)
 
+    if not args.dev:
+        os.remove(afterBacteraFasta)
 
     #eukaryotic pathogens----------------
     dbList=["ameoba",
@@ -890,6 +898,17 @@ if not args.immune:
             excludeReadsFromFasta(inFasta,eupathdbReads,afterFasta)
             inFasta=afterFasta
             nReadsEP+=nEupathdbReads
+                
+
+
+    os.rename(eupathdbDir+"%s_after_tritryp.fasta" %(basename), unaccountedReadsFasta)
+
+    if not args.dev:
+        os.remove(afterVirusFasta)
+    for db in dbList:
+        os.remove(eupathdbDir+"%s_after_%s.fasta" %(basename,db))
+
+
 
 
 if not args.qsub and  not args.qsubArray:
