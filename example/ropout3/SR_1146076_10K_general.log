@@ -1,5 +1,0 @@
-Processing 2500 unmapped reads
-1. Quality Control
-Filter 2194 low quality reads (FASTX-Toolkit)
-Filter 2 low complexity reads (e.g. ACACACAC...) (SeqClean)
-Filter 0 rRNA reads (mapped to human ribosomal DNA complete repeating unit)
