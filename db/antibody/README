@@ -1,0 +1,2 @@
+for f in *fa ;do makeblastdb -parse_seqids -dbtype nucl -in $f;done
+
