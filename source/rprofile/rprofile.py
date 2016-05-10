@@ -44,7 +44,7 @@ def find(start, end, tree):
 
 ap = argparse.ArgumentParser()
 ap.add_argument('bam', help='sorted bam file')
-ap.add_argument('outPrefix', help='file to save number of reads per genome category')
+ap.add_argument('outPrefix', help='prefix to save the profile of repeat elements')
 args = ap.parse_args()
 
 
@@ -72,7 +72,7 @@ chr_list.append('Y')
 
 
 
-repeat_file=os.path.dirname(os.path.realpath(__file__))+'/annotations/human/bedPrepared/hg19_rmsk_TE_prepared_noCDS.bed'
+repeat_file=os.path.dirname(os.path.realpath(__file__))+'/annotations/human/bedPrepared/hg19_rmsk_TE_prepared_noCDS.bed.gz'
     
 
 
@@ -115,9 +115,9 @@ family_list=[]
 
 #1,AluSp,Alu,SINE,16777161,16777470
 
-
+import gzip
 k=0
-with open(repeat_file,'r') as f:
+with gzip.open(repeat_file,'r') as f:
     
     reader=csv.reader(f)
     for line in reader:
@@ -139,7 +139,7 @@ with open(repeat_file,'r') as f:
             dictGeneCount[Gene]=[0]
 
         k+=1
-        if k%100000==0:
+        if k%500000==0:
             print k, "repeat elements were loaded "
 	    
 

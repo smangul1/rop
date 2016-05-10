@@ -108,10 +108,13 @@ def nMicrobialReads(inFile,readLength,outFile):
 def nCirrcularReads(inFile):
     reads=set()
     with open(inFile,'r') as f:
+        
+        next(f)
         reader=csv.reader(f,delimiter='\t')
         for line in reader:
-            for kv in line[9].split(","):
-                reads.add(kv)
+            for kv in line[10].split(","):
+                if kv:
+                    reads.add(kv)
             
     return reads
 
@@ -585,6 +588,7 @@ if args.qsub or args.qsubArray:
         cmdQsub="qsub -cwd -V -N NCL_CIRI -l h_data=8G,time=10:00:00 %s" %(runNCL_CIRIfile)
         os.system(cmdQsub)
 else:
+    os.chdir(NCL_Dir)
     os.system(cmd)
     NCL_reads=nCirrcularReads(after_NCL_CIRI_file_prefix)
     nReadsNCL=len(NCL_reads)
@@ -606,7 +610,9 @@ write2Log("4a. B lymphocytes profiling...",gLogfile,args.quiet)
 
 #IGH-------
 os.chdir(ighDir)
-cmd="ln -s %s//db/antibody/internal_data/ ./" %(codeDir)
+
+internal_data="%s//db/antibody/internal_data/" %(codeDir)
+cmd="ln -s %s ./" %(internal_data)
 os.system(cmd)
 
 
@@ -635,7 +641,10 @@ else:
 
 #IGK---------
 os.chdir(igkDir)
-cmd="ln -s %s//db/antibody//internal_data/ ./" %(codeDir)
+internal_data="%s//db/antibody/internal_data/" %(codeDir)
+cmd="ln -s %s ./" %(internal_data)
+os.system(cmd)
+
 
 cmd="%s/tools/igblastn -germline_db_V %s/db/antibody/IGKV.fa -germline_db_D %s/db/antibody//IGHD.fa  -germline_db_J %s/db/antibody//IGKJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterNCLFasta,igkFile)
 write2Log(cmd,cmdLogfile,"False")
@@ -659,7 +668,8 @@ else:
 
 #IGL------------
 os.chdir(iglDir)
-cmd="ln -s %s//db/antibody//internal_data/ ./" %(codeDir)
+internal_data="%s//db/antibody/internal_data/" %(codeDir)
+cmd="ln -s %s ./" %(internal_data)
 os.system(cmd)
 cmd="%s/tools/igblastn -germline_db_V %s/db/antibody/IGLV.fa -germline_db_D %s/db/antibody//IGHD.fa  -germline_db_J %s/db/antibody//IGLJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterNCLFasta,iglFile)
 write2Log(cmd,cmdLogfile,"False")
@@ -688,7 +698,8 @@ write2Log("4b. T lymphocytes profiling...",gLogfile,args.quiet)
 
 #TCRA-----------------
 os.chdir(tcraDir)
-cmd="ln -s %s//db/antibody//internal_data/ ./" %(codeDir)
+internal_data="%s//db/antibody/internal_data/" %(codeDir)
+cmd="ln -s %s ./" %(internal_data)
 os.system(cmd)
 cmd="%s/tools/igblastn -germline_db_V %s/db/antibody/TRAV.fa -germline_db_D %s/db/antibody//TRBD.fa  -germline_db_J %s/db/antibody//TRAJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterNCLFasta,tcraFile)
 write2Log(cmd,cmdLogfile,"False")
@@ -712,7 +723,8 @@ else:
 
 #TCRB--------------
 os.chdir(tcrbDir)
-cmd="ln -s %s//db/antibody//internal_data/ ./" %(codeDir)
+internal_data="%s//db/antibody/internal_data/" %(codeDir)
+cmd="ln -s %s ./" %(internal_data)
 os.system(cmd)
 cmd="%s/tools/igblastn -germline_db_V %s/db/antibody/TRBV.fa -germline_db_D %s/db/antibody//TRBD.fa  -germline_db_J %s/db/antibody//TRBJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterNCLFasta,tcrbFile)
 write2Log(cmd,cmdLogfile,"False")
@@ -737,7 +749,8 @@ else:
 
 #TCRD----------------
 os.chdir(tcrdDir)
-cmd="ln -s %s//db/antibody//internal_data/ ./" %(codeDir)
+internal_data="%s//db/antibody/internal_data/" %(codeDir)
+cmd="ln -s %s ./" %(internal_data)
 os.system(cmd)
 cmd="%s/tools/igblastn -germline_db_V %s/db/antibody/TRDV.fa -germline_db_D %s/db/antibody//TRBD.fa  -germline_db_J %s/db/antibody//TRDJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterNCLFasta,tcrdFile)
 write2Log(cmd,cmdLogfile,"False")
@@ -761,7 +774,8 @@ else:
 
 #TCRG---------------------
 os.chdir(tcrgDir)
-cmd="ln -s %s//db/antibody//internal_data/ ./" %(codeDir)
+internal_data="%s//db/antibody/internal_data/" %(codeDir)
+cmd="ln -s %s ./" %(internal_data)
 os.system(cmd)
 cmd="%s/tools/igblastn -germline_db_V %s/db/antibody/TRGV.fa -germline_db_D %s/db/antibody/TRBD.fa  -germline_db_J %s/db/antibody/TRGJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterNCLFasta,tcrgFile)
 write2Log(cmd,cmdLogfile,"False")
@@ -903,9 +917,17 @@ if not args.immune:
 
     os.rename(eupathdbDir+"%s_after_tritryp.fasta" %(basename), unaccountedReadsFasta)
 
+
     if not args.dev:
         os.remove(afterVirusFasta)
-    for db in dbList:
+for db in ["ameoba",
+           "crypto",
+           "giardia",
+           "microsporidia",
+           "piroplasma",
+           "plasmo",
+           "toxo",
+           "trich"]:
         os.remove(eupathdbDir+"%s_after_%s.fasta" %(basename,db))
 
 
@@ -915,8 +937,13 @@ if not args.qsub and  not args.qsubArray:
     write2Log("In toto : %s reads mapped to microbial genomes" %(nReadsBacteria+nReadsVirus+nReadsEP) ,gLogfile,args.quiet)
     nTotalReads=nLowQReads+nLowCReads+n_rRNAReads+nlostHumanReads+nRepeatReads+nReadsImmuneTotal+nReadsBacteria+nReadsVirus+nReadsEP
     write2Log("Summary:   The ROP protocol is able to account for %s reads" %(nTotalReads) ,gLogfile,args.quiet)
-    
-    message=basename+","+str(n)+","+str(nLowQReads)+","+str(nLowCReads)+","+str(n_rRNAReads)+","+str(nlostHumanReads)+","+str(nRepeatReads)+","+str(nReadsImmuneTotal)+","+str(nReadsBacteria+nReadsVirus+nReadsEP)
+    write2Log("***Unaccounted reads (not explained by ROP) are saved to %s" %(unaccountedReadsFasta) ,gLogfile,args.quiet)
+
+
+    header="sample,totalReads,lowQuality,lowComplexity,rRNA,lostHumanReads,lostRepeatReads,immuneReads,microbiomeReads,unaccountedReads"
+    tLogfile.write(header)
+    tLogfile.write("\n")
+    message=basename+","+str(n)+","+str(nLowQReads)+","+str(nLowCReads)+","+str(n_rRNAReads)+","+str(nlostHumanReads)+","+str(nRepeatReads)+","+str(nReadsImmuneTotal)+","+str(nReadsBacteria+nReadsVirus+nReadsEP)+","+str(n-nTotalReads)
     tLogfile.write(message)
     tLogfile.write("\n")
 
