@@ -19,7 +19,7 @@ if args.immune:
 	print "Immune only option selected"
 	print "Unzipping Immune Databases (i.e. BCR/TCR)"
 	os.chdir('./db/')
-	call(["tar","-zxvf", './immune.tar'])
+	call(["tar","-xvf", './immune.tar'])
 
 elif args.standard: 
 	checksum_original="1052af7849f099ed77fa6e668278a4ec" 
