@@ -1,9 +1,3 @@
-Small training data (3000 unmapped reads saved in .fastq format) is distributed with the ROP package. Please note that selected reads are randomly selected and might not represent the typical reads of RNA-Seq experiment. 
+For a quick start a toy example with 2508 unmapped reads is distributed with the ROP package. Please note that selected reads are randomly selected from a normal skin (SRR1146076) RNA-Seq sample and might not represent the typical reads of RNA-Seq experiment. The reads are provided for demonstration purposes and can be accessed under ROP directory.
 
-Reads were selected from an RNA-Seq sample of normal skin (SRR1146076). 
-
-RNA-Seq sample was downlaoded from here:
-http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE54456
-
-
-
+RNA-Seq sample of normal skin (SRR1146076) was downloaded from http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE54456 

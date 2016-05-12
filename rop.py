@@ -123,7 +123,7 @@ print "*********************************************"
 print "ROP is a computational protocol aimed to discover the source of all reads, originated from complex RNA molecules, recombinant antibodies and microbial communities. Written by Serghei Mangul (smangul@ucla.edu) and Harry Taegyun Yang (harry2416@gmail.com), University of California, Los Angeles (UCLA). (c) 2016. Released under the terms of the General Public License version 3.0 (GPLv3)"
 print ""
 print "For more details see:"
-print "http://serghei.bioinformatics.ucla.edu/rop/"
+print "https://sergheimangul.wordpress.com/rop/"
 print "https://github.com/smangul1/rop/wiki"
 print "*********************************************"
 
