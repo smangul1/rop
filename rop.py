@@ -122,47 +122,23 @@ ap.add_argument('dir', help='directory (absolute path) to save results of the an
 
 ap.add_argument("--qsub", help="submit qsub jobs on hoffman2 cluster",
                     action="store_true")
-ap.add_argument("--qsubArray", help="prepare qsub scripts to be run later using job array",
+ap.add_argument("--qsubArray", help="prepare qsub scripts to be run latetr using job array",
                 action="store_true")
-ap.add_argument("--b", help="if unmapped reads are in bam format",
+ap.add_argument("--b", help="unmapped reads in bam format",
                 action="store_true")
-ap.add_argument("--skipLowq", help="skip filtering step",
+ap.add_argument("--skipLowq", help="skip step filtering ",
                 action="store_true")
-ap.add_argument("--skipQC", help="skip entire QC step : filtering low-quality, low-complexity and rRNA reads (reads matching rRNA repeat unit)",
+ap.add_argument("--skipQC", help="skip entire QC step : filtering  low-quality, low-complexity and rRNA reads (reads mathing rRNA repeat unit)",
                 action="store_true")
+ap.add_argument("--skipHuman", help="skip the mapping lost human read step", action="store_true")
 ap.add_argument("--circRNA", help="enable CIRI for circular RNA detection ", action="store_true")
 ap.add_argument("--immune", help = "Only TCR/BCR immune gene analysis will be performed", action = "store_true")
 ap.add_argument("--gzip", help = "Gzip the fasta files after filtering step", action = "store_true")
-ap.add_argument("--quiet", help = "suppress progress report and warnings", action = "store_true")
+ap.add_argument("--quiet", help = "uppress progress report and warnings", action = "store_true")
 ap.add_argument("--dev", help = "keep intermediate files", action = "store_true")
-ap.add_argument("--license", help= "Show ROP License Information", action = "store_true")
-
 
 args = ap.parse_args()
 
-##################################
-# LICENSE
-##################################
-
-if args.license:
-    print """
-    Read Origin Protocol is a computational protocol for profiling the composition of unmapped reads, which failed to map to the human references. ROP profiles repeats, circRNAs, gene fusions, trans-splicing events, recombined B and T cell receptors and microbial communities.
-    Copyright (C) 2016  Serghei Mangul and Harry Taegyun Yang
-
-    Read Origin Protocol is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Read Origin Protocol is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-    """
-    sys.exit(0)
 
 
 
@@ -422,56 +398,62 @@ else:
 
 #######################################################################################################################################
 #2. Remaping to human references...
-write2Log("2. Remaping to human references...",cmdLogfile,"False")
-write2Log("2. Remaping to human references...",gLogfile,args.quiet)
+if not args.skipHuman:
+    write2Log("2. Remaping to human references...",cmdLogfile,"False")
+    write2Log("2. Remaping to human references...",gLogfile,args.quiet)
 
-cmdGenome="%s/tools/bowtie2 -k 1 -p 8 -f -x %s/db/human/Bowtie2Index/genome -U %s 2>%s | %s/tools/samtools view -SF4 -   >%s" %(codeDir,codeDir, afterrRNAFasta,logHuman,codeDir,gBamFile)
+    cmdGenome="%s/tools/bowtie2 -k 1 -p 8 -f -x %s/db/human/Bowtie2Index/genome -U %s 2>%s | %s/tools/samtools view -SF4 -   >%s" %(codeDir,codeDir, afterrRNAFasta,logHuman,codeDir,gBamFile)
 
-#transcriptome
-cmdTranscriptome="%s/tools/bowtie2  -k 1 -f -p 8 -x %s/db/human/Bowtie2Index/hg19KnownGene.exon_polya200 -U %s 2>%s | %s/tools/samtools view -SF4 -  >  %s " %(codeDir,codeDir, afterrRNAFasta,logHuman, codeDir,tBamFile)
-write2Log(cmdGenome,cmdLogfile,"False")
-write2Log(cmdTranscriptome,cmdLogfile,"False")
-
-
-
-
-
-
-os.system(cmdGenome)
-os.system(cmdTranscriptome)
+    #transcriptome
+    cmdTranscriptome="%s/tools/bowtie2  -k 1 -f -p 8 -x %s/db/human/Bowtie2Index/hg19KnownGene.exon_polya200 -U %s 2>%s | %s/tools/samtools view -SF4 -  >  %s " %(codeDir,codeDir, afterrRNAFasta,logHuman, codeDir,tBamFile)
+    write2Log(cmdGenome,cmdLogfile,"False")
+    write2Log(cmdTranscriptome,cmdLogfile,"False")
 
 
 
 
-nlostHumanReads_10=0
-
-lostHumanReads = set()
 
 
-with open(gBamFile,'r') as f:
-    reader=csv.reader(f,delimiter='\t')
-    for line in reader:
-        if int(line[16].split(':')[2])<3:
-            lostHumanReads.add(line[0])
-
-with open(tBamFile,'r') as f:
-    reader=csv.reader(f,delimiter='\t')
-    for line in reader:
-        if int(line[16].split(':')[2])<3:
-            lostHumanReads.add(line[0])
+    os.system(cmdGenome)
+    os.system(cmdTranscriptome)
 
 
 
-excludeReadsFromFasta(afterrRNAFasta,lostHumanReads,afterlostHumanFasta)
-nlostHumanReads=len(lostHumanReads)
-write2Log("--identified %s lost human reads from unmapped reads " %(len(lostHumanReads)) ,gLogfile,args.quiet)
+
+    nlostHumanReads_10=0
+
+    lostHumanReads = set()
 
 
-if not args.dev:
-    os.remove(afterrRNAFasta)
-    os.remove(gBamFile)
-    os.remove(tBamFile)
+    with open(gBamFile,'r') as f:
+        reader=csv.reader(f,delimiter='\t')
+        for line in reader:
+            if int(line[16].split(':')[2])<3:
+                lostHumanReads.add(line[0])
 
+    with open(tBamFile,'r') as f:
+        reader=csv.reader(f,delimiter='\t')
+        for line in reader:
+            if int(line[16].split(':')[2])<3:
+                lostHumanReads.add(line[0])
+
+
+
+    excludeReadsFromFasta(afterrRNAFasta,lostHumanReads,afterlostHumanFasta)
+    nlostHumanReads=len(lostHumanReads)
+    write2Log("--identified %s lost human reads from unmapped reads " %(len(lostHumanReads)) ,gLogfile,args.quiet)
+
+
+    if not args.dev:
+        os.remove(afterrRNAFasta)
+        os.remove(gBamFile)
+        os.remove(tBamFile)
+### TODO
+else:
+    temp_f = open(afterlostHumanFasta, 'w')
+    with gzip.open(args.unmappedReads, 'r') as f:
+        temp_f.write(f.read()) 
+    temp_f.close()
 
 
 
@@ -484,7 +466,7 @@ write2Log("3. Maping to repeat sequences...",gLogfile,args.quiet)
 #TO DO : make all fasta ->gzip
 #gzip -dc %s | , query -
 
-cmd="%s/tools/blastn -task megablast -index_name %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa -use_index true -query %s -db %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s" %(codeDir,codeDir,afterlostHumanFasta,codeDir,repeatFile)
+cmd="%s/tools/blastn -task megablast -index_name %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa -use_index true -query %s -db %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 > %s" %(codeDir, codeDir, afterlostHumanFasta, codeDir, repeatFile)
 
 
 if args.qsub or args.qsubArray:
