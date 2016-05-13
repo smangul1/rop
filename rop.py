@@ -107,7 +107,8 @@ print "*********************************************"
 print "ROP is a computational protocol aimed to discover the source of all reads, originated from complex RNA molecules, recombinant antibodies and microbial communities. Written by Serghei Mangul (smangul@ucla.edu) and Harry Taegyun Yang (harry2416@gmail.com), University of California, Los Angeles (UCLA). (c) 2016. Released under the terms of the General Public License version 3.0 (GPLv3)"
 print ""
 print "For more details see:"
-print "http://serghei.bioinformatics.ucla.edu/rop/"
+print "https://sergheimangul.wordpress.com/rop/"
+#print "http://serghei.bioinformatics.ucla.edu/rop/"
 #print "https://github.com/smangul1/rop/ROPmanual.pdf"
 print "*********************************************"
 
@@ -117,33 +118,25 @@ print "*********************************************"
 ap = argparse.ArgumentParser('python rop.py')
 
 necessary_arguments = ap.add_argument_group('Necessary Inputs')
-
 necessary_arguments.add_argument('unmappedReads', help='unmapped Reads in the fastq format')
 necessary_arguments.add_argument('dir', help='directory (absolute path) to save results of the analysis')
 
 job_option_arguments = ap.add_argument_group('Job Options')
-job_option_arguments.add_argument("--qsub", help="submit qsub jobs on hoffman2 cluster",
-                    action="store_true")
-job_option_arguments.add_argument("--qsubArray", help="prepare qsub scripts to be run later using job array",
-                action="store_true")
+job_option_arguments.add_argument("--qsub", help="submit qsub jobs on hoffman2 cluster", action="store_true")
+job_option_arguments.add_argument("--qsubArray", help="prepare qsub scripts to be run later using job array", action="store_true")
 
 input_option_arguments = ap.add_argument_group('Input Options')
-input_option_arguments.add_argument("--bam", '-b' help="unmapped reads in bam format",
-                action="store_true")
-input_option_arguments.add_argument("--skipLowq", help="skip step filtering ",
-                action="store_true")
-input_option_arguments.add_argument("--skipQC", help="skip entire QC step : filtering  low-quality, low-complexity and rRNA reads (reads mathing rRNA repeat unit)",
-                action="store_true")
-input_option_arguments.add_argument("--skipPreliminary", help="skip the preliminary steps including QC step as well as mapping lost human read step", action="store_true")
+input_option_arguments.add_argument("--b", '-b', help="unmapped reads in bam format", action="store_true")
+input_option_arguments.add_argument("--skipLowq", help="skip step filtering ", action="store_true")
+input_option_arguments.add_argument("--skipQC", help="skip entire QC step : filtering  low-quality, low-complexity and rRNA reads (reads mathing rRNA repeat unit)", action="store_true")
+input_option_arguments.add_argument("--skipPreliminary", '-s', help="skip the preliminary steps including QC step as well as mapping lost human read step", action="store_true")
 
 run_only_options = ap.add_argument_group('Run Options')
 run_only_options.add_argument("--immune", help = "Run TCR/BCR immune gene analysis ONLY", action = "store_true")
 run_only_options.add_argument("--circRNA", help = "Run CIRI for circular RNA detection ONLY", action="store_true")
 run_only_options.add_argument("--microbiome", help = "Run Microbime Analysis ONLY", action = "store_true")
 
-
 misc_option_arguments = ap.add_argument_group('Miscellenous Options')
-
 misc_option_arguments.add_argument("--gzip", help = "Gzip the fasta files after filtering step", action = "store_true")
 misc_option_arguments.add_argument("--quiet", help = "uppress progress report and warnings", action = "store_true")
 misc_option_arguments.add_argument("--dev", help = "keep intermediate files", action = "store_true")
