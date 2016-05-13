@@ -148,6 +148,7 @@ misc_option_arguments.add_argument("--gzip", help = "Gzip the fasta files after 
 misc_option_arguments.add_argument("--quiet", help = "uppress progress report and warnings", action = "store_true")
 misc_option_arguments.add_argument("--dev", help = "keep intermediate files", action = "store_true")
 
+
 args = ap.parse_args()
 
 
