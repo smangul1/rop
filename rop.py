@@ -116,26 +116,37 @@ print "*********************************************"
 
 ap = argparse.ArgumentParser('python rop.py')
 
+necessary_arguments = ap.add_argument_group('Necessary Inputs')
 
-ap.add_argument('unmappedReads', help='unmapped Reads in the fastq format')
-ap.add_argument('dir', help='directory (absolute path) to save results of the analysis')
+necessary_arguments.add_argument('unmappedReads', help='unmapped Reads in the fastq format')
+necessary_arguments.add_argument('dir', help='directory (absolute path) to save results of the analysis')
 
-ap.add_argument("--qsub", help="submit qsub jobs on hoffman2 cluster",
+job_option_arguments = ap.add_argument_group('Job Options')
+job_option_arguments.add_argument("--qsub", help="submit qsub jobs on hoffman2 cluster",
                     action="store_true")
-ap.add_argument("--qsubArray", help="prepare qsub scripts to be run latetr using job array",
+job_option_arguments.add_argument("--qsubArray", help="prepare qsub scripts to be run latetr using job array",
                 action="store_true")
-ap.add_argument("--b", help="unmapped reads in bam format",
+
+input_option_arguments = ap.add_argument_group('Input Options')
+input_option_arguments.add_argument("--b", help="unmapped reads in bam format",
                 action="store_true")
-ap.add_argument("--skipLowq", help="skip step filtering ",
+input_option_arguments.add_argument("--skipLowq", help="skip step filtering ",
                 action="store_true")
-ap.add_argument("--skipQC", help="skip entire QC step : filtering  low-quality, low-complexity and rRNA reads (reads mathing rRNA repeat unit)",
+input_option_arguments.add_argument("--skipQC", help="skip entire QC step : filtering  low-quality, low-complexity and rRNA reads (reads mathing rRNA repeat unit)",
                 action="store_true")
-ap.add_argument("--skipHuman", help="skip the mapping lost human read step", action="store_true")
-ap.add_argument("--circRNA", help="enable CIRI for circular RNA detection ", action="store_true")
-ap.add_argument("--immune", help = "Only TCR/BCR immune gene analysis will be performed", action = "store_true")
-ap.add_argument("--gzip", help = "Gzip the fasta files after filtering step", action = "store_true")
-ap.add_argument("--quiet", help = "uppress progress report and warnings", action = "store_true")
-ap.add_argument("--dev", help = "keep intermediate files", action = "store_true")
+input_option_arguments.add_argument("--skipPreliminary", help="skip the preliminary steps including QC step as well as mapping lost human read step", action="store_true")
+
+run_only_options = ap.add_argument_group('Run Options')
+run_only_options.add_argument("--immune", help = "Run TCR/BCR immune gene analysis ONLY", action = "store_true")
+run_only_options.add_argument("--circRNA", help = "Run CIRI for circular RNA detection ONLY", action="store_true")
+run_only_options.add_argument("--microbiome", help = "Run Microbime Analysis ONLY", action = "store_true")
+run_only_options
+
+misc_option_arguments = ap.add_argument_group('Miscellenous Options')
+
+misc_option_arguments.add_argument("--gzip", help = "Gzip the fasta files after filtering step", action = "store_true")
+misc_option_arguments.add_argument("--quiet", help = "uppress progress report and warnings", action = "store_true")
+misc_option_arguments.add_argument("--dev", help = "keep intermediate files", action = "store_true")
 
 args = ap.parse_args()
 
@@ -222,6 +233,7 @@ lowQCFile=QCDir+basename+"_lowQC.fa"
 rRNAFile=QCDir+basename+"_rRNA_blastFormat6.csv"
 afterrRNAFasta=QCDir+basename+"_after_rRNA.fasta"
 afterlostHumanFasta=lostHumanDir+basename+"_after_rRNA_lostHuman.fasta"
+afterlostHumanFastaGzip=lostHumanDir+basename+"_after_rRNA_lostHuman.fasta.gz"
 afterImmuneFasta=bcrDir+basename+"_afterImmune.fasta"
 afterBacteraFasta=bacteriaDir+basename+"_afterBacteria.fasta"
 afterVirusFasta=virusDir+basename+"_afterVirus.fasta"
@@ -282,7 +294,7 @@ runVirusFile=virusDir +"/runVirus_"+basename+".sh"
 os.chdir(args.dir)
 
 #######################################################################################################################################
-if args.skipQC:
+if args.skipQC or args.skipPreliminary:
     afterrRNAFasta=args.unmappedReads
 else:
     if args.b:
@@ -398,7 +410,7 @@ else:
 
 #######################################################################################################################################
 #2. Remaping to human references...
-if not args.skipHuman:
+if not args.skipPreliminary:
     write2Log("2. Remaping to human references...",cmdLogfile,"False")
     write2Log("2. Remaping to human references...",gLogfile,args.quiet)
 
@@ -438,10 +450,12 @@ if not args.skipHuman:
                 lostHumanReads.add(line[0])
 
 
-
-    excludeReadsFromFasta(afterrRNAFasta,lostHumanReads,afterlostHumanFasta)
+    if args.gzip:
+        excludeReadsFromFastaGzip(afterrRNAFasta,lostHumanReads,afterlostHumanFastaGzip)
+    else:
+        excludeReadsFromFasta(afterrRNAFasta,lostHumanReads,afterlostHumanFasta)
     nlostHumanReads=len(lostHumanReads)
-    write2Log("--identified %s lost human reads from unmapped reads " %(len(lostHumanReads)) ,gLogfile,args.quiet)
+    write2Log("--identified %s lost human reads from unmapped reads " %(len(lostHumanReads)), gLogfile, args.quiet)
 
 
     if not args.dev:
@@ -450,11 +464,13 @@ if not args.skipHuman:
         os.remove(tBamFile)
 ### TODO
 else:
-    temp_f = open(afterlostHumanFasta, 'w')
-    with gzip.open(args.unmappedReads, 'r') as f:
-        temp_f.write(f.read()) 
-    temp_f.close()
-
+    if args.gzip:
+        temp_f = open(afterlostHumanFasta, 'w')
+        with gzip.open(args.unmappedReads, 'r') as f:
+            temp_f.write(f.read()) 
+        temp_f.close()
+    else:
+        afterlostHumanFasta = args.unmappedReads
 
 
 
