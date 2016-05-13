@@ -153,13 +153,18 @@ misc_option_arguments = ap.add_argument_group('Miscellenous Options')
 misc_option_arguments.add_argument("--gzip", help = "Gzip the fasta files after filtering step", action = "store_true")
 misc_option_arguments.add_argument("--quiet", help = "Suppress progress report and warnings", action = "store_true")
 misc_option_arguments.add_argument("--dev", help = "Keep intermediate files", action = "store_true")
-misc_option_arguments.add_argument("--non-reductive", help = "non-reductive analysis - Dev mode - Please use with caution", action = "store_true")
+misc_option_arguments.add_argument("--nonReductive", help = "non-reductive analysis - Dev mode - Please use with caution", action = "store_true")
 
 
 args = ap.parse_args()
 
-# ONLY OPTION MANIPULATION 
-# TODO 
+# ONLY OPTION Configuration
+# IF none of them are selected: make everything true
+if not args.repeat and not args.immune and not args.circRNA and not args.microbiome:
+    args.repeat = True
+    args.immune = True
+    args.circRNA = True
+    args.microbiome = True
 
 
 #######################################################################
