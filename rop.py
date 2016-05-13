@@ -124,11 +124,11 @@ necessary_arguments.add_argument('dir', help='directory (absolute path) to save 
 job_option_arguments = ap.add_argument_group('Job Options')
 job_option_arguments.add_argument("--qsub", help="submit qsub jobs on hoffman2 cluster",
                     action="store_true")
-job_option_arguments.add_argument("--qsubArray", help="prepare qsub scripts to be run latetr using job array",
+job_option_arguments.add_argument("--qsubArray", help="prepare qsub scripts to be run later using job array",
                 action="store_true")
 
 input_option_arguments = ap.add_argument_group('Input Options')
-input_option_arguments.add_argument("--b", help="unmapped reads in bam format",
+input_option_arguments.add_argument("--bam", '-b' help="unmapped reads in bam format",
                 action="store_true")
 input_option_arguments.add_argument("--skipLowq", help="skip step filtering ",
                 action="store_true")
@@ -140,7 +140,7 @@ run_only_options = ap.add_argument_group('Run Options')
 run_only_options.add_argument("--immune", help = "Run TCR/BCR immune gene analysis ONLY", action = "store_true")
 run_only_options.add_argument("--circRNA", help = "Run CIRI for circular RNA detection ONLY", action="store_true")
 run_only_options.add_argument("--microbiome", help = "Run Microbime Analysis ONLY", action = "store_true")
-run_only_options
+
 
 misc_option_arguments = ap.add_argument_group('Miscellenous Options')
 
