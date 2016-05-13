@@ -23,8 +23,9 @@ from Bio import SeqIO # module needed for sequence input
 
 
 ####################################################################
+### I/O Functions 
 ####################################################################
-####################################################################
+
 def excludeReadsFromFasta(inFasta,reads,outFasta):
 
     fasta_sequences = SeqIO.parse(open(inFasta),'fasta')
@@ -43,18 +44,16 @@ def excludeReadsFromFastaGzip(inFasta,reads,outFasta):
             if name not in reads:
                 SeqIO.write([seq], f, "fasta")
 
-
-
-
 ####################################################################
+
 def bam2fasta(codeDir,inFile,outFile):
     message="Convert bam to fasta"
     cmdConvertBam2Fastq="%s/tools/bamtools convert -in %s -format fasta >%s" %(codeDir,inFile,outFile)
     write2Log(cmdConvertBam2Fastq,cmdLogfile,"False")
     os.system(cmdConvertBam2Fastq)
 
-
 ####################################################################
+
 def bam2fastq(codeDir,inFile,outFile):
     message="Convert bam to fastq"
     write2Log(message,gLogfile,args.quiet)
@@ -64,9 +63,8 @@ def bam2fastq(codeDir,inFile,outFile):
     if not args.dev:
         os.remove(inFile)
 
-
-
 #######################################################################
+
 def write2Log(message,logFile,option):
     if not option:
         print message
@@ -74,6 +72,15 @@ def write2Log(message,logFile,option):
     logFile.write("\n")
 
 #######################################################################
+
+def write_gzip_into_readable(gz_input, output): 
+    temp_file = open(output, 'w')
+    with gzip.open(gz_input, 'r') as f:
+        temp_file.write(f.read())
+    temp_file.close()
+
+#######################################################################
+
 def nReadsImmune(inFile):
     readsImmune=set()
     with open(inFile,'r') as f:
@@ -86,6 +93,7 @@ def nReadsImmune(inFile):
     return readsImmune
 
 #######################################################################
+
 def nMicrobialReads(inFile,readLength,outFile):
     readsMicrobiome=set()
     out=open(outFile,'w')
@@ -103,6 +111,8 @@ def nMicrobialReads(inFile,readLength,outFile):
     out.close()
     return readsMicrobiome
 
+#######################################################################
+
 print "*********************************************"
 print "ROP is a computational protocol aimed to discover the source of all reads, originated from complex RNA molecules, recombinant antibodies and microbial communities. Written by Serghei Mangul (smangul@ucla.edu) and Harry Taegyun Yang (harry2416@gmail.com), University of California, Los Angeles (UCLA). (c) 2016. Released under the terms of the General Public License version 3.0 (GPLv3)"
 print ""
@@ -112,7 +122,9 @@ print "https://sergheimangul.wordpress.com/rop/"
 #print "https://github.com/smangul1/rop/ROPmanual.pdf"
 print "*********************************************"
 
-
+#######################################################################
+### Arguments 
+#######################################################################
 
 
 ap = argparse.ArgumentParser('python rop.py')
@@ -132,25 +144,27 @@ input_option_arguments.add_argument("--skipQC", help="skip entire QC step : filt
 input_option_arguments.add_argument("--skipPreliminary", '-s', help="skip the preliminary steps including QC step as well as mapping lost human read step", action="store_true")
 
 run_only_options = ap.add_argument_group('Run Options')
+run_only_options.add_argument("--repeat", help = "Run Lost Human Repeat Step ONLY", action = "store_true")
 run_only_options.add_argument("--immune", help = "Run TCR/BCR immune gene analysis ONLY", action = "store_true")
 run_only_options.add_argument("--circRNA", help = "Run CIRI for circular RNA detection ONLY", action="store_true")
 run_only_options.add_argument("--microbiome", help = "Run Microbime Analysis ONLY", action = "store_true")
 
 misc_option_arguments = ap.add_argument_group('Miscellenous Options')
 misc_option_arguments.add_argument("--gzip", help = "Gzip the fasta files after filtering step", action = "store_true")
-misc_option_arguments.add_argument("--quiet", help = "uppress progress report and warnings", action = "store_true")
-misc_option_arguments.add_argument("--dev", help = "keep intermediate files", action = "store_true")
+misc_option_arguments.add_argument("--quiet", help = "Suppress progress report and warnings", action = "store_true")
+misc_option_arguments.add_argument("--dev", help = "Keep intermediate files", action = "store_true")
+misc_option_arguments.add_argument("--non-reductive", help = "non-reductive analysis - Dev mode - Please use with caution", action = "store_true")
 
 
 args = ap.parse_args()
 
+# ONLY OPTION MANIPULATION 
+# TODO 
 
 
-
-##################################
-#main code
-##################################
-
+#######################################################################
+### MAIN CODE
+#######################################################################
 
 #relative path to absolute path
 args.unmappedReads=os.path.abspath(args.unmappedReads)
@@ -459,13 +473,9 @@ if not args.skipPreliminary:
 ### TODO
 else:
     if args.gzip:
-        temp_f = open(afterlostHumanFasta, 'w')
-        with gzip.open(args.unmappedReads, 'r') as f:
-            temp_f.write(f.read()) 
-        temp_f.close()
+        write_gzip_into_readable(args.unmappedReads,afterlostHumanFasta)
     else:
         afterlostHumanFasta = args.unmappedReads
-
 
 
 #######################################################################################################################################
@@ -510,8 +520,6 @@ if not args.qsub and not args.qsubArray:
     nRepeatReads=len(lostRepeatReads)
     write2Log("-Identify %s lost repeat sequences from unmapped reads" %(nRepeatReads) ,gLogfile,args.quiet)
     write2Log("***Note : Repeat sequences classification into classes (e.g. LINE) and families (e.g. Alu) will be available in next release" ,gLogfile,args.quiet)
-
-
     excludeReadsFromFasta(afterlostHumanFasta,lostRepeatReads,afterlostRepeatFasta)
 
     if not args.dev:
@@ -538,208 +546,213 @@ if args.circRNA:
             os.system(cmdQsub)
     else:
         os.system(cmd)
-
+else: 
+    print "Non-co-linear RNA Profiling step is deselected - this step is skipped."
 
 #######################################################################################################################################
 #4. T and B lymphocytes profiling
-immuneReads=set()
 
-write2Log("4a. B lymphocytes profiling...",cmdLogfile,"False")
-write2Log("4a. B lymphocytes profiling...",gLogfile,args.quiet)
+if args.immune:
+    immuneReads=set()
 
-#IGH-------
-os.chdir(ighDir)
-cmd="ln -s %s//db/BCRTCR/internal_data/ ./" %(codeDir)
-os.system(cmd)
+    write2Log("4a. B lymphocytes profiling...",cmdLogfile,"False")
+    write2Log("4a. B lymphocytes profiling...",gLogfile,args.quiet)
 
 
-cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/IGHV.fa -germline_db_D %s/db/BCRTCR/IGHD.fa  -germline_db_J %s/db/BCRTCR/IGHJ.fa -query %s -outfmt 7 -evalue 1e-05  2>temp.txt | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"D\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,ighFile)
-write2Log(cmd,cmdLogfile,"False")
-
-
-if args.qsub or args.qsubArray:
-    f = open(runIGHFile,'w')
-    f.write("ln -s %s//db/BCRTCR/internal_data/ ./ \n" %(codeDir))
-    f.write(cmd+"\n")
-    f.write("echo \"done!\"> %s/%s_igh.done \n" %(ighDir,basename))
-    f.close()
-    if args.qsub:
-        cmdQsub="qsub -cwd -V -N igh -l h_data=16G,time=24:00:00 %s" %(runIGHFile)
-        os.system(cmdQsub)
-else:
+    #IGH-------
     os.chdir(ighDir)
+    cmd="ln -s %s//db/BCRTCR/internal_data/ ./" %(codeDir)
     os.system(cmd)
-    immuneReadsIGH=nReadsImmune(ighFile)
-    nReadsImmuneIGH=len(immuneReadsIGH)
-    write2Log("--identified %s reads mapped to immunoglobulin heavy (IGH) locus" %(nReadsImmuneIGH) ,gLogfile,args.quiet)
 
 
-#IGK---------
-os.chdir(igkDir)
-cmd="ln -s %s//db/BCRTCR/internal_data/ ./" %(codeDir)
+    cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/IGHV.fa -germline_db_D %s/db/BCRTCR/IGHD.fa  -germline_db_J %s/db/BCRTCR/IGHJ.fa -query %s -outfmt 7 -evalue 1e-05  2>temp.txt | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"D\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,ighFile)
+    write2Log(cmd,cmdLogfile,"False")
 
-cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/IGKV.fa -germline_db_D %s/db/BCRTCR/IGHD.fa  -germline_db_J %s/db/BCRTCR/IGKJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,igkFile)
-write2Log(cmd,cmdLogfile,"False")
 
-if args.qsub or args.qsubArray:
-    f = open(runIGKFile,'w')
-    f.write("ln -s %s//db/BCRTCR/internal_data/ ./ \n" %(codeDir))
-    f.write(cmd+"\n")
-    f.write("echo \"done!\"> %s/%s_igk.done \n" %(igkDir,basename))
-    f.close()
-    if args.qsub:
-        cmdQsub="qsub -cwd -V -N igk -l h_data=16G,time=24:00:00 %s" %(runIGKFile)
-        os.system(cmdQsub)
-else:
+    if args.qsub or args.qsubArray:
+        f = open(runIGHFile,'w')
+        f.write("ln -s %s//db/BCRTCR/internal_data/ ./ \n" %(codeDir))
+        f.write(cmd+"\n")
+        f.write("echo \"done!\"> %s/%s_igh.done \n" %(ighDir,basename))
+        f.close()
+        if args.qsub:
+            cmdQsub="qsub -cwd -V -N igh -l h_data=16G,time=24:00:00 %s" %(runIGHFile)
+            os.system(cmdQsub)
+    else:
+        os.chdir(ighDir)
+        os.system(cmd)
+        immuneReadsIGH=nReadsImmune(ighFile)
+        nReadsImmuneIGH=len(immuneReadsIGH)
+        write2Log("--identified %s reads mapped to immunoglobulin heavy (IGH) locus" %(nReadsImmuneIGH) ,gLogfile,args.quiet)
+
+
+    #IGK---------
     os.chdir(igkDir)
-    os.system(cmd)
-    immuneReadsIGK=nReadsImmune(igkFile)
-    nReadsImmuneIGK=len(immuneReadsIGK)
-    write2Log("--identified %s reads mapped to immunoglobulin kappa (IGK) locus " %(nReadsImmuneIGK) ,gLogfile,args.quiet)
-            
-            
-#IGL------------
-os.chdir(iglDir)
-cmd="ln -s %s//db/BCRTCR/internal_data/ ./" %(codeDir)
-os.system(cmd)
-cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/IGLV.fa -germline_db_D %s/db/BCRTCR/IGHD.fa  -germline_db_J %s/db/BCRTCR/IGLJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,iglFile)
-write2Log(cmd,cmdLogfile,"False")
+    cmd="ln -s %s//db/BCRTCR/internal_data/ ./" %(codeDir)
 
-if args.qsub or args.qsubArray:
-    f = open(runIGLFile,'w')
-    f.write("ln -s %s//db/BCRTCR/internal_data/ ./ \n" %(codeDir))
-    f.write(cmd+"\n")
-    f.write("echo \"done!\">%s/%s_igl.done \n" %(iglDir,basename))
-    f.close()
-    if args.qsub:
-        cmdQsub="qsub -cwd -V -N igl -l h_data=16G,time=24:00:00 %s" %(runIGLFile)
-        os.system(cmdQsub)
-else:
+    cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/IGKV.fa -germline_db_D %s/db/BCRTCR/IGHD.fa  -germline_db_J %s/db/BCRTCR/IGKJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,igkFile)
+    write2Log(cmd,cmdLogfile,"False")
+
+    if args.qsub or args.qsubArray:
+        f = open(runIGKFile,'w')
+        f.write("ln -s %s//db/BCRTCR/internal_data/ ./ \n" %(codeDir))
+        f.write(cmd+"\n")
+        f.write("echo \"done!\"> %s/%s_igk.done \n" %(igkDir,basename))
+        f.close()
+        if args.qsub:
+            cmdQsub="qsub -cwd -V -N igk -l h_data=16G,time=24:00:00 %s" %(runIGKFile)
+            os.system(cmdQsub)
+    else:
+        os.chdir(igkDir)
+        os.system(cmd)
+        immuneReadsIGK=nReadsImmune(igkFile)
+        nReadsImmuneIGK=len(immuneReadsIGK)
+        write2Log("--identified %s reads mapped to immunoglobulin kappa (IGK) locus " %(nReadsImmuneIGK) ,gLogfile,args.quiet)
+                
+                
+    #IGL------------
     os.chdir(iglDir)
+    cmd="ln -s %s//db/BCRTCR/internal_data/ ./" %(codeDir)
     os.system(cmd)
-    immuneReadsIGL=nReadsImmune(iglFile)
-    nReadsImmuneIGL=len(immuneReadsIGL)
-    write2Log("--identified %s reads mapped to immunoglobulin lambda (IGL) locus" %(nReadsImmuneIGL) ,gLogfile,args.quiet)
+    cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/IGLV.fa -germline_db_D %s/db/BCRTCR/IGHD.fa  -germline_db_J %s/db/BCRTCR/IGLJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,iglFile)
+    write2Log(cmd,cmdLogfile,"False")
+
+    if args.qsub or args.qsubArray:
+        f = open(runIGLFile,'w')
+        f.write("ln -s %s//db/BCRTCR/internal_data/ ./ \n" %(codeDir))
+        f.write(cmd+"\n")
+        f.write("echo \"done!\">%s/%s_igl.done \n" %(iglDir,basename))
+        f.close()
+        if args.qsub:
+            cmdQsub="qsub -cwd -V -N igl -l h_data=16G,time=24:00:00 %s" %(runIGLFile)
+            os.system(cmdQsub)
+    else:
+        os.chdir(iglDir)
+        os.system(cmd)
+        immuneReadsIGL=nReadsImmune(iglFile)
+        nReadsImmuneIGL=len(immuneReadsIGL)
+        write2Log("--identified %s reads mapped to immunoglobulin lambda (IGL) locus" %(nReadsImmuneIGL) ,gLogfile,args.quiet)
 
 
-##################
-##################
-write2Log("4b. T lymphocytes profiling...",cmdLogfile,"False")
-write2Log("4b. T lymphocytes profiling...",gLogfile,args.quiet)
+    ##################
+    ##################
+    write2Log("4b. T lymphocytes profiling...",cmdLogfile,"False")
+    write2Log("4b. T lymphocytes profiling...",gLogfile,args.quiet)
 
-#TCRA-----------------
-os.chdir(tcraDir)
-cmd="ln -s %s//db/BCRTCR/internal_data/ ./" %(codeDir)
-os.system(cmd)
-cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/TRAV.fa -germline_db_D %s/db/BCRTCR/TRBD.fa  -germline_db_J %s/db/BCRTCR/TRAJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,tcraFile)
-write2Log(cmd,cmdLogfile,"False")
-if args.qsub or args.qsubArray:
-    f = open(runTCRAFile,'w')
-    f.write("ln -s %s//db/BCRTCR/internal_data/ ./ \n" %(codeDir))
-    f.write(cmd+"\n")
-    f.write("echo \"done!\">%s/%s_tcra.done \n"%(tcraDir,basename))
-    f.close()
-    if args.qsub:
-        cmdQsub="qsub -cwd -V -N tcra -l h_data=16G,time=24:00:00 %s" %(runTCRAFile)
-        os.system(cmdQsub)
-else:
+    #TCRA-----------------
     os.chdir(tcraDir)
+    cmd="ln -s %s//db/BCRTCR/internal_data/ ./" %(codeDir)
     os.system(cmd)
-    immuneReadsTCRA=nReadsImmune(tcraFile)
-    nReadsImmuneTCRA=len(immuneReadsTCRA)
-    write2Log("--identified %s reads mapped to T cell receptor alpha (TCRA) locus" %(nReadsImmuneTCRA) ,gLogfile,args.quiet)
-            
-            
+    cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/TRAV.fa -germline_db_D %s/db/BCRTCR/TRBD.fa  -germline_db_J %s/db/BCRTCR/TRAJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,tcraFile)
+    write2Log(cmd,cmdLogfile,"False")
+    if args.qsub or args.qsubArray:
+        f = open(runTCRAFile,'w')
+        f.write("ln -s %s//db/BCRTCR/internal_data/ ./ \n" %(codeDir))
+        f.write(cmd+"\n")
+        f.write("echo \"done!\">%s/%s_tcra.done \n"%(tcraDir,basename))
+        f.close()
+        if args.qsub:
+            cmdQsub="qsub -cwd -V -N tcra -l h_data=16G,time=24:00:00 %s" %(runTCRAFile)
+            os.system(cmdQsub)
+    else:
+        os.chdir(tcraDir)
+        os.system(cmd)
+        immuneReadsTCRA=nReadsImmune(tcraFile)
+        nReadsImmuneTCRA=len(immuneReadsTCRA)
+        write2Log("--identified %s reads mapped to T cell receptor alpha (TCRA) locus" %(nReadsImmuneTCRA) ,gLogfile,args.quiet)
+                
+                
 
-#TCRB--------------
-os.chdir(tcrbDir)
-cmd="ln -s %s//db/BCRTCR/internal_data/ ./" %(codeDir)
-os.system(cmd)
-cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/TRBV.fa -germline_db_D %s/db/BCRTCR/TRBD.fa  -germline_db_J %s/db/BCRTCR/TRBJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,tcrbFile)
-write2Log(cmd,cmdLogfile,"False")
-if args.qsub or args.qsubArray:
-    f = open(runTCRBFile,'w')
-    f.write("ln -s %s//db/BCRTCR/internal_data/ ./ \n" %(codeDir))
-    f.write(cmd+"\n")
-    f.write("echo \"done!\">%s/%s_tcrb.done \n"%(tcrbDir,basename))
-    f.close()
-    if args.qsub:
-        cmdQsub="qsub -cwd -V -N tcrb -l h_data=16G,time=24:00:00 %s" %(runTCRBFile)
-        os.system(cmdQsub)
-else:
+    #TCRB--------------
     os.chdir(tcrbDir)
+    cmd="ln -s %s//db/BCRTCR/internal_data/ ./" %(codeDir)
     os.system(cmd)
-    immuneReadsTCRB=nReadsImmune(tcrbFile)
-    nReadsImmuneTCRB=len(immuneReadsTCRB)
-    write2Log("--identified %s reads mapped to T cell receptor beta (TCRB) locus" %(nReadsImmuneTCRB) ,gLogfile,args.quiet)
+    cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/TRBV.fa -germline_db_D %s/db/BCRTCR/TRBD.fa  -germline_db_J %s/db/BCRTCR/TRBJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,tcrbFile)
+    write2Log(cmd,cmdLogfile,"False")
+    if args.qsub or args.qsubArray:
+        f = open(runTCRBFile,'w')
+        f.write("ln -s %s//db/BCRTCR/internal_data/ ./ \n" %(codeDir))
+        f.write(cmd+"\n")
+        f.write("echo \"done!\">%s/%s_tcrb.done \n"%(tcrbDir,basename))
+        f.close()
+        if args.qsub:
+            cmdQsub="qsub -cwd -V -N tcrb -l h_data=16G,time=24:00:00 %s" %(runTCRBFile)
+            os.system(cmdQsub)
+    else:
+        os.chdir(tcrbDir)
+        os.system(cmd)
+        immuneReadsTCRB=nReadsImmune(tcrbFile)
+        nReadsImmuneTCRB=len(immuneReadsTCRB)
+        write2Log("--identified %s reads mapped to T cell receptor beta (TCRB) locus" %(nReadsImmuneTCRB) ,gLogfile,args.quiet)
 
 
-            
+                
 
-#TCRD----------------
-os.chdir(tcrdDir)
-cmd="ln -s %s//db/BCRTCR/internal_data/ ./" %(codeDir)
-os.system(cmd)
-cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/TRDV.fa -germline_db_D %s/db/BCRTCR/TRBD.fa  -germline_db_J %s/db/BCRTCR/TRDJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,tcrdFile)
-write2Log(cmd,cmdLogfile,"False")
-if args.qsub or args.qsubArray:
-    f = open(runTCRDFile,'w')
-    f.write("ln -s %s//db/BCRTCR/internal_data/ ./ \n" %(codeDir))
-    f.write(cmd+"\n")
-    f.write("echo \"done!\">%s/%s_tcrd.done \n" %(tcrdDir, basename))
-    f.close()
-    if args.qsub:
-        cmdQsub="qsub -cwd -V -N tcrd -l h_data=16G,time=24:00:00 %s" %(runTCRDFile)
-        os.system(cmdQsub)
-else:
+    #TCRD----------------
     os.chdir(tcrdDir)
+    cmd="ln -s %s//db/BCRTCR/internal_data/ ./" %(codeDir)
     os.system(cmd)
-    immuneReadsTCRD=nReadsImmune(tcrdFile)
-    nReadsImmuneTCRD=len(immuneReadsTCRD)
-    write2Log("--identified %s reads mapped to T cell receptor delta (TCRD) locus" %(nReadsImmuneTCRD) ,gLogfile,args.quiet)
+    cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/TRDV.fa -germline_db_D %s/db/BCRTCR/TRBD.fa  -germline_db_J %s/db/BCRTCR/TRDJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,tcrdFile)
+    write2Log(cmd,cmdLogfile,"False")
+    if args.qsub or args.qsubArray:
+        f = open(runTCRDFile,'w')
+        f.write("ln -s %s//db/BCRTCR/internal_data/ ./ \n" %(codeDir))
+        f.write(cmd+"\n")
+        f.write("echo \"done!\">%s/%s_tcrd.done \n" %(tcrdDir, basename))
+        f.close()
+        if args.qsub:
+            cmdQsub="qsub -cwd -V -N tcrd -l h_data=16G,time=24:00:00 %s" %(runTCRDFile)
+            os.system(cmdQsub)
+    else:
+        os.chdir(tcrdDir)
+        os.system(cmd)
+        immuneReadsTCRD=nReadsImmune(tcrdFile)
+        nReadsImmuneTCRD=len(immuneReadsTCRD)
+        write2Log("--identified %s reads mapped to T cell receptor delta (TCRD) locus" %(nReadsImmuneTCRD) ,gLogfile,args.quiet)
 
 
-            
-#TCRG---------------------
-os.chdir(tcrgDir)
-cmd="ln -s %s//db/BCRTCR/internal_data/ ./" %(codeDir)
-os.system(cmd)
-cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/TRGV.fa -germline_db_D %s/db/BCRTCR/TRBD.fa  -germline_db_J %s/db/BCRTCR/TRGJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,tcrgFile)
-write2Log(cmd,cmdLogfile,"False")
-
-if args.qsub or args.qsubArray:
-    f = open(runTCRGFile,'w')
-    f.write("ln -s %s//db/BCRTCR/internal_data/ ./ \n" %(codeDir))
-    f.write(cmd+"\n")
-    f.write("echo \"done!\">%s/%s_tcrg.done \n" %(tcrgDir,basename))
-    f.close()
-    if args.qsub:
-        cmdQsub="qsub -cwd -V -N tcrg -l h_data=16G,time=24:00:00 %s" %(runTCRGFile)
-        os.system(cmdQsub)
-else:
+                
+    #TCRG---------------------
     os.chdir(tcrgDir)
+    cmd="ln -s %s//db/BCRTCR/internal_data/ ./" %(codeDir)
     os.system(cmd)
-    immuneReadsTCRG=nReadsImmune(tcrgFile)
-    nReadsImmuneTCRG=len(immuneReadsTCRG)
-    write2Log("--identified %s reads mapped to T cell receptor gamma locus (TCRG) locus" %(nReadsImmuneTCRG) ,gLogfile,args.quiet)
+    cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/TRGV.fa -germline_db_D %s/db/BCRTCR/TRBD.fa  -germline_db_J %s/db/BCRTCR/TRGJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,tcrgFile)
+    write2Log(cmd,cmdLogfile,"False")
 
-nReadsImmuneTotal=0
-if not args.qsub and not args.qsubArray:
-    nReadsImmuneTotal=nReadsImmuneIGH+nReadsImmuneIGL+nReadsImmuneIGK+nReadsImmuneTCRA+nReadsImmuneTCRB+nReadsImmuneTCRD+nReadsImmuneTCRG
-    write2Log("In toto : %s reads mapped to antibody repertoire loci" %(nReadsImmuneTotal) ,gLogfile,args.quiet)
-    write2Log("***Note : Combinatorial diversity of the antibody repertoire (recombinations of the of VJ gene segments)  will be available in the next release.",gLogfile,args.quiet)
+    if args.qsub or args.qsubArray:
+        f = open(runTCRGFile,'w')
+        f.write("ln -s %s//db/BCRTCR/internal_data/ ./ \n" %(codeDir))
+        f.write(cmd+"\n")
+        f.write("echo \"done!\">%s/%s_tcrg.done \n" %(tcrgDir,basename))
+        f.close()
+        if args.qsub:
+            cmdQsub="qsub -cwd -V -N tcrg -l h_data=16G,time=24:00:00 %s" %(runTCRGFile)
+            os.system(cmdQsub)
+    else:
+        os.chdir(tcrgDir)
+        os.system(cmd)
+        immuneReadsTCRG=nReadsImmune(tcrgFile)
+        nReadsImmuneTCRG=len(immuneReadsTCRG)
+        write2Log("--identified %s reads mapped to T cell receptor gamma locus (TCRG) locus" %(nReadsImmuneTCRG) ,gLogfile,args.quiet)
 
-    immuneReads=set().union(immuneReadsTCRA,immuneReadsTCRB,immuneReadsTCRD,immuneReadsTCRG)
-    excludeReadsFromFasta(afterlostRepeatFasta,immuneReads,afterImmuneFasta)
-    if not args.dev:
-        os.remove(afterlostRepeatFasta)
+    nReadsImmuneTotal=0
+    if not args.qsub and not args.qsubArray:
+        nReadsImmuneTotal=nReadsImmuneIGH+nReadsImmuneIGL+nReadsImmuneIGK+nReadsImmuneTCRA+nReadsImmuneTCRB+nReadsImmuneTCRD+nReadsImmuneTCRG
+        write2Log("In toto : %s reads mapped to antibody repertoire loci" %(nReadsImmuneTotal) ,gLogfile,args.quiet)
+        write2Log("***Note : Combinatorial diversity of the antibody repertoire (recombinations of the of VJ gene segments)  will be available in the next release.",gLogfile,args.quiet)
 
+        immuneReads=set().union(immuneReadsTCRA,immuneReadsTCRB,immuneReadsTCRD,immuneReadsTCRG)
+        excludeReadsFromFasta(afterlostRepeatFasta,immuneReads,afterImmuneFasta)
+        if not args.dev:
+            os.remove(afterlostRepeatFasta)
+else:
+    print "Immune Profiling Step is deselected - This step is skipped."
 
 
 
 #######################################################################################################################################
 #5. Microbiome profiling...
-if not args.immune:
+if args.microbiome:
     write2Log("5.  Microbiome profiling...",cmdLogfile,"False")
     write2Log("5.  Microbiome profiling...",gLogfile,args.quiet)
     
@@ -837,15 +850,16 @@ if not args.immune:
             nReadsEP+=nEupathdbReads
 
 
-if not args.qsub and  not args.qsubArray:
-    write2Log("In toto : %s reads mapped to microbial genomes" %(nReadsBacteria+nReadsVirus+nReadsEP) ,gLogfile,args.quiet)
-    nTotalReads=nLowQReads+nLowCReads+n_rRNAReads+nlostHumanReads+nRepeatReads+nReadsImmuneTotal+nReadsBacteria+nReadsVirus+nReadsEP
-    write2Log("Summary:   The ROP protocol is able to account for %s reads" %(nTotalReads) ,gLogfile,args.quiet)
+    if not args.qsub and  not args.qsubArray:
+        write2Log("In toto : %s reads mapped to microbial genomes" %(nReadsBacteria+nReadsVirus+nReadsEP) ,gLogfile,args.quiet)
+        nTotalReads=nLowQReads+nLowCReads+n_rRNAReads+nlostHumanReads+nRepeatReads+nReadsImmuneTotal+nReadsBacteria+nReadsVirus+nReadsEP
+        write2Log("Summary:   The ROP protocol is able to account for %s reads" %(nTotalReads) ,gLogfile,args.quiet)
 
-    message=basename+","+str(n)+","+str(nLowQReads)+","+str(nLowCReads)+","+str(n_rRNAReads)+","+str(nlostHumanReads)+","+str(nRepeatReads)+","+str(nReadsImmuneTotal)+","+str(nReadsBacteria+nReadsVirus+nReadsEP)
-    tLogfile.write(message)
-    tLogfile.write("\n")
-
+        message=basename+","+str(n)+","+str(nLowQReads)+","+str(nLowCReads)+","+str(n_rRNAReads)+","+str(nlostHumanReads)+","+str(nRepeatReads)+","+str(nReadsImmuneTotal)+","+str(nReadsBacteria+nReadsVirus+nReadsEP)
+        tLogfile.write(message)
+        tLogfile.write("\n")
+else:
+    print "Microbiome Profiling step is deselected - this step is skipped."
 
 
 
