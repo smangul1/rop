@@ -165,6 +165,9 @@ if not args.repeat and not args.immune and not args.circRNA and not args.microbi
     args.immune = True
     args.circRNA = True
     args.microbiome = True
+else:
+    #It is gonna be non-reductive for now 
+    args.nonReductive = True
 
 
 
@@ -485,52 +488,64 @@ else:
         afterlostHumanFasta = args.unmappedReads
 
 
+### TODO - Branch point
+if args.nonReductive:
+    branch_point_file = afterlostHumanFasta
+
 #######################################################################################################################################
 #3. Maping to repeat sequences...
-write2Log("3. Maping to repeat sequences...",cmdLogfile,"False")
-write2Log("3. Maping to repeat sequences...",gLogfile,args.quiet)
+if args.repeat:
+    write2Log("3. Maping to repeat sequences...",cmdLogfile,"False")
+    write2Log("3. Maping to repeat sequences...",gLogfile,args.quiet)
 
-#TO DO : make all fasta ->gzip
-#gzip -dc %s | , query -
+    #TO DO : make all fasta ->gzip
+    #gzip -dc %s | , query -
+    # CHANGED 
+    # cmd="%s/tools/blastn -task megablast -index_name %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa -use_index true -query %s -db %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 > %s" %(codeDir, codeDir, afterlostHumanFasta, codeDir, repeatFile)
+    if args.nonReductive:
+        input_file = branch_point_file
+    else:
+        input_file = afterlostHumanFasta
+    cmd="%s/tools/blastn -task megablast -index_name %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa -use_index true -query %s -db %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 > %s" %(codeDir, codeDir, input_file, codeDir, repeatFile)
 
-cmd="%s/tools/blastn -task megablast -index_name %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa -use_index true -query %s -db %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 > %s" %(codeDir, codeDir, afterlostHumanFasta, codeDir, repeatFile)
+
+    if args.qsub or args.qsubArray:
+        f = open(runLostRepeatFile,'w')
+        f.write(cmd+"\n")
+        f.write("echo \"done!\">%s/%s_lostRepeat.done \n" %(lostRepeatDir,basename))
+        f.close()
+        if args.qsub:
+            cmdQsub="qsub -cwd -V -N lostRepeat -l h_data=16G,time=10:00:00 %s" %(runLostRepeatFile)
+            os.system(cmdQsub)
+    else:
+        os.system(cmd)
+        write2Log(cmd,cmdLogfile,"False")
 
 
-if args.qsub or args.qsubArray:
-    f = open(runLostRepeatFile,'w')
-    f.write(cmd+"\n")
-    f.write("echo \"done!\">%s/%s_lostRepeat.done \n" %(lostRepeatDir,basename))
-    f.close()
-    if args.qsub:
-        cmdQsub="qsub -cwd -V -N lostRepeat -l h_data=16G,time=10:00:00 %s" %(runLostRepeatFile)
-        os.system(cmdQsub)
+
+    if not args.qsub and not args.qsubArray:
+
+        lostRepeatReads = set()
+        
+        with open(repeatFile,'r') as f:
+            reader=csv.reader(f,delimiter='\t')
+            for line in reader:
+                element=line[0]
+                identity=float(line[2])
+                alignmentLength=float(line[3])
+                eValue=float(line[10])
+                if eValue<1e-05 and alignmentLength>=0.8*readLength and identity>=0.9*readLength:
+                    lostRepeatReads.add(element)
+
+        nRepeatReads=len(lostRepeatReads)
+        write2Log("-Identify %s lost repeat sequences from unmapped reads" %(nRepeatReads) ,gLogfile,args.quiet)
+        write2Log("***Note : Repeat sequences classification into classes (e.g. LINE) and families (e.g. Alu) will be available in next release" ,gLogfile,args.quiet)
+        excludeReadsFromFasta(afterlostHumanFasta,lostRepeatReads,afterlostRepeatFasta)
+
+        if not args.dev:
+            os.remove(afterlostHumanFasta)
 else:
-    os.system(cmd)
-    write2Log(cmd,cmdLogfile,"False")
-
-
-
-if not args.qsub and not args.qsubArray:
-
-    lostRepeatReads = set()
-    
-    with open(repeatFile,'r') as f:
-        reader=csv.reader(f,delimiter='\t')
-        for line in reader:
-            element=line[0]
-            identity=float(line[2])
-            alignmentLength=float(line[3])
-            eValue=float(line[10])
-            if eValue<1e-05 and alignmentLength>=0.8*readLength and identity>=0.9*readLength:
-                lostRepeatReads.add(element)
-
-    nRepeatReads=len(lostRepeatReads)
-    write2Log("-Identify %s lost repeat sequences from unmapped reads" %(nRepeatReads) ,gLogfile,args.quiet)
-    write2Log("***Note : Repeat sequences classification into classes (e.g. LINE) and families (e.g. Alu) will be available in next release" ,gLogfile,args.quiet)
-    excludeReadsFromFasta(afterlostHumanFasta,lostRepeatReads,afterlostRepeatFasta)
-
-    if not args.dev:
-        os.remove(afterlostHumanFasta)
+    print "Lost Human Repeat Profiling step is deselected - this step is skipped."
 
 #######################################################################################################################################
 #3. Non-co-linear RNA profiling
@@ -541,8 +556,12 @@ write2Log("***Note : Trans-spicing and gene fusions  are currently not supported
 
 
 if args.circRNA:
-    cmd="%s/tools/bwa mem -T -S %s/db/human/BWAIndex/genome.fa %s > %s \n" %(codeDir,codeDir,afterrRNAFasta,NCL_CIRI_file)
-    cmd = cmd + "pearl %s/tools/CIRI_v1.2.pl -S -I %s -O %s -F %s/db/human/BWAIndex/genome.fa" %(codeDir,NCL_CIRI_file,after_NCL_CIRI_file_prefix,codeDir)
+    if args.nonReductive:   
+        input_file = branch_point_file
+    else:
+        input_file = afterrRNAFasta
+    cmd="%s/tools/bwa mem -T -S %s/db/human/BWAIndex/genome.fa %s > %s \n" %(codeDir, codeDir, input_file, NCL_CIRI_file)
+    cmd = cmd + "pearl %s/tools/CIRI_v1.2.pl -S -I %s -O %s -F %s/db/human/BWAIndex/genome.fa" %(codeDir, NCL_CIRI_file, after_NCL_CIRI_file_prefix, codeDir)
     if args.qsub or args.qsubArray:
         f = open(runNCL_CIRIfile,'w')
         f.write(cmd+"\n")
@@ -571,8 +590,12 @@ if args.immune:
     cmd="ln -s %s//db/BCRTCR/internal_data/ ./" %(codeDir)
     os.system(cmd)
 
+    if args.nonReductive:
+        input_file = branch_point_file
+    else:
+        input_file = afterlostRepeatFasta
 
-    cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/IGHV.fa -germline_db_D %s/db/BCRTCR/IGHD.fa  -germline_db_J %s/db/BCRTCR/IGHJ.fa -query %s -outfmt 7 -evalue 1e-05  2>temp.txt | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"D\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,ighFile)
+    cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/IGHV.fa -germline_db_D %s/db/BCRTCR/IGHD.fa  -germline_db_J %s/db/BCRTCR/IGHJ.fa -query %s -outfmt 7 -evalue 1e-05  2>temp.txt | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"D\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta, ighFile)
     write2Log(cmd,cmdLogfile,"False")
 
 
@@ -597,7 +620,7 @@ if args.immune:
     os.chdir(igkDir)
     cmd="ln -s %s//db/BCRTCR/internal_data/ ./" %(codeDir)
 
-    cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/IGKV.fa -germline_db_D %s/db/BCRTCR/IGHD.fa  -germline_db_J %s/db/BCRTCR/IGKJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,igkFile)
+    cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/IGKV.fa -germline_db_D %s/db/BCRTCR/IGHD.fa  -germline_db_J %s/db/BCRTCR/IGKJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,input_file,igkFile)
     write2Log(cmd,cmdLogfile,"False")
 
     if args.qsub or args.qsubArray:
@@ -621,7 +644,7 @@ if args.immune:
     os.chdir(iglDir)
     cmd="ln -s %s//db/BCRTCR/internal_data/ ./" %(codeDir)
     os.system(cmd)
-    cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/IGLV.fa -germline_db_D %s/db/BCRTCR/IGHD.fa  -germline_db_J %s/db/BCRTCR/IGLJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,iglFile)
+    cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/IGLV.fa -germline_db_D %s/db/BCRTCR/IGHD.fa  -germline_db_J %s/db/BCRTCR/IGLJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,input_file,iglFile)
     write2Log(cmd,cmdLogfile,"False")
 
     if args.qsub or args.qsubArray:
@@ -650,7 +673,7 @@ if args.immune:
     os.chdir(tcraDir)
     cmd="ln -s %s//db/BCRTCR/internal_data/ ./" %(codeDir)
     os.system(cmd)
-    cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/TRAV.fa -germline_db_D %s/db/BCRTCR/TRBD.fa  -germline_db_J %s/db/BCRTCR/TRAJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,tcraFile)
+    cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/TRAV.fa -germline_db_D %s/db/BCRTCR/TRBD.fa  -germline_db_J %s/db/BCRTCR/TRAJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,input_file,tcraFile)
     write2Log(cmd,cmdLogfile,"False")
     if args.qsub or args.qsubArray:
         f = open(runTCRAFile,'w')
@@ -674,7 +697,7 @@ if args.immune:
     os.chdir(tcrbDir)
     cmd="ln -s %s//db/BCRTCR/internal_data/ ./" %(codeDir)
     os.system(cmd)
-    cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/TRBV.fa -germline_db_D %s/db/BCRTCR/TRBD.fa  -germline_db_J %s/db/BCRTCR/TRBJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,tcrbFile)
+    cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/TRBV.fa -germline_db_D %s/db/BCRTCR/TRBD.fa  -germline_db_J %s/db/BCRTCR/TRBJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,input_file,tcrbFile)
     write2Log(cmd,cmdLogfile,"False")
     if args.qsub or args.qsubArray:
         f = open(runTCRBFile,'w')
@@ -699,7 +722,7 @@ if args.immune:
     os.chdir(tcrdDir)
     cmd="ln -s %s//db/BCRTCR/internal_data/ ./" %(codeDir)
     os.system(cmd)
-    cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/TRDV.fa -germline_db_D %s/db/BCRTCR/TRBD.fa  -germline_db_J %s/db/BCRTCR/TRDJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,tcrdFile)
+    cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/TRDV.fa -germline_db_D %s/db/BCRTCR/TRBD.fa  -germline_db_J %s/db/BCRTCR/TRDJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,input_file,tcrdFile)
     write2Log(cmd,cmdLogfile,"False")
     if args.qsub or args.qsubArray:
         f = open(runTCRDFile,'w')
@@ -723,7 +746,7 @@ if args.immune:
     os.chdir(tcrgDir)
     cmd="ln -s %s//db/BCRTCR/internal_data/ ./" %(codeDir)
     os.system(cmd)
-    cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/TRGV.fa -germline_db_D %s/db/BCRTCR/TRBD.fa  -germline_db_J %s/db/BCRTCR/TRGJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,afterlostRepeatFasta,tcrgFile)
+    cmd="%s/tools/igblastn -germline_db_V %s/db/BCRTCR/TRGV.fa -germline_db_D %s/db/BCRTCR/TRBD.fa  -germline_db_J %s/db/BCRTCR/TRGJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,input_file,tcrgFile)
     write2Log(cmd,cmdLogfile,"False")
 
     if args.qsub or args.qsubArray:
@@ -763,8 +786,13 @@ if args.microbiome:
     write2Log("5.  Microbiome profiling...",cmdLogfile,"False")
     write2Log("5.  Microbiome profiling...",gLogfile,args.quiet)
     
+    if args.nonReductive:
+        input_file = branch_point_file
+    else:
+        input_file = afterImmuneFasta
+
     #bacteria ----------
-    cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/virus/virus -use_index true -query %s -db %s/db/microbiome/bacteria/bacteria  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s 2>temp.txt" %(codeDir,codeDir,afterImmuneFasta,codeDir,bacteriaFile)
+    cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/virus/virus -use_index true -query %s -db %s/db/microbiome/bacteria/bacteria  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s 2>temp.txt" %(codeDir,codeDir,input_file,codeDir,bacteriaFile)
     write2Log(cmd,cmdLogfile,"False")
 
     if args.qsub or args.qsubArray:
@@ -789,12 +817,17 @@ if args.microbiome:
 
 
 #metaphlan2.py metagenome.fastq --input_type fastq
-
+### TODO - Fix the input for non-reductive step 
 
     #virus-----------
-    cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/virus/viruses -use_index true -query %s -db %s/db/microbiome/virus/viruses  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s 2>temp" %(codeDir,codeDir,afterBacteraFasta,codeDir,virusFile)
-    write2Log(cmd,cmdLogfile,"False")
+
     if args.qsub or args.qsubArray:
+        if args.nonReductive:
+            input_file = branch_point_file
+        else:
+            input_file = afterImmuneFasta
+        cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/virus/viruses -use_index true -query %s -db %s/db/microbiome/virus/viruses  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s 2>temp" %(codeDir,codeDir,input_file,codeDir,virusFile)
+        write2Log(cmd,cmdLogfile,"False")
         f = open(runVirusFile,'w')
         f.write(cmd+"\n")
         f.write("echo \"done!\">%s/%s_virus.done \n" %(virusDir, basename))
@@ -803,6 +836,8 @@ if args.microbiome:
             cmdQsub="qsub -cwd -V -N virus -l h_data=16G,time=24:00:00 %s" %(runVirusFile)
             os.system(cmdQsub)
     else:
+        cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/virus/viruses -use_index true -query %s -db %s/db/microbiome/virus/viruses  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s 2>temp" %(codeDir,codeDir,afterBacteraFasta,codeDir,virusFile)
+        write2Log(cmd,cmdLogfile,"False")
         os.chdir(virusDir)
         os.system(cmd)
         virusReads=nMicrobialReads(virusFile,readLength,virusFileFiltered)
@@ -824,8 +859,10 @@ if args.microbiome:
 
 
 
-
-    inFasta=afterVirusFasta
+    if args.nonReductive:
+        inFasta = branch_point_file
+    else:    
+        inFasta = afterVirusFasta
     nReadsEP=0
 
     for db in dbList:
