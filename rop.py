@@ -139,9 +139,12 @@ job_option_arguments.add_argument("--qsubArray", help="prepare qsub scripts to b
 
 input_option_arguments = ap.add_argument_group('Input Options')
 input_option_arguments.add_argument("--b", '-b', help="unmapped reads in bam format", action="store_true")
+input_option_arguments.add_argument("--fastqGz", '-z', help="unmapped reads in fasta.gz format", action="store_true")
 input_option_arguments.add_argument("--skipLowq", help="skip step filtering ", action="store_true")
 input_option_arguments.add_argument("--skipQC", help="skip entire QC step : filtering  low-quality, low-complexity and rRNA reads (reads mathing rRNA repeat unit)", action="store_true")
 input_option_arguments.add_argument("--skipPreliminary", '-s', help="skip the preliminary steps including QC step as well as mapping lost human read step", action="store_true")
+
+
 
 run_only_options = ap.add_argument_group('Run Options')
 run_only_options.add_argument("--repeat", help = "Run Lost Human Repeat Step ONLY", action = "store_true")
@@ -326,12 +329,23 @@ else:
 
     #######################################################################################################################################
     if args.skipLowq==False:
-
         #number of reads
-        with open(unmappedFastq) as f:
-            for i, l in enumerate(f):
-                pass
-        n=(i + 1)/4
+        if args.fastqGz:
+            with gzip.open(unmappedFastq) as f:
+                for i, l in enumerate(f):
+                    pass
+            n=(i + 1)/4
+            
+            unmappedFastqGzip=unmappedFastq
+            unmappedFastq=unmappedFastqGzip.split(".gz")[0]
+            write_gzip_into_readable(unmappedFastqGzip,unmappedFastq)
+            
+            
+        else:
+            with open(unmappedFastq) as f:
+                for i, l in enumerate(f):
+                    pass
+            n=(i + 1)/4
 
         message="Processing %s unmapped reads" %(n)
         write2Log(message,gLogfile,args.quiet)
