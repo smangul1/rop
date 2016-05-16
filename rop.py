@@ -140,8 +140,8 @@ job_option_arguments.add_argument("--qsubArray", help="prepare qsub scripts to b
 input_option_arguments = ap.add_argument_group('Input Options')
 input_option_arguments.add_argument("--b", '-b', help="unmapped reads in bam format", action="store_true")
 input_option_arguments.add_argument("--fastqGz", '-z', help="unmapped reads in fasta.gz format", action="store_true")
-input_option_arguments.add_argument("--skipLowq", help="skip step filtering ", action="store_true")
-input_option_arguments.add_argument("--skipQC", help="skip entire QC step : filtering  low-quality, low-complexity and rRNA reads (reads mathing rRNA repeat unit)", action="store_true")
+input_option_arguments.add_argument("--skipLowq", help="skip step filtering low qulaity reads ", action="store_true")
+input_option_arguments.add_argument("--skipQC", help="skip entire QC step : filtering  low-quality, low-complexity and rRNA reads", action="store_true")
 input_option_arguments.add_argument("--skipPreliminary", '-s', help="skip the preliminary steps including (1) QC and (2) Remaping to human references (lost human reads)", action="store_true")
 
 
