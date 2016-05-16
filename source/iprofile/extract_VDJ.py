@@ -26,8 +26,8 @@ prefix=os.path.splitext(base)[0]
 
 currentDir=os.path.dirname(os.path.realpath(__file__))
 
-ighvFile=currentDir+"/../../db/BCRTCR/gnames/%sV.gNames" %(args.chainType)
-ighjFile=currentDir+"/../../db/BCRTCR/gnames/%sJ.gNames" %(args.chainType)
+ighvFile=currentDir+"/../../db/antibody/gnames/%sV.gNames" %(args.chainType)
+ighjFile=currentDir+"/../../db/antibody/gnames/%sJ.gNames" %(args.chainType)
 
 ighvNames = [line.strip() for line in open(ighvFile, 'r')]
 ighjNames = [line.strip() for line in open(ighjFile, 'r')]
