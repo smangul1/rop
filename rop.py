@@ -114,7 +114,7 @@ def nMicrobialReads(inFile,readLength,outFile):
 #######################################################################
 
 print "*********************************************"
-print "ROP is a computational protocol aimed to discover the source of all reads, originated from complex RNA molecules, recombinant antibodies and microbial communities. Written by Serghei Mangul (smangul@ucla.edu) and Harry Taegyun Yang (harry2416@gmail.com), University of California, Los Angeles (UCLA). (c) 2016. Released under the terms of the General Public License version 3.0 (GPLv3)"
+print "ROP (version 1.0.1) is a computational protocol aimed to discover the source of all reads, originated from complex RNA molecules, recombinant antibodies and microbial communities. Written by Serghei Mangul (smangul@ucla.edu) and Harry Taegyun Yang (harry2416@gmail.com), University of California, Los Angeles (UCLA). (c) 2016. Released under the terms of the General Public License version 3.0 (GPLv3)"
 print ""
 print "For more details see:"
 print "https://sergheimangul.wordpress.com/rop/"
@@ -131,23 +131,26 @@ ap = argparse.ArgumentParser('python rop.py')
 
 necessary_arguments = ap.add_argument_group('Necessary Inputs')
 necessary_arguments.add_argument('unmappedReads', help='unmapped Reads in the fastq format')
-necessary_arguments.add_argument('dir', help='directory (absolute path) to save results of the analysis')
+necessary_arguments.add_argument('dir', help='directory to save results of the analysis')
 
 job_option_arguments = ap.add_argument_group('Job Options')
-job_option_arguments.add_argument("--qsub", help="submit qsub jobs on hoffman2 cluster", action="store_true")
-job_option_arguments.add_argument("--qsubArray", help="prepare qsub scripts to be run later using job array", action="store_true")
+job_option_arguments.add_argument("--qsub", help="submit qsub jobs on hoffman2 (UCLA) cluster. If planning to use on your cluster contact smangul@ucla.edu", action="store_true")
+job_option_arguments.add_argument("--qsubArray", help="prepare qsub scripts to be run later using job array. Working on hoffman2 (UCLA) cluster. If planning to use on your cluster contact smangul@ucla.edu", action="store_true")
 
 input_option_arguments = ap.add_argument_group('Input Options')
 input_option_arguments.add_argument("--b", '-b', help="unmapped reads in bam format", action="store_true")
-input_option_arguments.add_argument("--skipLowq", help="skip step filtering ", action="store_true")
-input_option_arguments.add_argument("--skipQC", help="skip entire QC step : filtering  low-quality, low-complexity and rRNA reads (reads mathing rRNA repeat unit)", action="store_true")
-input_option_arguments.add_argument("--skipPreliminary", '-s', help="skip the preliminary steps including QC step as well as mapping lost human read step", action="store_true")
+input_option_arguments.add_argument("--fastqGz", '-z', help="unmapped reads in fasta.gz format", action="store_true")
+input_option_arguments.add_argument("--skipLowq", help="skip step filtering low qulaity reads ", action="store_true")
+input_option_arguments.add_argument("--skipQC", help="skip entire QC step : filtering  low-quality, low-complexity and rRNA reads", action="store_true")
+input_option_arguments.add_argument("--skipPreliminary", '-s', help="skip the preliminary steps including (1) QC and (2) Remaping to human references (lost human reads)", action="store_true")
+
+
 
 run_only_options = ap.add_argument_group('Run Options')
-run_only_options.add_argument("--repeat", help = "Run Lost Human Repeat Step ONLY", action = "store_true")
-run_only_options.add_argument("--immune", help = "Run TCR/BCR immune gene analysis ONLY", action = "store_true")
-run_only_options.add_argument("--circRNA", help = "Run CIRI for circular RNA detection ONLY", action="store_true")
-run_only_options.add_argument("--microbiome", help = "Run Microbime Analysis ONLY", action = "store_true")
+run_only_options.add_argument("--repeat", help = "Run lost repeat profiling ONLY", action = "store_true")
+run_only_options.add_argument("--immune", help = "Run antibody profiling ONLY", action = "store_true")
+run_only_options.add_argument("--circRNA", help = "Run circular RNA profiling ONLY", action="store_true")
+run_only_options.add_argument("--microbiome", help = "Run microbime profiling ONLY", action = "store_true")
 
 misc_option_arguments = ap.add_argument_group('Miscellenous Options')
 misc_option_arguments.add_argument("--gzip", help = "Gzip the fasta files after filtering step", action = "store_true")
@@ -326,12 +329,23 @@ else:
 
     #######################################################################################################################################
     if args.skipLowq==False:
-
         #number of reads
-        with open(unmappedFastq) as f:
-            for i, l in enumerate(f):
-                pass
-        n=(i + 1)/4
+        if args.fastqGz:
+            with gzip.open(unmappedFastq) as f:
+                for i, l in enumerate(f):
+                    pass
+            n=(i + 1)/4
+            
+            unmappedFastqGzip=unmappedFastq
+            unmappedFastq=unmappedFastqGzip.split(".gz")[0]
+            write_gzip_into_readable(unmappedFastqGzip,unmappedFastq)
+            
+            
+        else:
+            with open(unmappedFastq) as f:
+                for i, l in enumerate(f):
+                    pass
+            n=(i + 1)/4
 
         message="Processing %s unmapped reads" %(n)
         write2Log(message,gLogfile,args.quiet)
