@@ -26,7 +26,7 @@ elif args.standard:
 	print "Standard installation option selected"
 	print "Downloading the database (~65GB) takes up to 45 minute"
 	print "Please wait until the installation is completed."
-	print "Downloading the gtex files"
+	print "Downloading the database files"
 	os.chdir('./db/')
 	call(["wget", "https://googledrive.com/host/0B_NUyiE86yDwaUxoVjhlSjN5SkE/database.tar"]) 
 	
@@ -39,10 +39,14 @@ elif args.standard:
 		sys.exit(23)
 	else:
 		print "MD5 Checksum matches"
+	print "Downloading the metaphlan database"
+	call(["wget", "https://googledrive.com/host/0B_NUyiE86yDwaUxoVjhlSjN5SkE/metaphlan_bowtie2db.tar"]) 
 
 	print "Unzipping the databases"
 	call(["tar","-xvf", 'database.tar'])
 	os.remove('database.tar')
+	call(["tar", "-xvf", 'metaphlan_bowtie2db.tar'])
+	os.remove('metaphlan_bowtie2db.tar')
 	print "Installation Completed! Please use rop.py"
 
 else:
