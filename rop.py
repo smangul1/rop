@@ -149,6 +149,7 @@ input_option_arguments.add_argument("--skipPreliminary", '-s', help="skip the pr
 run_only_options = ap.add_argument_group('Run Options')
 run_only_options.add_argument("--repeat", help = "Run lost repeat profiling ONLY", action = "store_true")
 run_only_options.add_argument("--immune", help = "Run antibody profiling ONLY", action = "store_true")
+run_only_options.add_argument("--metaphlan", help = "Run metaphlan profiling ONLY", action = "store_true")
 run_only_options.add_argument("--circRNA", help = "Run circular RNA profiling ONLY", action="store_true")
 run_only_options.add_argument("--microbiome", help = "Run microbime profiling ONLY", action = "store_true")
 
@@ -214,6 +215,8 @@ tcrbDir=args.dir+"/TCR/TCRB/"
 tcrdDir=args.dir+"/TCR/TCRD/"
 tcrgDir=args.dir+"/TCR/TCRG/"
 
+metaphlanDir = args.dir + "/metaphlan/"
+
 microbiomeDir=args.dir+"/microbiome/"
 
 bacteriaDir=args.dir+"/microbiome/bacteria/"
@@ -245,6 +248,8 @@ if not os.path.exists(virusDir):
     os.makedirs(virusDir)
 if not os.path.exists(eupathdbDir):
     os.makedirs(eupathdbDir)
+if not os.path.exists(metaphlanDir):
+    os.makedirs(metaphlanDir)
 
 #intermediate files
 unmappedFastq=args.dir+"/unmapped_"+basename+".fastq"
@@ -253,11 +258,17 @@ lowQFileFasta=QCDir+basename+"_lowQ.fa"
 lowQCFile=QCDir+basename+"_lowQC.fa"
 rRNAFile=QCDir+basename+"_rRNA_blastFormat6.csv"
 afterrRNAFasta=QCDir+basename+"_after_rRNA.fasta"
+
 afterlostHumanFasta=lostHumanDir+basename+"_after_rRNA_lostHuman.fasta"
 afterlostHumanFastaGzip=lostHumanDir+basename+"_after_rRNA_lostHuman.fasta.gz"
+
 afterImmuneFasta=bcrDir+basename+"_afterImmune.fasta"
 afterBacteraFasta=bacteriaDir+basename+"_afterBacteria.fasta"
 afterVirusFasta=virusDir+basename+"_afterVirus.fasta"
+
+metaphlan_intermediate_map = metaphlanDir + basename + "_metaphlan.map"
+metaphlan_intermediate_bowtie2out = metaphlanDir + basename + "_bowtie2out.txt"
+metaphlan_output = metaphlanDir + basename + "_metaphlan_output.tsv"
 
 
 gBamFile=lostHumanDir+basename+"_genome.bam"
@@ -310,7 +321,7 @@ runTCRDFile=tcrdDir+"/runTCRD_"+basename+".sh"
 runTCRGFile=tcrgDir+"/runTCRG_"+basename+".sh"
 runBacteriaFile=bacteriaDir +"/runBacteria_"+basename+".sh"
 runVirusFile=virusDir +"/runVirus_"+basename+".sh"
-
+run_metaphlan_file = metaphlanDir + "/run_metaphlan_" + basename + ".sh"
 
 os.chdir(args.dir)
 
@@ -792,13 +803,36 @@ if args.immune:
 else:
     print "Immune Profiling Step is deselected - This step is skipped."
 
+#######################################################################################################################################
+# 5. Metaphlan
+
+#TODO 
+if args.metaphlan:
+    write2Log("5.  Metaphlan profiling...",cmdLogfile,"False")
+    write2Log("5.  Metaphlan profiling...",gLogfile,args.quiet)
+    if args.nonReductive:
+        input_file = branch_point_file
+    else:
+        input_file = afterImmuneFasta
+    cmd = "python %s/tools/metaphlan2.py %s %s --input_type multifasta --bowtie2db %s/db/metaphlan/bowtie2db/mpa -t reads_map --nproc 8 --bowtie2out %s" % (codeDir, input_file, metaphlan_intermediate_map, codeDir, metaphlan_intermediate_bowtie2out)
+    cmd = cmd + "\n" + "python %s/tools/metaphlan2.py --input-type blastout %s -t rel_ab > %s" %(codeDir,metaphlan_intermediate_bowtie2out, metaphlan_output)
+    write2Log(cmd,cmdLogfile,"False")
+
+    if args.qsub or args.qsubArray:
+        f= open(run_metaphlan_file, 'w')
+        f.write(cmd + "\n")
+        f.write("echo \"done!\" > %s/%s_metaphlan.done \n" % (metaphlanDir, basename))
+        f.close()
+        if args.qsub:
+            cmdQsub="qsub -cwd -V -N metaphlan -l h_data=16G,time=24:00:00 %s" %(run_metaphlan_file)
+            os.system(cmdQsub)
 
 
 #######################################################################################################################################
-#5. Microbiome profiling...
+# 6. Microbiome profiling...
 if args.microbiome:
-    write2Log("5.  Microbiome profiling...",cmdLogfile,"False")
-    write2Log("5.  Microbiome profiling...",gLogfile,args.quiet)
+    write2Log("6.  Microbiome profiling...",cmdLogfile,"False")
+    write2Log("6.  Microbiome profiling...",gLogfile,args.quiet)
     
     if args.nonReductive:
         input_file = branch_point_file
