@@ -516,6 +516,7 @@ else:
 ### TODO - Branch point
 if args.nonReductive:
     branch_point_file = afterlostHumanFasta
+    print "Non-reductive mode selected"
 
 #######################################################################################################################################
 #3. Maping to repeat sequences...
@@ -797,7 +798,7 @@ if args.immune:
         write2Log("***Note : Combinatorial diversity of the antibody repertoire (recombinations of the of VJ gene segments)  will be available in the next release.",gLogfile,args.quiet)
 
         immuneReads=set().union(immuneReadsTCRA,immuneReadsTCRB,immuneReadsTCRD,immuneReadsTCRG)
-        excludeReadsFromFasta(afterlostRepeatFasta,immuneReads,afterImmuneFasta)
+        excludeReadsFromFasta(input_file,immuneReads,afterImmuneFasta)
         if not args.dev:
             os.remove(afterlostRepeatFasta)
 else:
