@@ -549,7 +549,7 @@ if not args.skipPreliminary:
     else:
         excludeReadsFromFasta(afterrRNAFasta,lostHumanReads,afterlostHumanFasta)
     nlostHumanReads=len(lostHumanReads)
-    write2Log("--identified %s lost human reads from unmapped reads. Among those: %s reads with 0 mistmathes; %s reads with 1 mistmath; %s reads with 2 mistmathes" %(len(lostHumanReads),len(lostHumanReads0),len(lostHumanReads1),len(lostHumanReads2)), gLogfile, args.quiet)
+    write2Log("--identified %s lost human reads from unmapped reads. Among those: %s reads with 0 mismatches; %s reads with 1 mismatch; %s reads with 2 mismatches" %(len(lostHumanReads),len(lostHumanReads0),len(lostHumanReads1),len(lostHumanReads2)), gLogfile, args.quiet)
     write2Log("***Note: Complete list of lost human reads is available from sam files: %s,%s" %(gBamFile,tBamFile), gLogfile, args.quiet)
 
 
@@ -564,8 +564,6 @@ else:
     else:
         afterlostHumanFasta = args.unmappedReads
 
-
-### TODO - Branch point
 if args.nonReductive:
     branch_point_file = afterlostHumanFasta
     print "Non-reductive mode selected"
@@ -664,8 +662,8 @@ if args.circRNA:
         excludeReadsFromFasta(afterlostRepeatFasta,NCL_reads,afterNCLFasta)
         nNCLReads=len(NCL_reads)
 
-    if not args.dev:
-        os.remove(afterlostRepeatFasta)
+        if not args.dev:
+            os.remove(afterlostRepeatFasta)
 
 
 
