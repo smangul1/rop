@@ -355,7 +355,7 @@ os.chdir(args.dir)
 
 #######################################################################################################################################
 if args.skipQC or args.skipPreliminary:
-    afterrRNAFasta=args.unmappedReads
+    # afterrRNAFasta=args.unmappedReads
     print "Preliminary filtering steps are skipped."
 else:
     if args.b:
@@ -557,9 +557,9 @@ if not args.skipPreliminary:
         os.remove(afterrRNAFasta)
 ### TODO
 else:
-    if args.gzip:
+    if args.gzip or args.fastqGz:
         print "gzip file %s is loaded." %(args.unmappedReads)
-        write_gzip_into_readable(args.unmappedReads,afterlostHumanFasta)
+        write_gzip_into_readable(args.unmappedReads, afterlostHumanFasta)
 
     else:
         afterlostHumanFasta = args.unmappedReads
