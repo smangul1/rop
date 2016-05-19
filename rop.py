@@ -485,7 +485,9 @@ else:
 if not args.skipPreliminary:
     write2Log("2. Remaping to human references...",cmdLogfile,"False")
     write2Log("2. Remaping to human references...",gLogfile,args.quiet)
-
+    # If input is afterQC fasta.gz
+    if args.fastqGz:
+        write_gzip_into_readable(args.unmappedReads, afterrRNAFasta)
     cmdGenome="%s/tools/bowtie2 -k 1 -p 8 -f -x %s/db/human/Bowtie2Index/genome -U %s 2>>%s | %s/tools/samtools view -SF4 -   >%s" %(codeDir,codeDir, afterrRNAFasta,logHuman,codeDir,gBamFile)
 
     #transcriptome
