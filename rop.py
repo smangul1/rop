@@ -355,7 +355,8 @@ os.chdir(args.dir)
 
 #######################################################################################################################################
 if args.skipQC or args.skipPreliminary:
-    afterrRNAFasta=args.unmappedReads
+    # afterrRNAFasta=args.unmappedReads
+    print "Preliminary filtering steps are skipped."
 else:
     if args.b:
         if args.skipLowq:
@@ -484,7 +485,9 @@ else:
 if not args.skipPreliminary:
     write2Log("2. Remaping to human references...",cmdLogfile,"False")
     write2Log("2. Remaping to human references...",gLogfile,args.quiet)
-
+    # If input is afterQC fasta.gz
+    if args.fastqGz:
+        write_gzip_into_readable(args.unmappedReads, afterrRNAFasta)
     cmdGenome="%s/tools/bowtie2 -k 1 -p 8 -f -x %s/db/human/Bowtie2Index/genome -U %s 2>>%s | %s/tools/samtools view -SF4 -   >%s" %(codeDir,codeDir, afterrRNAFasta,logHuman,codeDir,gBamFile)
 
     #transcriptome
@@ -546,7 +549,7 @@ if not args.skipPreliminary:
     else:
         excludeReadsFromFasta(afterrRNAFasta,lostHumanReads,afterlostHumanFasta)
     nlostHumanReads=len(lostHumanReads)
-    write2Log("--identified %s lost human reads from unmapped reads. Among those: %s reads with 0 mistmathes; %s reads with 1 mistmath; %s reads with 2 mistmathes" %(len(lostHumanReads),len(lostHumanReads0),len(lostHumanReads1),len(lostHumanReads2)), gLogfile, args.quiet)
+    write2Log("--identified %s lost human reads from unmapped reads. Among those: %s reads with 0 mismatches; %s reads with 1 mismatch; %s reads with 2 mismatches" %(len(lostHumanReads),len(lostHumanReads0),len(lostHumanReads1),len(lostHumanReads2)), gLogfile, args.quiet)
     write2Log("***Note: Complete list of lost human reads is available from sam files: %s,%s" %(gBamFile,tBamFile), gLogfile, args.quiet)
 
 
@@ -554,13 +557,13 @@ if not args.skipPreliminary:
         os.remove(afterrRNAFasta)
 ### TODO
 else:
-    if args.gzip:
-        write_gzip_into_readable(args.unmappedReads,afterlostHumanFasta)
+    if args.gzip or args.fastqGz:
+        print "gzip file %s is loaded." %(args.unmappedReads)
+        write_gzip_into_readable(args.unmappedReads, afterlostHumanFasta)
+
     else:
         afterlostHumanFasta = args.unmappedReads
 
-
-### TODO - Branch point
 if args.nonReductive:
     branch_point_file = afterlostHumanFasta
     print "Non-reductive mode selected"
@@ -611,7 +614,7 @@ if args.repeat:
                     lostRepeatReads.add(element)
 
         nRepeatReads=len(lostRepeatReads)
-        write2Log("-Identify %s lost repeat sequences from unmapped reads" %(nRepeatReads) ,gLogfile,args.quiet)
+        write2Log("-- Identified %s lost repeat sequences from unmapped reads" %(nRepeatReads) ,gLogfile,args.quiet)
         write2Log("***Note : Repeat sequences classification into classes (e.g. LINE) and families (e.g. Alu) will be available in next release" ,gLogfile,args.quiet)
         excludeReadsFromFasta(afterlostHumanFasta,lostRepeatReads,afterlostRepeatFasta)
 
@@ -659,8 +662,8 @@ if args.circRNA:
         excludeReadsFromFasta(afterlostRepeatFasta,NCL_reads,afterNCLFasta)
         nNCLReads=len(NCL_reads)
 
-    if not args.dev:
-        os.remove(afterlostRepeatFasta)
+        if not args.dev:
+            os.remove(afterlostRepeatFasta)
 
 
 
