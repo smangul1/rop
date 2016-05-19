@@ -998,17 +998,17 @@ if args.microbiome:
     if not args.qsubArray or args.qsub:
         os.rename(eupathdbDir+"%s_after_tritryp.fasta" %(basename), unaccountedReadsFasta)
 
-    if not args.dev:
-        os.remove(afterVirusFasta)
-    for db in ["ameoba",
-           "crypto",
-           "giardia",
-           "microsporidia",
-           "piroplasma",
-           "plasmo",
-           "toxo",
-           "trich"]:
-        os.remove(eupathdbDir+"%s_after_%s.fasta" %(basename,db))
+        if not args.dev:
+            os.remove(afterVirusFasta)
+        for db in ["ameoba",
+               "crypto",
+               "giardia",
+               "microsporidia",
+               "piroplasma",
+               "plasmo",
+               "toxo",
+               "trich"]:
+            os.remove(eupathdbDir+"%s_after_%s.fasta" %(basename,db))
 
 
 
