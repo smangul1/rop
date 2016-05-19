@@ -995,7 +995,8 @@ if args.microbiome:
             inFasta=afterFasta
             nReadsEP+=nEupathdbReads
 
-    os.rename(eupathdbDir+"%s_after_tritryp.fasta" %(basename), unaccountedReadsFasta)
+    if not args.qsubArray or args.qsub:
+        os.rename(eupathdbDir+"%s_after_tritryp.fasta" %(basename), unaccountedReadsFasta)
 
     if not args.dev:
         os.remove(afterVirusFasta)
