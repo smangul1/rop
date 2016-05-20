@@ -587,7 +587,7 @@ if args.circRNA:
     else:
         input_file = afterrRNAFasta
     cmd="%s/tools/bwa mem -T -S %s/db/human/BWAIndex/genome.fa %s > %s \n" %(codeDir, codeDir, input_file, NCL_CIRI_file)
-    cmd = cmd + "pearl %s/tools/CIRI_v1.2.pl -S -I %s -O %s -F %s/db/human/BWAIndex/genome.fa" %(codeDir, NCL_CIRI_file, after_NCL_CIRI_file_prefix, codeDir)
+    cmd = cmd + "perl %s/tools/CIRI_v1.2.pl -S -I %s -O %s -F %s/db/human/BWAIndex/genome.fa" %(codeDir, NCL_CIRI_file, after_NCL_CIRI_file_prefix, codeDir)
     if args.qsub or args.qsubArray:
         f = open(runNCL_CIRIfile,'w')
         f.write(cmd+"\n")
