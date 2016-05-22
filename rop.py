@@ -181,11 +181,12 @@ args = ap.parse_args()
 
 # ONLY OPTION Configuration
 # IF none of them are selected: make everything true
-if not args.repeat and not args.immune and not args.circRNA and not args.microbiome:
+if not args.repeat and not args.immune and not args.circRNA and not args.microbiome and not args.metaphlan:
     args.repeat = True
     args.immune = True
     args.circRNA = True
     args.microbiome = True
+    args.metaphlan = True
 else:
     #It is gonna be non-reductive for now 
     args.nonReductive = True
