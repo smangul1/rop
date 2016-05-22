@@ -166,7 +166,7 @@ input_option_arguments.add_argument("--skipPreliminary", '-s', help="skip the pr
 run_only_options = ap.add_argument_group('Run Options')
 run_only_options.add_argument("--repeat", help = "Run lost repeat profiling ONLY", action = "store_true")
 run_only_options.add_argument("--immune", help = "Run antibody profiling ONLY", action = "store_true")
-#run_only_options.add_argument("--metaphlan", help = "Run metaphlan profiling ONLY", action = "store_true")
+run_only_options.add_argument("--metaphlan", help = "Run metaphlan profiling ONLY", action = "store_true")
 run_only_options.add_argument("--circRNA", help = "Run circular RNA profiling ONLY", action="store_true")
 run_only_options.add_argument("--microbiome", help = "Run microbime profiling ONLY", action = "store_true")
 
@@ -181,11 +181,12 @@ args = ap.parse_args()
 
 # ONLY OPTION Configuration
 # IF none of them are selected: make everything true
-if not args.repeat and not args.immune and not args.circRNA and not args.microbiome:
+if not args.repeat and not args.immune and not args.circRNA and not args.microbiome and not args.metaphlan:
     args.repeat = True
     args.immune = True
     args.circRNA = True
     args.microbiome = True
+    args.metaphlan = true
 else:
     #It is gonna be non-reductive for now 
     args.nonReductive = True
@@ -876,8 +877,29 @@ if args.immune:
             os.remove(afterNCLFasta)
 else:
     print "Immune Profiling Step is deselected - This step is skipped."
+#######################################################################################################################################
+# 5. Metaphlan
 
+#TODO 
+if args.metaphlan:
+    write2Log("5.  Metaphlan profiling...",cmdLogfile,"False")
+    write2Log("5.  Metaphlan profiling...",gLogfile,args.quiet)
+    if args.nonReductive:
+        input_file = branch_point_file
+    else:
+        input_file = afterImmuneFasta
+    cmd = "python %s/tools/metaphlan2.py %s %s --mpl_pkl %s/db/metaphlan/mpa_v20_m200.pkl --input_type multifasta --bowtie2db %s/db/metaphlan/mpa_v20_m200 -t reads_map --nproc 8 --bowtie2out %s" % (codeDir, input_file, metaphlan_intermediate_map, codeDir, codeDir, metaphlan_intermediate_bowtie2out)
+    cmd = cmd + "\n" + "python %s/tools/metaphlan2.py --mpl_pkl %s/db/metaphlan/mpa_v20_m200.pkl --input_type bowtie2out %s -t rel_ab > %s" %(codeDir,codeDir,metaphlan_intermediate_bowtie2out, metaphlan_output)
+    write2Log(cmd,cmdLogfile,"False")
 
+    if args.qsub or args.qsubArray:
+        f= open(run_metaphlan_file, 'w')
+        f.write(cmd + "\n")
+        f.write("echo \"done!\" > %s/%s_metaphlan.done \n" % (metaphlanDir, basename))
+        f.close()
+        if args.qsub:
+            cmdQsub="qsub -cwd -V -N metaphlan -l h_data=16G,time=24:00:00 %s" %(run_metaphlan_file)
+            os.system(cmdQsub)
 
 #######################################################################################################################################
 # 6. Microbiome profiling...
