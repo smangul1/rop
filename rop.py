@@ -876,8 +876,29 @@ if args.immune:
             os.remove(afterNCLFasta)
 else:
     print "Immune Profiling Step is deselected - This step is skipped."
+#######################################################################################################################################
+# 5. Metaphlan
 
+#TODO 
+if args.metaphlan:
+    write2Log("5.  Metaphlan profiling...",cmdLogfile,"False")
+    write2Log("5.  Metaphlan profiling...",gLogfile,args.quiet)
+    if args.nonReductive:
+        input_file = branch_point_file
+    else:
+        input_file = afterImmuneFasta
+    cmd = "python %s/tools/metaphlan2.py %s %s --input_type multifasta --bowtie2db %s/db/metaphlan/bowtie2db/mpa -t reads_map --nproc 8 --bowtie2out %s" % (codeDir, input_file, metaphlan_intermediate_map, codeDir, metaphlan_intermediate_bowtie2out)
+    cmd = cmd + "\n" + "python %s/tools/metaphlan2.py --input-type blastout %s -t rel_ab > %s" %(codeDir,metaphlan_intermediate_bowtie2out, metaphlan_output)
+    write2Log(cmd,cmdLogfile,"False")
 
+    if args.qsub or args.qsubArray:
+        f= open(run_metaphlan_file, 'w')
+        f.write(cmd + "\n")
+        f.write("echo \"done!\" > %s/%s_metaphlan.done \n" % (metaphlanDir, basename))
+        f.close()
+        if args.qsub:
+            cmdQsub="qsub -cwd -V -N metaphlan -l h_data=16G,time=24:00:00 %s" %(run_metaphlan_file)
+            os.system(cmdQsub)
 
 #######################################################################################################################################
 # 6. Microbiome profiling...
