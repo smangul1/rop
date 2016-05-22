@@ -354,8 +354,11 @@ run_metaphlan_file = metaphlanDir + "/run_metaphlan_" + basename + ".sh"
 os.chdir(args.dir)
 
 #######################################################################################################################################
-if args.skipQC or args.skipPreliminary:
+if args.skipPreliminary:
     # afterrRNAFasta=args.unmappedReads
+    print "Preliminary filtering steps are skipped."
+elif args.skipQC:
+    afterrRNAFasta = args.unmappedReads
     print "Preliminary filtering steps are skipped."
 else:
     if args.b:
