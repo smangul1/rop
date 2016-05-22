@@ -40,13 +40,13 @@ elif args.standard:
 	else:
 		print "MD5 Checksum matches"
 	print "Downloading the metaphlan database"
-	call(["wget", "https://googledrive.com/host/0B_NUyiE86yDwaUxoVjhlSjN5SkE/metaphlan_bowtie2db.tar"]) 
+	call(["wget", "https://googledrive.com/host/0B_NUyiE86yDwaUxoVjhlSjN5SkE/metaphlan_db.tar"]) 
 
 	print "Unzipping the databases"
 	call(["tar","-xvf", 'database.tar'])
 	os.remove('database.tar')
-	call(["tar", "-xvf", 'metaphlan_bowtie2db.tar'])
-	os.remove('metaphlan_bowtie2db.tar')
+	call(["tar", "-xvf", 'metaphlan_db.tar'])
+	os.remove('metaphlan_db.tar')
 	print "Installation Completed! Please use rop.py"
 
 else:
