@@ -62,6 +62,11 @@ onlyfiles = [f for f in listdir(args.dir) if isfile(join(args.dir, f))]
 c1=int(args.column1)
 c2=int(args.column2)
 
+
+print "Number of samples to proccess:", len(onlyfiles)
+
+
+
 for sample in onlyfiles:
     if sample.endswith(args.fileExtension):
     
@@ -77,7 +82,7 @@ for sample in onlyfiles:
                 print [line[c2]]
                 dict[line[c1]]=float(line[c2])
         
-        sample=sample.split(".")[0]
+        sample=sample.split(args.fileExtension)[0]
         iProfile[sample]=dict
 
 out=open(args.outDir+'/alpha'+args.prefix+'.csv',"w")
@@ -90,6 +95,8 @@ for sample,dict in iProfile.items():
     else:
         out.write(sample+",0,0.0,0.0\n")
 
+
+print "Calculated alpha for %i samples" %len(iProfile)
 
 
 print "DONE!"

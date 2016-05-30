@@ -96,10 +96,12 @@ comb=[]
 
 
 
+
 for key,val in dict.items():
     if val[0]==1:
         s=val[1][0]+val[2][0]+val[3][0]
         if s>=2:
+            print key,val
             if val[1][0]+val[3][0]==2:
                 comb.append(val[1][1]+";"+val[3][1])
 
