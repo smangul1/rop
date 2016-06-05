@@ -163,7 +163,7 @@ input_option_arguments.add_argument("--skipPreliminary", '-s', help="skip the pr
 
 
 
-run_only_options = ap.add_argument_group('Run Options')
+run_only_options = ap.add_argument_group('Run Options - select analysis (multi-selection possible)')
 run_only_options.add_argument("--repeat", help = "Run lost repeat profiling ONLY", action = "store_true")
 run_only_options.add_argument("--immune", help = "Run antibody profiling ONLY", action = "store_true")
 run_only_options.add_argument("--metaphlan", help = "Run metaphlan profiling ONLY", action = "store_true")
