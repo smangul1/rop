@@ -28,7 +28,7 @@ elif args.standard:
 	print "Please wait until the installation is completed."
 	print "Downloading the database files"
 	os.chdir('./db/')
-	call(["wget", "https://googledrive.com/host/0B_NUyiE86yDwaUxoVjhlSjN5SkE/database.tar"]) 
+	call(["wget", "https://googledrive.com/host/0B_NUyiE86yDwaUxoVjhlSjN5SkE/database.tar", "--no-check-certificate"]) 
 	
 	print "Checking md5sum of the databases" 
 	downloaded = Popen(["md5sum",'./database.tar'], stdout=PIPE)
