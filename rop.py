@@ -166,7 +166,7 @@ input_option_arguments.add_argument("--b", '-b', help="unmapped reads in bam for
 input_option_arguments.add_argument("--fastqGz", '-z', help="unmapped reads in fasta.gz format", action="store_true")
 input_option_arguments.add_argument("--skipLowq", help="skip step filtering low quality reads ", action="store_true")
 input_option_arguments.add_argument("--skipQC", help="skip entire QC step : filtering  low-quality, low-complexity and rRNA reads", action="store_true")
-input_option_arguments.add_argument("--skipPreliminary", '-s', help="skip the preliminary steps including (1) QC and (2) Remaping to human references (lost human reads)", action="store_true")
+input_option_arguments.add_argument("--skipPreliminary", '-s', help="skip the preliminary steps including (1) QC and (2) Remapping to human references (lost human reads)", action="store_true")
 
 
 
@@ -494,8 +494,8 @@ else:
 #######################################################################################################################################
 #2. Remaping to human references...
 if not args.skipPreliminary:
-    write2Log("2. Remaping to human references...",cmdLogfile,"False")
-    write2Log("2. Remaping to human references...",gLogfile,args.quiet)
+    write2Log("2. Remapping to human references...",cmdLogfile,"False")
+    write2Log("2. Remapping to human references...",gLogfile,args.quiet)
     # If input is afterQC fasta.gz
     if args.fastqGz:
         write_gzip_into_readable(args.unmappedReads, afterrRNAFasta)
