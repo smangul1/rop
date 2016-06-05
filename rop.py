@@ -896,8 +896,8 @@ if args.metaphlan:
         input_file = branch_point_file
     else:
         input_file = afterImmuneFasta
-    cmd = "python %s/tools/metaphlan2.py %s %s --mpl_pkl %s/db/metaphlan/mpa_v20_m200.pkl --input_type multifasta --bowtie2db %s/db/metaphlan/mpa_v20_m200 -t reads_map --nproc 8 --bowtie2out %s" % (codeDir, input_file, metaphlan_intermediate_map, codeDir, codeDir, metaphlan_intermediate_bowtie2out)
-    cmd = cmd + "\n" + "python %s/tools/metaphlan2.py --mpl_pkl %s/db/metaphlan/mpa_v20_m200.pkl --input_type bowtie2out %s -t rel_ab > %s" %(codeDir,codeDir,metaphlan_intermediate_bowtie2out, metaphlan_output)
+    cmd = "python %s/tools/metaphlan2.py %s %s --mpa_pkl %s/db/metaphlan/mpa_v20_m200.pkl --input_type multifasta --bowtie2db %s/db/metaphlan/mpa_v20_m200 -t reads_map --nproc 8 --bowtie2out %s" % (codeDir, input_file, metaphlan_intermediate_map, codeDir, codeDir, metaphlan_intermediate_bowtie2out)
+    cmd = cmd + "\n" + "python %s/tools/metaphlan2.py --mpa_pkl %s/db/metaphlan/mpa_v20_m200.pkl --input_type bowtie2out %s -t rel_ab > %s" %(codeDir,codeDir,metaphlan_intermediate_bowtie2out, metaphlan_output)
     write2Log(cmd,cmdLogfile,"False")
 
     if args.qsub or args.qsubArray:
