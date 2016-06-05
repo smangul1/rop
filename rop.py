@@ -672,7 +672,7 @@ if args.circRNA:
         write2Log("***Note: circRNAs detected by CIRI are available here: %s" %(after_NCL_CIRI_file_prefix) ,gLogfile,args.quiet)
         excludeReadsFromFasta(afterlostRepeatFasta,NCL_reads,afterNCLFasta)
         nNCLReads=len(NCL_reads)
-
+        write2File("done!",args.dir+"/step4_NCL.done")
         if not args.dev:
             os.remove(afterlostRepeatFasta)
 
@@ -1050,10 +1050,11 @@ if args.microbiome:
 
     if not args.qsub and  not args.qsubArray and args.microbiome and args.repeat and args.circRNA and args.immune:
         write2Log("In toto : %s reads mapped to microbial genomes" %(nReadsBacteria+nReadsVirus+nReadsEP) ,gLogfile,args.quiet)
+        write2File("done!",args.dir+"/step6_microbiomeProfile.done")
         nTotalReads=nLowQReads+nLowCReads+n_rRNAReads+nlostHumanReads+nRepeatReads+nNCLReads+nReadsImmuneTotal+nReadsBacteria+nReadsVirus+nReadsEP
         write2Log("Summary: The ROP protocol is able to account for %s reads" %(nTotalReads) ,gLogfile,args.quiet)
         write2Log("***Unaccounted reads (not explained by ROP) are saved to %s" %(unaccountedReadsFasta) ,gLogfile,args.quiet)
-        write2File("done!",args.dir+"/step6_microbiomeProfile.done")
+        
 
 
         message=basename+","+str(n)+","+str(nLowQReads)+","+str(nLowCReads)+","+str(n_rRNAReads)+","+str(nlostHumanReads)+","+str(nRepeatReads)+","+str(nReadsImmuneTotal)+","+str(nReadsBacteria+nReadsVirus+nReadsEP)
