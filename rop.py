@@ -166,7 +166,7 @@ input_option_arguments.add_argument("--b", '-b', help="unmapped reads in bam for
 input_option_arguments.add_argument("--fastqGz", '-z', help="unmapped reads in fasta.gz format", action="store_true")
 input_option_arguments.add_argument("--skipLowq", help="skip step filtering low quality reads ", action="store_true")
 input_option_arguments.add_argument("--skipQC", help="skip entire QC step : filtering  low-quality, low-complexity and rRNA reads", action="store_true")
-input_option_arguments.add_argument("--skipPreliminary", '-s', help="skip the preliminary steps including (1) QC and (2) Remaping to human references (lost human reads)", action="store_true")
+input_option_arguments.add_argument("--skipPreliminary", '-s', help="skip the preliminary steps including (1) QC and (2) Remapping to human references (lost human reads)", action="store_true")
 
 
 
@@ -494,8 +494,8 @@ else:
 #######################################################################################################################################
 #2. Remaping to human references...
 if not args.skipPreliminary:
-    write2Log("2. Remaping to human references...",cmdLogfile,"False")
-    write2Log("2. Remaping to human references...",gLogfile,args.quiet)
+    write2Log("2. Remapping to human references...",cmdLogfile,"False")
+    write2Log("2. Remapping to human references...",gLogfile,args.quiet)
     # If input is afterQC fasta.gz
     if args.fastqGz:
         write_gzip_into_readable(args.unmappedReads, afterrRNAFasta)
@@ -896,8 +896,8 @@ if args.metaphlan:
         input_file = branch_point_file
     else:
         input_file = afterImmuneFasta
-    cmd = "python %s/tools/metaphlan2.py %s %s --mpl_pkl %s/db/metaphlan/mpa_v20_m200.pkl --input_type multifasta --bowtie2db %s/db/metaphlan/mpa_v20_m200 -t reads_map --nproc 8 --bowtie2out %s" % (codeDir, input_file, metaphlan_intermediate_map, codeDir, codeDir, metaphlan_intermediate_bowtie2out)
-    cmd = cmd + "\n" + "python %s/tools/metaphlan2.py --mpl_pkl %s/db/metaphlan/mpa_v20_m200.pkl --input_type bowtie2out %s -t rel_ab > %s" %(codeDir,codeDir,metaphlan_intermediate_bowtie2out, metaphlan_output)
+    cmd = "python %s/tools/metaphlan2.py %s %s --mpa_pkl %s/db/metaphlan/mpa_v20_m200.pkl --input_type multifasta --bowtie2db %s/db/metaphlan/mpa_v20_m200 -t reads_map --nproc 8 --bowtie2out %s" % (codeDir, input_file, metaphlan_intermediate_map, codeDir, codeDir, metaphlan_intermediate_bowtie2out)
+    cmd = cmd + "\n" + "python %s/tools/metaphlan2.py --mpa_pkl %s/db/metaphlan/mpa_v20_m200.pkl --input_type bowtie2out %s -t rel_ab > %s" %(codeDir,codeDir,metaphlan_intermediate_bowtie2out, metaphlan_output)
     write2Log(cmd,cmdLogfile,"False")
 
     if args.qsub or args.qsubArray:
