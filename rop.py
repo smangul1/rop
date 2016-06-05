@@ -71,15 +71,6 @@ def write2Log(message,logFile,option):
     logFile.write(message)
     logFile.write("\n")
 
-
-#######################################################################
-
-def write2File(message,logFile):
-    gLogfile=open(logFile,'w')
-    gLogfile.write(message)
-    gLogfile.close()
-
-
 #######################################################################
 
 def write_gzip_into_readable(gz_input, output): 
@@ -172,9 +163,10 @@ input_option_arguments.add_argument("--skipPreliminary", '-s', help="skip the pr
 
 
 
-run_only_options = ap.add_argument_group('Run Options (options can be combined)')
+run_only_options = ap.add_argument_group('Run Options')
 run_only_options.add_argument("--repeat", help = "Run lost repeat profiling ONLY", action = "store_true")
 run_only_options.add_argument("--immune", help = "Run antibody profiling ONLY", action = "store_true")
+run_only_options.add_argument("--metaphlan", help = "Run metaphlan profiling ONLY", action = "store_true")
 run_only_options.add_argument("--circRNA", help = "Run circular RNA profiling ONLY", action="store_true")
 run_only_options.add_argument("--microbiome", help = "Run microbime profiling ONLY", action = "store_true")
 
@@ -189,11 +181,12 @@ args = ap.parse_args()
 
 # ONLY OPTION Configuration
 # IF none of them are selected: make everything true
-if not args.repeat and not args.immune and not args.circRNA and not args.microbiome:
+if not args.repeat and not args.immune and not args.circRNA and not args.microbiome and not args.metaphlan:
     args.repeat = True
     args.immune = True
     args.circRNA = True
     args.microbiome = True
+    args.metaphlan = True
 else:
     #It is gonna be non-reductive for now 
     args.nonReductive = True
@@ -244,6 +237,7 @@ tcrgDir=tcrDir+"/TCRG/"
 microbiomeDir=args.dir+"/microbiomeProfile/"
 
 
+metaphlanDir = microbiomeDir + "/metaphlan/"
 
 
 bacteriaDir=args.dir+"/microbiomeProfile/bacteriaProfile/"
@@ -277,7 +271,8 @@ if not os.path.exists(virusDir):
     os.makedirs(virusDir)
 if not os.path.exists(eupathdbDir):
     os.makedirs(eupathdbDir)
-
+if not os.path.exists(metaphlanDir):
+    os.makedirs(metaphlanDir)
 
 #intermediate files
 unmappedFastq=args.dir+"/unmapped_"+basename+".fastq"
@@ -298,6 +293,9 @@ afterVirusFasta=virusDir+basename+"_afterVirus.fasta"
 unaccountedReadsFasta=args.dir+"/"+basename+"_unaccountedReads.fasta"
 
 
+metaphlan_intermediate_map = metaphlanDir + basename + "_metaphlan.map"
+metaphlan_intermediate_bowtie2out = metaphlanDir + basename + "_bowtie2out.txt"
+metaphlan_output = metaphlanDir + basename + "_metaphlan_output.tsv"
 
 
 gBamFile=lostHumanDir+basename+"_genome.sam"
@@ -352,6 +350,7 @@ runTCRDFile=tcrdDir+"/runTCRD_"+basename+".sh"
 runTCRGFile=tcrgDir+"/runTCRG_"+basename+".sh"
 runBacteriaFile=bacteriaDir +"/runBacteria_"+basename+".sh"
 runVirusFile=virusDir +"/runVirus_"+basename+".sh"
+run_metaphlan_file = metaphlanDir + "/run_metaphlan_" + basename + ".sh"
 
 os.chdir(args.dir)
 
@@ -469,7 +468,7 @@ else:
     n_rRNAReads=len(rRNAReads)
     write2Log("--filtered %s rRNA reads" %(n_rRNAReads) ,gLogfile,args.quiet)
     write2Log("In toto : %s reads failed QC and are filtered out" %(nLowQReads+nLowCReads+n_rRNAReads) ,gLogfile,args.quiet)
-    write2File("done!",args.dir+"/step1_QC.done")
+
 
     message="Number of entries in %s is %s" %(rRNAFile,n_rRNATotal)
     write2Log(message,cmdLogfile,"False")
@@ -556,7 +555,7 @@ if not args.skipPreliminary:
     nlostHumanReads=len(lostHumanReads)
     write2Log("--identified %s lost human reads from unmapped reads. Among those: %s reads with 0 mismatches; %s reads with 1 mismatch; %s reads with 2 mismatches" %(len(lostHumanReads),len(lostHumanReads0),len(lostHumanReads1),len(lostHumanReads2)), gLogfile, args.quiet)
     write2Log("***Note: Complete list of lost human reads is available from sam files: %s,%s" %(gBamFile,tBamFile), gLogfile, args.quiet)
-    write2File("done!",args.dir+"/step2_lostHumanReads.done")
+
 
     if not args.dev:
         os.remove(afterrRNAFasta)
@@ -570,12 +569,10 @@ else:
         afterlostHumanFasta = args.unmappedReads
 
 if args.nonReductive:
+
+
     branch_point_file = afterlostHumanFasta
     print "Non-reductive mode selected"
-
-
-
-
 
 #######################################################################################################################################
 #3. Maping to repeat sequences...
@@ -626,7 +623,6 @@ if args.repeat:
         write2Log("-- Identified %s lost repeat sequences from unmapped reads" %(nRepeatReads) ,gLogfile,args.quiet)
         write2Log("***Note : Repeat sequences classification into classes (e.g. LINE) and families (e.g. Alu) will be available in next release" ,gLogfile,args.quiet)
         excludeReadsFromFasta(afterlostHumanFasta,lostRepeatReads,afterlostRepeatFasta)
-        write2File("done!",args.dir+"/step3_lostRepeatSequences.done")
 
         if not args.dev:
             os.remove(afterlostHumanFasta)
@@ -671,8 +667,7 @@ if args.circRNA:
         write2Log("***Note: circRNAs detected by CIRI are available here: %s" %(after_NCL_CIRI_file_prefix) ,gLogfile,args.quiet)
         excludeReadsFromFasta(afterlostRepeatFasta,NCL_reads,afterNCLFasta)
         nNCLReads=len(NCL_reads)
-        write2File("done!",args.dir+"/step4_NCL.done")
-        
+
         if not args.dev:
             os.remove(afterlostRepeatFasta)
 
@@ -877,19 +872,36 @@ if args.immune:
         nReadsImmuneTotal=nReadsImmuneIGH+nReadsImmuneIGL+nReadsImmuneIGK+nReadsImmuneTCRA+nReadsImmuneTCRB+nReadsImmuneTCRD+nReadsImmuneTCRG
         write2Log("In toto : %s reads mapped to antibody repertoire loci" %(nReadsImmuneTotal) ,gLogfile,args.quiet)
         write2Log("***Note : Combinatorial diversity of the antibody repertoire (recombinations of the of VJ gene segments)  will be available in the next release.",gLogfile,args.quiet)
-        write2File("done!",args.dir+"/step5_antibodyProfile.done")
-        
 
         immuneReads=set().union(immuneReadsTCRA,immuneReadsTCRB,immuneReadsTCRD,immuneReadsTCRG)
         excludeReadsFromFasta(input_file,immuneReads,afterImmuneFasta)
         if not args.dev:
-            if args.circRNA:
-                os.remove(afterNCLFasta)
+            os.remove(afterNCLFasta)
 else:
     print "Immune Profiling Step is deselected - This step is skipped."
+#######################################################################################################################################
+# 5. Metaphlan
 
+#TODO 
+if args.metaphlan:
+    write2Log("5.  Metaphlan profiling...",cmdLogfile,"False")
+    write2Log("5.  Metaphlan profiling...",gLogfile,args.quiet)
+    if args.nonReductive:
+        input_file = branch_point_file
+    else:
+        input_file = afterImmuneFasta
+    cmd = "python %s/tools/metaphlan2.py %s %s --mpl_pkl %s/db/metaphlan/mpa_v20_m200.pkl --input_type multifasta --bowtie2db %s/db/metaphlan/mpa_v20_m200 -t reads_map --nproc 8 --bowtie2out %s" % (codeDir, input_file, metaphlan_intermediate_map, codeDir, codeDir, metaphlan_intermediate_bowtie2out)
+    cmd = cmd + "\n" + "python %s/tools/metaphlan2.py --mpl_pkl %s/db/metaphlan/mpa_v20_m200.pkl --input_type bowtie2out %s -t rel_ab > %s" %(codeDir,codeDir,metaphlan_intermediate_bowtie2out, metaphlan_output)
+    write2Log(cmd,cmdLogfile,"False")
 
-
+    if args.qsub or args.qsubArray:
+        f= open(run_metaphlan_file, 'w')
+        f.write(cmd + "\n")
+        f.write("echo \"done!\" > %s/%s_metaphlan.done \n" % (metaphlanDir, basename))
+        f.close()
+        if args.qsub:
+            cmdQsub="qsub -cwd -V -N metaphlan -l h_data=16G,time=24:00:00 %s" %(run_metaphlan_file)
+            os.system(cmdQsub)
 
 #######################################################################################################################################
 # 6. Microbiome profiling...
@@ -897,16 +909,15 @@ if args.microbiome:
     write2Log("6.  Microbiome profiling...",cmdLogfile,"False")
     write2Log("6.  Microbiome profiling...",gLogfile,args.quiet)
     
-
-
-
-
-    
-    
     if args.nonReductive:
         input_file = branch_point_file
     else:
         input_file = afterImmuneFasta
+
+
+
+
+
 
     #bacteria ----------
 
@@ -1014,7 +1025,7 @@ if args.microbiome:
             inFasta=afterFasta
             nReadsEP+=nEupathdbReads
 
-    if not args.qsubArray and not args.qsub:
+    if not args.qsubArray or args.qsub:
         os.rename(eupathdbDir+"%s_after_tritryp.fasta" %(basename), unaccountedReadsFasta)
 
         if not args.dev:
@@ -1031,11 +1042,8 @@ if args.microbiome:
 
 
 
-    if not args.qsub and  not args.qsubArray and args.microbiome and args.repeat and args.circRNA and args.immune:
+    if not args.qsub and  not args.qsubArray:
         write2Log("In toto : %s reads mapped to microbial genomes" %(nReadsBacteria+nReadsVirus+nReadsEP) ,gLogfile,args.quiet)
-        write2File("done!",args.dir+"/step6_microbiomeProfile.done")
-        
-        
         nTotalReads=nLowQReads+nLowCReads+n_rRNAReads+nlostHumanReads+nRepeatReads+nNCLReads+nReadsImmuneTotal+nReadsBacteria+nReadsVirus+nReadsEP
         write2Log("Summary: The ROP protocol is able to account for %s reads" %(nTotalReads) ,gLogfile,args.quiet)
         write2Log("***Unaccounted reads (not explained by ROP) are saved to %s" %(unaccountedReadsFasta) ,gLogfile,args.quiet)
