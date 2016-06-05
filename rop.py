@@ -367,7 +367,7 @@ if args.skipPreliminary:
     # afterrRNAFasta=args.unmappedReads
     print "Preliminary filtering steps are skipped."
 elif args.skipQC:
-    afterrRNAFasta = args.unmappedReads
+    # afterrRNAFasta = args.unmappedReads
     print "Preliminary filtering steps are skipped."
 else:
     if args.b:
@@ -498,8 +498,10 @@ if not args.skipPreliminary:
     write2Log("2. Remapping to human references...",cmdLogfile,"False")
     write2Log("2. Remapping to human references...",gLogfile,args.quiet)
     # If input is afterQC fasta.gz
-    if args.fastqGz:
+    if args.skipQC and (args.fastqGz or args.gzip):
         write_gzip_into_readable(args.unmappedReads, afterrRNAFasta)
+    elif args.skipQC and not args.fastqGz and not args.gzip:
+        afterrRNAFasta = args.unmappedReads
     cmdGenome="%s/tools/bowtie2 -k 1 -p 8 -f -x %s/db/human/Bowtie2Index/genome -U %s 2>>%s | %s/tools/samtools view -SF4 -   >%s" %(codeDir,codeDir, afterrRNAFasta,logHuman,codeDir,gBamFile)
 
     #transcriptome
