@@ -40,7 +40,7 @@ elif args.standard:
 	else:
 		print "MD5 Checksum matches"
 	print "Downloading the metaphlan database"
-	call(["wget", "https://googledrive.com/host/0B_NUyiE86yDwaUxoVjhlSjN5SkE/metaphlan_db.tar"]) 
+	call(["wget", "https://googledrive.com/host/0B_NUyiE86yDwaUxoVjhlSjN5SkE/metaphlan_db.tar", "--no-check-certificate"]) 
 
 	print "Unzipping the databases"
 	call(["tar","-xvf", 'database.tar'])
