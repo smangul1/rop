@@ -73,6 +73,13 @@ def write2Log(message,logFile,option):
 
 #######################################################################
 
+def write2File(message,logFile):
+    gLogfile=open(logFile,'w')
+    gLogfile.write(message)
+    gLogfile.close()
+
+#######################################################################
+
 def write_gzip_into_readable(gz_input, output): 
     temp_file = open(output, 'w')
     with gzip.open(gz_input, 'r') as f:
@@ -468,7 +475,7 @@ else:
     n_rRNAReads=len(rRNAReads)
     write2Log("--filtered %s rRNA reads" %(n_rRNAReads) ,gLogfile,args.quiet)
     write2Log("In toto : %s reads failed QC and are filtered out" %(nLowQReads+nLowCReads+n_rRNAReads) ,gLogfile,args.quiet)
-
+    write2File("done!",args.dir+"/step1_QC.done")
 
     message="Number of entries in %s is %s" %(rRNAFile,n_rRNATotal)
     write2Log(message,cmdLogfile,"False")
@@ -555,7 +562,7 @@ if not args.skipPreliminary:
     nlostHumanReads=len(lostHumanReads)
     write2Log("--identified %s lost human reads from unmapped reads. Among those: %s reads with 0 mismatches; %s reads with 1 mismatch; %s reads with 2 mismatches" %(len(lostHumanReads),len(lostHumanReads0),len(lostHumanReads1),len(lostHumanReads2)), gLogfile, args.quiet)
     write2Log("***Note: Complete list of lost human reads is available from sam files: %s,%s" %(gBamFile,tBamFile), gLogfile, args.quiet)
-
+    write2File("done!",args.dir+"/step2_lostHumanReads.done")
 
     if not args.dev:
         os.remove(afterrRNAFasta)
@@ -569,8 +576,6 @@ else:
         afterlostHumanFasta = args.unmappedReads
 
 if args.nonReductive:
-
-
     branch_point_file = afterlostHumanFasta
     print "Non-reductive mode selected"
 
@@ -623,7 +628,7 @@ if args.repeat:
         write2Log("-- Identified %s lost repeat sequences from unmapped reads" %(nRepeatReads) ,gLogfile,args.quiet)
         write2Log("***Note : Repeat sequences classification into classes (e.g. LINE) and families (e.g. Alu) will be available in next release" ,gLogfile,args.quiet)
         excludeReadsFromFasta(afterlostHumanFasta,lostRepeatReads,afterlostRepeatFasta)
-
+        write2File("done!",args.dir+"/step3_lostRepeatSequences.done")
         if not args.dev:
             os.remove(afterlostHumanFasta)
 else:
@@ -872,11 +877,12 @@ if args.immune:
         nReadsImmuneTotal=nReadsImmuneIGH+nReadsImmuneIGL+nReadsImmuneIGK+nReadsImmuneTCRA+nReadsImmuneTCRB+nReadsImmuneTCRD+nReadsImmuneTCRG
         write2Log("In toto : %s reads mapped to antibody repertoire loci" %(nReadsImmuneTotal) ,gLogfile,args.quiet)
         write2Log("***Note : Combinatorial diversity of the antibody repertoire (recombinations of the of VJ gene segments)  will be available in the next release.",gLogfile,args.quiet)
-
+        write2File("done!",args.dir+"/step5_antibodyProfile.done")
         immuneReads=set().union(immuneReadsTCRA,immuneReadsTCRB,immuneReadsTCRD,immuneReadsTCRG)
         excludeReadsFromFasta(input_file,immuneReads,afterImmuneFasta)
         if not args.dev:
-            os.remove(afterNCLFasta)
+            if args.circRNA:           
+                os.remove(afterNCLFasta)
 else:
     print "Immune Profiling Step is deselected - This step is skipped."
 #######################################################################################################################################
@@ -1025,7 +1031,7 @@ if args.microbiome:
             inFasta=afterFasta
             nReadsEP+=nEupathdbReads
 
-    if not args.qsubArray or args.qsub:
+    if not args.qsubArray and not args.qsub:
         os.rename(eupathdbDir+"%s_after_tritryp.fasta" %(basename), unaccountedReadsFasta)
 
         if not args.dev:
@@ -1042,11 +1048,12 @@ if args.microbiome:
 
 
 
-    if not args.qsub and  not args.qsubArray:
+    if not args.qsub and  not args.qsubArray and args.microbiome and args.repeat and args.circRNA and args.immune:
         write2Log("In toto : %s reads mapped to microbial genomes" %(nReadsBacteria+nReadsVirus+nReadsEP) ,gLogfile,args.quiet)
         nTotalReads=nLowQReads+nLowCReads+n_rRNAReads+nlostHumanReads+nRepeatReads+nNCLReads+nReadsImmuneTotal+nReadsBacteria+nReadsVirus+nReadsEP
         write2Log("Summary: The ROP protocol is able to account for %s reads" %(nTotalReads) ,gLogfile,args.quiet)
         write2Log("***Unaccounted reads (not explained by ROP) are saved to %s" %(unaccountedReadsFasta) ,gLogfile,args.quiet)
+        write2File("done!",args.dir+"/step6_microbiomeProfile.done")
 
 
         message=basename+","+str(n)+","+str(nLowQReads)+","+str(nLowCReads)+","+str(n_rRNAReads)+","+str(nlostHumanReads)+","+str(nRepeatReads)+","+str(nReadsImmuneTotal)+","+str(nReadsBacteria+nReadsVirus+nReadsEP)
