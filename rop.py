@@ -83,7 +83,8 @@ def write2File(message,logFile):
 def write_gzip_into_readable(gz_input, output): 
     temp_file = open(output, 'w')
     with gzip.open(gz_input, 'r') as f:
-        temp_file.write(f.read())
+        for line in f:
+            temp_file.write(line)
     temp_file.close()
 
 #######################################################################
