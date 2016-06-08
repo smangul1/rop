@@ -146,6 +146,14 @@ def nCirrcularReads(inFile):
     return reads
 
 #######################################################################
+def write_gzip(inFasta,outFasta):
+    
+    fasta_sequences = SeqIO.parse(open(inFasta),'fasta')
+    with gzip.open(outFasta, "w") as f:
+        for seq in fasta_sequences:            
+            SeqIO.write([seq], f, "fasta")
+
+####################################################################
 
 print "*********************************************"
 print "ROP (version 1.0.1) is a computational protocol aimed to discover the source of all reads, originated from complex RNA molecules, recombinant antibodies and microbial communities. Written by Serghei Mangul (smangul@ucla.edu) and Harry Taegyun Yang (harry2416@gmail.com), University of California, Los Angeles (UCLA). (c) 2016. Released under the terms of the General Public License version 3.0 (GPLv3)"
@@ -189,6 +197,7 @@ run_only_options.add_argument("--microbiome", help = "Run microbime profiling ON
 
 misc_option_arguments = ap.add_argument_group('Miscellenous Options')
 misc_option_arguments.add_argument("--gzip", help = "Gzip the fasta files after filtering step", action = "store_true")
+misc_option_arguments.add_argument("--rezip", help = "rezip the fasta files after analysis", action = "store_true")
 misc_option_arguments.add_argument("--quiet", help = "Suppress progress report and warnings", action = "store_true")
 misc_option_arguments.add_argument("--dev", help = "Keep intermediate files", action = "store_true")
 misc_option_arguments.add_argument("--nonReductive", help = "non-reductive analysis - Dev mode - Please use with caution", action = "store_true")
@@ -1090,4 +1099,6 @@ tLogfile.close()
 gLogfile.close()
 cmdLogfile.close()
 
-
+if args.rezip:
+    write_gzip(branch_point_file, afterlostHumanFastaGzip)
+    os.remove(branch_point_file)
