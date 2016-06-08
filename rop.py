@@ -119,7 +119,16 @@ def nMicrobialReads(inFile,readLength,outFile):
     out.close()
     return readsMicrobiome
 
+#######################################################################
 
+def nReadsMetaphlan(inFile):
+    readsMetaphlan=set()
+    with open(inFile,'r') as f:
+        reader=csv.reader(f,delimiter='\t')
+        for line in reader:
+                read = line[0]
+                readsMetaphlan.add(read)
+    return readsMetaphlan
 
 #######################################################################
 #1:25169311|25169341     1       25169311        25169341        2       1_2_0   6       0.400   n/a     /n/a    SRR1146076.13939638,SRR1146076.25457964,
@@ -911,6 +920,15 @@ if args.metaphlan:
         if args.qsub:
             cmdQsub="qsub -cwd -V -N metaphlan -l h_data=16G,time=24:00:00 %s" %(run_metaphlan_file)
             os.system(cmdQsub)
+    else:
+        os.chdir(metaphlanDir)
+        os.system(cmd)
+        nMetaphlanRead=len(nReadsMetaphlan(metaphlan_intermediate_map))
+        # nReadsImmuneTCRG=len(immuneReadsTCRG)
+        write2Log("--identified %s reads mapped on metaphlan analysis" % (nMetaphlanRead) ,gLogfile,args.quiet)        
+else:       
+    print "Metaphlan Profiling Step is deselected - This step is skipped."
+
 
 #######################################################################################################################################
 # 6. Microbiome profiling...
