@@ -1,0 +1,2 @@
+circRNA_ID	chr	circRNA_start	circRNA_end	#junction_reads	SM_MS_SMS	#non_junction_reads	junction_reads_ratio	circRNA_type	gene_id	junction_reads_ID
+1:25169311|25169341	1	25169311	25169341	2	1_2_0		1.000	n/a	/n/a	SRR1146076.13939638,SRR1146076.25457964,

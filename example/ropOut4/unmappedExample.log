@@ -1,0 +1,28 @@
+Processing 2511 unmapped reads
+1. Quality Control...
+--filtered 2193 low quality reads
+--filtered 2 low complexity reads (e.g. ACACACAC...)
+--filtered 22 rRNA reads
+In toto : 2217 reads failed QC and are filtered out
+2. Remapping to human references...
+--identified 6 lost human reads from unmapped reads. Among those: 4 reads with 0 mismatches; 2 reads with 1 mismatch; 0 reads with 2 mismatches
+***Note: Complete list of lost human reads is available from sam files: /u/home/galaxy/collaboratory/serghei/code/rop/example/ropOut4/lostHumanReads/unmappedExample_genome.sam,/u/home/galaxy/collaboratory/serghei/code/rop/example/ropOut4/lostHumanReads/unmappedExample_transcriptome.sam
+3. Maping to repeat sequences...
+-- Identified 1 lost repeat sequences from unmapped reads
+***Note : Repeat sequences classification into classes (e.g. LINE) and families (e.g. Alu) will be available in next release
+4. Non-co-linear RNA profiling
+***Note : Trans-spicing and gene fusions  are currently not supported, but will be in the next release.
+--identified 2 reads from circRNA
+***Note: circRNAs detected by CIRI are available here: unmappedExample_circRNA.csv
+5a. B lymphocytes profiling...
+--identified 1 reads mapped to immunoglobulin heavy (IGH) locus
+--identified 0 reads mapped to immunoglobulin kappa (IGK) locus 
+--identified 1 reads mapped to immunoglobulin lambda (IGL) locus
+5b. T lymphocytes profiling...
+--identified 0 reads mapped to T cell receptor alpha (TCRA) locus
+--identified 2 reads mapped to T cell receptor beta (TCRB) locus
+--identified 1 reads mapped to T cell receptor delta (TCRD) locus
+--identified 0 reads mapped to T cell receptor gamma locus (TCRG) locus
+In toto : 5 reads mapped to antibody repertoire loci
+***Note : Combinatorial diversity of the antibody repertoire (recombinations of the of VJ gene segments)  will be available in the next release.
+5.  Metaphlan profiling...

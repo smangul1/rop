@@ -1,0 +1,3 @@
+[bwt_restore_sa] Failed to allocate 1547846992 bytes at bwt.c line 436: Cannot allocate memory
+Single-end reads are supported by CIRI, but paired-end reads are strongly recommended for low FDR.
+Please make sure all the reads have the same read lengths!

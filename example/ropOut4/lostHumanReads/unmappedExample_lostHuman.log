@@ -1,0 +1,10 @@
+Unmapped reads are remap to human transcriptome reference using bowtie2
+Unmapped reads are remap to human genome reference using bowtie2
+  0 (0.00%) aligned >1 times
+52.72% overall alignment rate
+294 reads; of these:
+  294 (100.00%) were unpaired; of these:
+    146 (49.66%) aligned 0 times
+    148 (50.34%) aligned exactly 1 time
+    0 (0.00%) aligned >1 times
+50.34% overall alignment rate

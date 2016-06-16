@@ -474,7 +474,7 @@ else:
 
 
     #rRNA
-    cmd="%s/tools/blastn -task megablast -index_name %s/db/rRNA/rRNA -use_index true -query %s -db %s/db/rRNA/rRNA  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s" %(codeDir,codeDir,lowQCFile,codeDir,rRNAFile)
+    cmd="%s/tools/blastn -task megablast -index_name %s/db/rRNA/rRNA -use_index true -query %s -db %s/db/rRNA/rRNA  -outfmt 6 -evalue 1e-05  >%s" %(codeDir,codeDir,lowQCFile,codeDir,rRNAFile)
     write2Log(cmd,cmdLogfile,"False")
     os.system(cmd)
 
@@ -614,12 +614,12 @@ if args.repeat:
     #TO DO : make all fasta ->gzip
     #gzip -dc %s | , query -
     # CHANGED 
-    # cmd="%s/tools/blastn -task megablast -index_name %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa -use_index true -query %s -db %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 > %s" %(codeDir, codeDir, afterlostHumanFasta, codeDir, repeatFile)
+    # cmd="%s/tools/blastn -task megablast -index_name %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa -use_index true -query %s -db %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa  -outfmt 6 -evalue 1e-05  > %s" %(codeDir, codeDir, afterlostHumanFasta, codeDir, repeatFile)
     if args.nonReductive:
         input_file = branch_point_file
     else:
         input_file = afterlostHumanFasta
-    cmd="%s/tools/blastn -task megablast -index_name %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa -use_index true -query %s -db %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 > %s" %(codeDir, codeDir, input_file, codeDir, repeatFile)
+    cmd="%s/tools/blastn -task megablast -index_name %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa -use_index true -query %s -db %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa  -outfmt 6 -evalue 1e-05  > %s" %(codeDir, codeDir, input_file, codeDir, repeatFile)
 
 
     if args.qsub or args.qsubArray:
@@ -969,7 +969,7 @@ if args.microbiome:
         break;
 
 
-    cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/bacteria/bacteria -use_index true -query %s -db %s/db/microbiome/bacteria/bacteria  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s 2>temp.txt" %(codeDir,codeDir,input_file,codeDir,bacteriaFile)
+    cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/bacteria/bacteria -use_index true -query %s -db %s/db/microbiome/bacteria/bacteria  -outfmt 6 -evalue 1e-05  >%s 2>temp.txt" %(codeDir,codeDir,input_file,codeDir,bacteriaFile)
     write2Log(cmd,cmdLogfile,"False")
 
     if args.qsub or args.qsubArray:
@@ -999,7 +999,7 @@ if args.microbiome:
         else:
             input_file = afterBacteraFasta
 
-        cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/virus/viruses -use_index true -query %s -db %s/db/microbiome/virus/viruses  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s 2>temp" %(codeDir,codeDir,input_file,codeDir,virusFile)
+        cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/virus/viruses -use_index true -query %s -db %s/db/microbiome/virus/viruses  -outfmt 6 -evalue 1e-05  >%s 2>temp" %(codeDir,codeDir,input_file,codeDir,virusFile)
         write2Log(cmd,cmdLogfile,"False")
         f = open(runVirusFile,'w')
         f.write(cmd+"\n")
@@ -1009,7 +1009,7 @@ if args.microbiome:
             cmdQsub="qsub -cwd -V -N virus -l h_data=16G,time=24:00:00 %s" %(runVirusFile)
             os.system(cmdQsub)
     else:
-        cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/virus/viruses -use_index true -query %s -db %s/db/microbiome/virus/viruses  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s 2>temp" %(codeDir,codeDir,input_file,codeDir,virusFile)
+        cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/virus/viruses -use_index true -query %s -db %s/db/microbiome/virus/viruses  -outfmt 6 -evalue 1e-05  >%s 2>temp" %(codeDir,codeDir,input_file,codeDir,virusFile)
         write2Log(cmd,cmdLogfile,"False")
         os.chdir(virusDir)
         os.system(cmd)
@@ -1044,7 +1044,7 @@ if args.microbiome:
         runEupathdbFile=eupathdbDir+"/run_"+basename+"_"+db+".sh"
 
 
-        cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/eupathdb/%s -use_index true -query %s -db %s/db/microbiome/eupathdb/%s  -outfmt 6 -evalue 1e-05 -max_target_seqs 1 >%s 2>temp.txt" %(codeDir,codeDir,db,inFasta,codeDir,db,eupathdbFile)
+        cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/eupathdb/%s -use_index true -query %s -db %s/db/microbiome/eupathdb/%s  -outfmt 6 -evalue 1e-05  >%s 2>temp.txt" %(codeDir,codeDir,db,inFasta,codeDir,db,eupathdbFile)
         write2Log(cmd,cmdLogfile,"False")
         if args.qsub or args.qsubArray:
             f = open(runEupathdbFile,'w')
