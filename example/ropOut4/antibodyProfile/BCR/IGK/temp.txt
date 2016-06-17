@@ -1,2 +1,0 @@
-BLAST query/options error: Germline annotation database human/human_V could not be found in [internal_data] directory
-Please refer to the BLAST+ user manual.
