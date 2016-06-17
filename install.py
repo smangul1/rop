@@ -70,7 +70,11 @@ except KeyError:
 		call(["tar", "-xvf", 'metaphlan_db.tar'])
 		os.remove('metaphlan_db.tar')
 		print "Installation Completed! Please use rop.py"
-
+	
+	if args.standard or args.immune:
+		# TODO : ADD ROPDB VARIABLE - check 
+		cmd = "echo \"ROPDB= %s\" > ~/.bashrc" % (args.rop_db)
+		os.system(cmd)
 	else:
 		print "No option is selected. Please use -h option to see available options"
 		sys.exit(233)
