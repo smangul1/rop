@@ -15,7 +15,7 @@ env path name = ROPDB
 """
 
 ap = argparse.ArgumentParser()
-ap.add_argument("rop_db", help = "Directory ")
+ap.add_argument("rop_db", help = "Directory that the databases will be saved")
 ap.add_argument("--immune", help="Set up database for immune reads only (i.e. TCR/BCR) ", action="store_true")
 ap.add_argument("--standard", help="standard installation option", action="store_true")
 args = ap.parse_args()
@@ -76,7 +76,7 @@ except KeyError:
 		# TODO : ADD ROPDB VARIABLE - check 
 		cmd = "echo \"ROPDB= %s\" > ~/.bashrc" % (args.rop_db)
 		os.system(cmd)
-		print "Soft links will be made in ROP_dir/db/"
+		print "Soft links will be made in %s/db/" % (code_dir)
 		cmd = "mkdir %s \n" % (args.rop_db)
 		cmd += "rm -rf %s/tools" % (code_dir)
 		cmd += "ln - %s %s/db/" % (args.rop_db, code_dir)
