@@ -34,6 +34,7 @@ except KeyError:
 	print "Database for ROP will be unzipped at : %s " %(args.rop_db)
 	# TODO : install DB and make link
 	# TODO : UPDATE it so that it will be installed in the designated dir 
+	code_dir = os.getcwd()
 
 	if args.immune:
 		print "Immune only option selected"
@@ -69,12 +70,18 @@ except KeyError:
 		os.remove('database.tar')
 		call(["tar", "-xvf", 'metaphlan_db.tar'])
 		os.remove('metaphlan_db.tar')
-		print "Installation Completed! Please use rop.py"
+		
 	
 	if args.standard or args.immune:
 		# TODO : ADD ROPDB VARIABLE - check 
 		cmd = "echo \"ROPDB= %s\" > ~/.bashrc" % (args.rop_db)
 		os.system(cmd)
+		print "Soft links will be made in ROP_dir/db/"
+		cmd = "mkdir %s \n" % (args.rop_db)
+		cmd += "rm -rf %s/tools" % (code_dir)
+		cmd += "ln - %s %s/db/" % (args.rop_db, code_dir)
+		print "Installation Completed! Please use rop.py"
+
 	else:
 		print "No option is selected. Please use -h option to see available options"
 		sys.exit(233)
