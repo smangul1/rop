@@ -6,14 +6,27 @@ from subprocess import call, Popen, PIPE
 
 """
 option requirements - TCR/BCR only option - in terms of database
+"""
 
+"""
+make environment option 
+env path name = ROPDB
 
 """
 
 ap = argparse.ArgumentParser()
+ap.add_argument("rop_db", help = "Directory ")
 ap.add_argument("--immune", help="Set up database for immune reads only (i.e. TCR/BCR) ", action="store_true")
 ap.add_argument("--standard", help="standard installation option", action="store_true")
 args = ap.parse_args()
+
+try:
+	rop_db_path = os.environ['ROPDB']
+	print "ROP DB is found: new links will be generated."
+	# TODO : MAKE THE LINK IF DB IS FOUND 
+except KeyError:
+	print "Database for ROP will be unzipped at : %s " %(args.rop_db)
+	# TODO : install DB and make link
 
 if args.immune:
 	print "Immune only option selected"
