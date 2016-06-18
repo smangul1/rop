@@ -8,7 +8,16 @@ from collections import Counter
 
 ap = argparse.ArgumentParser()
 ap.add_argument('virusMegablastSample', help='virusMegablastSample')
+ap.add_argument('readRength', help='')
+
 args = ap.parse_args()
+
+
+rLength=int(args.readRength)
+
+
+
+
 
 
 
@@ -43,6 +52,7 @@ k=0
 #HWI-ST1148:179:C4BAKACXX:5:1101:11944:1949/1    gi|8486122|ref|NC_002016.1|     94.68   94      5       0       7 100     750     843     7e-35    147
 
 
+#get list with genomes
 with open(args.virusMegablastSample,'r') as f:
     reader=csv.reader(f,delimiter='\t')
     for line in reader:
@@ -53,6 +63,7 @@ for g in genomesList:
     genomeReads[g]=0
 
 
+#get reads from each genome
 with open(args.virusMegablastSample,'r') as f:
     reader=csv.reader(f,delimiter='\t')
     for line in reader:
@@ -63,9 +74,9 @@ genomesList=list(set(genomesList))
 
 
 
-
+#if there are more then 10 reads assigned onto the genome prepare the coordinates of LEFT and RIGHT coordinates of the covered region
 for g in genomesList:
-    if genomeReads[g]>10:
+    if genomeReads[g]>100:
         genomesList2.add(g)
         k+=1
         genomeL[g]=-1
@@ -75,6 +86,7 @@ print k
 
 
 
+# get LEFT and RIGHT coordinates of the covered region
 with open(args.virusMegablastSample,'r') as f:
     reader=csv.reader(f,delimiter='\t')
     for line in reader:
@@ -86,19 +98,20 @@ with open(args.virusMegablastSample,'r') as f:
             temp=left
             left=right
             right=left
-        
+    
         if genome in genomesList2:
             if genomeL[genome]==-1 or left<genomeL[genome]:
-                genomeL[genome]=left-1
-        
+                genomeL[genome]=left-2
+            
             if genomeR[genome]==-1 or right>genomeR[genome]:
-                genomeR[genome]=right+1
+                genomeR[genome]=right+2
 
 
 
 
-print genomeL["gi|8486122|ref|NC_002016.1|"]
-print genomeR["gi|8486122|ref|NC_002016.1|"]
+
+
+
 
 
 
@@ -107,15 +120,20 @@ import array
 
 for g in genomesList2:
     
-    genomeCoverage[g]=array.array('i',(0,)*genomeR[g])
-    genomeStartPosition[g]=array.array('i',(0,)*genomeR[g])
+    genomeCoverage[g] =[0] * genomeR[g]
+    
+    
+    #array.array('i',(0,)*genomeR[g])
+    genomeStartPosition[g]=[0] * genomeR[g]
     genomeNumberReads[g]=0
     
     
-    print g,genomeL[g],genomeR[g]
 
 
 
+
+
+print "---------"
 
 with open(args.virusMegablastSample,'r') as f:
     reader=csv.reader(f,delimiter='\t')
@@ -127,21 +145,56 @@ with open(args.virusMegablastSample,'r') as f:
             temp=left
             left=right
             right=left
+        
         if genome in genomesList2:
-            #print line
-            #print genome,left,right
+            #print genome,genomeL[genome],genomeR[genome]
+            
             genomeNumberReads[genome]+=1
             genomeStartPosition[genome][left]+=1
-            if left==114:
-                print genomeCoverage["gi|8486122|ref|NC_002016.1|"][114:214]
-                print "line",line
-                print genomeStartPosition["gi|8486122|ref|NC_002016.1|"][114]
+            
+            
             for i in range(left,right):
-                #print i,genome
                 genomeCoverage[genome][i]+=1
-            if left==114:
-                print genomeCoverage["gi|8486122|ref|NC_002016.1|"][114:214]
-                sys.exit(1)
+
+
+for g in genomesList2:
+    
+    print g,genomeNumberReads[g],genomeR[g]-genomeL[g]
+
+
+
+
+g="gi|548558394|ref|NC_022518.1|"
+l=int(genomeL[g])
+r=int(genomeR[g])
+print r-l
+#print genomeCoverage[g][l:r]
+#print genomeStartPosition[g][l:r]
+
+
+length=r-l
+nPosCovered=length-genomeCoverage[g][l:r].count(0)
+nPosStart=length-genomeStartPosition[g][l:r].count(0)
+
+print nPosStart,nPosCovered
+print nPosStart/float(nPosCovered)
+
+
+print genomeCoverage[g][l:r]
+print "------"
+print genomeStartPosition[g][l:r]
+
+from itertools import groupby
+a=genomeCoverage[g][l:r]
+b = range(len(a))
+for group in groupby(iter(b), lambda x: a[x]):
+    if group[0]==0:
+        lis=list(group[1])
+        if max(lis)-min(lis)>rLength/2:
+            print max(lis)-min(lis)
+
+
+
 sys.exit(1)
 
 #print genomeCoverage["gi|109255272|ref|NC_008168.1|"]
