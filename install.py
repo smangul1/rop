@@ -74,13 +74,15 @@ except KeyError:
 	
 	if args.standard or args.immune:
 		# TODO : ADD ROPDB VARIABLE - check 
-		cmd = "echo \"ROPDB= %s\" > ~/.bashrc" % (args.rop_db)
-		os.system(cmd)
+
 		print "Soft links will be made in %s/db/" % (code_dir)
 		cmd = "mkdir %s \n" % (args.rop_db)
 		cmd += "rm -rf %s/db/" % (code_dir)
 		cmd += "ln -s %s %s/db/" % (args.rop_db, code_dir)
 		print "Installation Completed! Please use rop.py"
+		os.system(cmd)
+		cmd = "echo \"ROPDB=%s\"> ~/.bashrc" % (args.rop_db)
+		os.system(cmd)
 
 	else:
 		print "No option is selected. Please use -h option to see available options"
