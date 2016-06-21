@@ -94,8 +94,8 @@ except KeyError:
 		# TODO : ADD ROPDB VARIABLE - check 
 
 		print "Soft links will be made in %s/db/" % (code_dir)
-		cmd = "rm -rf %s/db/" % (code_dir)
-		cmd += "ln -s %s %s/db/" % (args.rop_db, code_dir)
+		cmd = "rm -rf %s/db/ \n" % (code_dir)
+		cmd += "ln -s %s %s/db/ \n" % (args.rop_db, code_dir)
 		os.system(cmd)
 		cmd = "echo \"export ROPDB=%s\"> ~/.bashrc" % (args.rop_db)
 		os.system(cmd)
