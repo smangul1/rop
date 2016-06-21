@@ -97,7 +97,7 @@ except KeyError:
 		cmd = "rm -rf %s/db/" % (code_dir)
 		cmd += "ln -s %s %s/db/" % (args.rop_db, code_dir)
 		os.system(cmd)
-		cmd = "echo \"ROPDB=%s\"> ~/.bashrc" % (args.rop_db)
+		cmd = "echo \"export ROPDB=%s\"> ~/.bashrc" % (args.rop_db)
 		os.system(cmd)
 		print "Installation Completed! Please use rop.py"
 
