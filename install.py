@@ -78,8 +78,8 @@ except KeyError:
 		os.system(cmd)
 		print "Soft links will be made in %s/db/" % (code_dir)
 		cmd = "mkdir %s \n" % (args.rop_db)
-		cmd += "rm -rf %s/tools" % (code_dir)
-		cmd += "ln - %s %s/db/" % (args.rop_db, code_dir)
+		cmd += "rm -rf %s/db/" % (code_dir)
+		cmd += "ln -s %s %s/db/" % (args.rop_db, code_dir)
 		print "Installation Completed! Please use rop.py"
 
 	else:
