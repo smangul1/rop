@@ -162,8 +162,6 @@ print "ROP (version 1.0.1) is a computational protocol aimed to discover the sou
 print ""
 print "For more details see:"
 print "https://sergheimangul.wordpress.com/rop/"
-#print "http://serghei.bioinformatics.ucla.edu/rop/"
-#print "https://github.com/smangul1/rop/ROPmanual.pdf"
 print "*********************************************"
 
 #######################################################################
@@ -180,6 +178,8 @@ necessary_arguments.add_argument('dir', help='directory to save results of the a
 job_option_arguments = ap.add_argument_group('Job Options')
 job_option_arguments.add_argument("--qsub", help="submit qsub jobs on hoffman2 (UCLA) cluster. If planning to use on your cluster contact smangul@ucla.edu", action="store_true")
 job_option_arguments.add_argument("--qsubArray", help="prepare qsub scripts to be run later using job array. Working on hoffman2 (UCLA) cluster. If planning to use on your cluster contact smangul@ucla.edu", action="store_true")
+job_option_arguments.add_argument("--maui", help = "use this option together with --qsub to submit jobs via  Maui scheduler. Maui is a job scheduler developped by Adaptive Computing. More details are here : https://wiki.calculquebec.ca/w/Maui/en", action = "store_true")
+
 
 input_option_arguments = ap.add_argument_group('Input Options')
 input_option_arguments.add_argument("--b", '-b', help="unmapped reads in bam format", action="store_true")
@@ -204,10 +204,13 @@ misc_option_arguments.add_argument("--clean", help = "clean all the intermediate
 misc_option_arguments.add_argument("--quiet", help = "Suppress progress report and warnings", action = "store_true")
 misc_option_arguments.add_argument("--dev", help = "Keep intermediate files", action = "store_true")
 misc_option_arguments.add_argument("--nonReductive", help = "non-reductive analysis - Dev mode - Please use with caution", action = "store_true")
-misc_option_arguments.add_argument("--maui", help = "use this option together with --qsub to submit jobs via  Maui scheduler. Maui is a job scheduler developped by Adaptive Computing. More details are here : https://wiki.calculquebec.ca/w/Maui/en", action = "store_true")
 
 
 args = ap.parse_args()
+
+
+
+
 
 # ONLY OPTION Configuration
 # IF none of them are selected: make everything true
@@ -368,12 +371,15 @@ virusFileFiltered=virusDir+basename+"_virusFiltered_blastFormat6.csv"
 gLogfile=args.dir+"/"+basename+".log"
 
 
-tLog=args.dir+"/"+"numberReads_"+basename+".log"
-tLogfile=open(tLog,'w')
+
 
 
 
 cmdLogfile=args.dir+"/"+"dev.log"
+
+toolsLogfile=args.dir+"/"+"tools.log"
+
+
 
 
 #runFiles
@@ -632,7 +638,12 @@ else:
 
 if args.nonReductive or args.qsub or args.qsubArray:
     branch_point_file = afterlostHumanFasta
-    print "Non-reductive mode selected"
+    
+    write2Log("*********************************",gLogfile, args.quiet)
+    write2Log("Non-substractive mode is selected : Low quality, low complexity, rRNA reads and lost human reads are filtered out. Resulting high quality non-human reads are provided as input  for STEP3-STEP6",gLogfile, args.quiet)
+    write2Log("*********************************",gLogfile, args.quiet)
+
+    
 
 #######################################################################################################################################
 #3. Maping to repeat sequences...
@@ -661,11 +672,12 @@ if args.repeat:
         if args.qsub:
             if args.maui:
                 cmdQsub="qsub -d `pwd`  -l walltime=10:00:00 -l nodes=1:m16G:ppn=12 %s" %(runLostRepeatFile)
-                print cmdQsub
-                sys.exit(1)
             else:
                 cmdQsub="qsub -cwd -V -N lostRepeat -l h_data=16G,time=10:00:00 %s" %(runLostRepeatFile)
             os.system(cmdQsub)
+            write2Log("Job for STEP3 has been submitted via qsub",gLogfile, args.quiet)
+
+
     else:
         os.system(cmd)
         write2Log(cmd,cmdLogfile,"False")
@@ -728,8 +740,12 @@ if args.circRNA:
         f.write("echo \"done!\">%s/%s_NCL_CIRI.done \n" %(NCL_Dir,basename))
         f.close()
         if args.qsub:
-            cmdQsub="qsub -cwd -V -N NCL_CIRI -l h_data=8G,time=10:00:00 %s" %(runNCL_CIRIfile)
+            if args.maui:
+                cmdQsub="qsub -d `pwd`  -l walltime=10:00:00 -l nodes=1:m16G:ppn=12 %s" %(runNCL_CIRIfile)
+            else:
+                cmdQsub="qsub -cwd -V -N NCL_CIRI -l h_data=8G,time=10:00:00 %s" %(runNCL_CIRIfile)
             os.system(cmdQsub)
+            write2Log("Job for STEP4 has been submitted via qsub",gLogfile, args.quiet)
     else:
         os.chdir(NCL_Dir)
         os.system(cmd)
@@ -784,8 +800,12 @@ if args.immune:
         f.write("echo \"done!\"> %s/%s_igh.done \n" %(ighDir,basename))
         f.close()
         if args.qsub:
-            cmdQsub="qsub -cwd -V -N igh -l h_data=16G,time=24:00:00 %s" %(runIGHFile)
+            if args.maui:
+                cmdQsub="qsub -d `pwd`  -l walltime=10:00:00 -l nodes=1:m16G:ppn=12 %s" %(runIGHFile)
+            else:
+                cmdQsub="qsub -cwd -V -N igh -l h_data=16G,time=24:00:00 %s" %(runIGHFile)
             os.system(cmdQsub)
+            write2Log("Job for STEP5a(IGK) has been submitted via qsub",gLogfile, args.quiet)
     else:
         os.chdir(ighDir)
         os.system(cmd)
@@ -816,8 +836,12 @@ if args.immune:
         f.write("echo \"done!\"> %s/%s_igk.done \n" %(igkDir,basename))
         f.close()
         if args.qsub:
-            cmdQsub="qsub -cwd -V -N igk -l h_data=16G,time=24:00:00 %s" %(runIGKFile)
+            if args.maui:
+                cmdQsub="qsub -d `pwd`  -l walltime=10:00:00 -l nodes=1:m16G:ppn=12 %s" %(runIGKFile)
+            else:
+                cmdQsub="qsub -cwd -V -N igk -l h_data=16G,time=24:00:00 %s" %(runIGKFile)
             os.system(cmdQsub)
+            write2Log("Job for STEP5a(IGK) has been submitted via qsub",gLogfile, args.quiet)
     else:
         os.chdir(igkDir)
         os.system(cmd)
@@ -847,8 +871,12 @@ if args.immune:
         f.write("echo \"done!\">%s/%s_igl.done \n" %(iglDir,basename))
         f.close()
         if args.qsub:
-            cmdQsub="qsub -cwd -V -N igl -l h_data=16G,time=24:00:00 %s" %(runIGLFile)
+            if args.maui:
+                cmdQsub="qsub -d `pwd`  -l walltime=10:00:00 -l nodes=1:m16G:ppn=12 %s" %(runIGLFile)
+            else:
+                cmdQsub="qsub -cwd -V -N igl -l h_data=16G,time=24:00:00 %s" %(runIGLFile)
             os.system(cmdQsub)
+            write2Log("Job for STEP5a(IGL) has been submitted via qsub",gLogfile, args.quiet)
     else:
         os.chdir(iglDir)
         os.system(cmd)
@@ -879,8 +907,12 @@ if args.immune:
         f.write("echo \"done!\">%s/%s_tcra.done \n"%(tcraDir,basename))
         f.close()
         if args.qsub:
-            cmdQsub="qsub -cwd -V -N tcra -l h_data=16G,time=24:00:00 %s" %(runTCRAFile)
+            if args.maui:
+                cmdQsub="qsub -d `pwd`  -l walltime=10:00:00 -l nodes=1:m16G:ppn=12 %s" %(runTCRAFile)
+            else:
+                cmdQsub="qsub -cwd -V -N tcra -l h_data=16G,time=24:00:00 %s" %(runTCRAFile)
             os.system(cmdQsub)
+            write2Log("Job for STEP5b(TCRA) has been submitted via qsub",gLogfile, args.quiet)
     else:
         os.chdir(tcraDir)
         os.system(cmd)
@@ -907,8 +939,13 @@ if args.immune:
         f.write("echo \"done!\">%s/%s_tcrb.done \n"%(tcrbDir,basename))
         f.close()
         if args.qsub:
-            cmdQsub="qsub -cwd -V -N tcrb -l h_data=16G,time=24:00:00 %s" %(runTCRBFile)
+            if args.maui:
+                cmdQsub="qsub -d `pwd`  -l walltime=10:00:00 -l nodes=1:m16G:ppn=12 %s" %(runTCRBFile)
+            else:
+                cmdQsub="qsub -cwd -V -N tcrb -l h_data=16G,time=24:00:00 %s" %(runTCRBFile)
             os.system(cmdQsub)
+            write2Log("Job for STEP5b(TCRB) has been submitted via qsub",gLogfile, args.quiet)
+
     else:
         os.chdir(tcrbDir)
         os.system(cmd)
@@ -936,8 +973,13 @@ if args.immune:
         f.write("echo \"done!\">%s/%s_tcrd.done \n" %(tcrdDir, basename))
         f.close()
         if args.qsub:
-            cmdQsub="qsub -cwd -V -N tcrd -l h_data=16G,time=24:00:00 %s" %(runTCRDFile)
+            if args.maui:
+                cmdQsub="qsub -d `pwd`  -l walltime=10:00:00 -l nodes=1:m16G:ppn=12 %s" %(runTCRDFile)
+            else:
+                cmdQsub="qsub -cwd -V -N tcrd -l h_data=16G,time=24:00:00 %s" %(runTCRDFile)
             os.system(cmdQsub)
+            write2Log("Job for STEP5b(TCRD) has been submitted via qsub",gLogfile, args.quiet)
+
     else:
         os.chdir(tcrdDir)
         os.system(cmd)
@@ -966,8 +1008,13 @@ if args.immune:
         f.write("echo \"done!\">%s/%s_tcrg.done \n" %(tcrgDir,basename))
         f.close()
         if args.qsub:
-            cmdQsub="qsub -cwd -V -N tcrg -l h_data=16G,time=24:00:00 %s" %(runTCRGFile)
+            if args.maui:
+                cmdQsub="qsub -d `pwd`  -l walltime=10:00:00 -l nodes=1:m16G:ppn=12 %s" %(runTCRGFile)
+            else:
+                cmdQsub="qsub -cwd -V -N tcrg -l h_data=16G,time=24:00:00 %s" %(runTCRGFile)
             os.system(cmdQsub)
+            write2Log("Job for STEP5b(TCRG) has been submitted via qsub",gLogfile, args.quiet)
+
     else:
         os.chdir(tcrgDir)
         os.system(cmd)
@@ -992,35 +1039,39 @@ else:
 # 5. Metaphlan
 
 
-    if args.metaphlan:
-        #write2Log("6.  Metaphlan profiling...",cmdLogfile,"False")
-        #write2Log("6.  Metaphlan profiling...",gLogfile,args.quiet)
-        if args.nonReductive or args.qsub or args.qsubArray:
-            input_file = branch_point_file
-        else:
-            input_file = afterImmuneFasta
-        print "----------"
-        cmd = "python %s/tools/metaphlan2.py %s %s --mpa_pkl %s/db/metaphlan/mpa_v20_m200.pkl --bowtie2_exe %s/tools/bowtie2 --input_type multifasta --bowtie2db %s/db/metaphlan/mpa_v20_m200 -t reads_map --nproc 8 --bowtie2out %s>%s" % (codeDir, input_file, metaphlan_intermediate_map, codeDir, codeDir, codeDir, metaphlan_intermediate_bowtie2out,logMetaphlan)
-        cmd = cmd + "\n" + "python %s/tools/metaphlan2.py --mpa_pkl %s/db/metaphlan/mpa_v20_m200.pkl --bowtie2_exe %s/tools/bowtie2 --input_type bowtie2out %s -t rel_ab > %s 2>%s" %(codeDir, codeDir, codeDir, metaphlan_intermediate_bowtie2out, metaphlan_output,logMetaphlan)
-        write2Log(cmd,cmdLogfile,"False")
 
-        if args.qsub or args.qsubArray:
-            f= open(run_metaphlan_file, 'w')
-            f.write(cmd + "\n")
-            f.write("echo \"done!\" > %s/%s_metaphlan.done \n" % (metaphlanDir, basename))
-            f.close()
-            if args.qsub:
+if args.metaphlan:
+    write2Log("***Extra step.  Metaphlan profiling...",cmdLogfile,"False")
+    write2Log("***Extra step.  Metaphlan profiling...",gLogfile,args.quiet)
+    if args.nonReductive or args.qsub or args.qsubArray:
+        input_file = branch_point_file
+    else:
+        input_file = afterImmuneFasta
+    cmd = "python %s/tools/metaphlan2.py %s %s --mpa_pkl %s/db/metaphlan/mpa_v20_m200.pkl --bowtie2_exe %s/tools/bowtie2 --input_type multifasta --bowtie2db %s/db/metaphlan/mpa_v20_m200 -t reads_map --nproc 8 --bowtie2out %s>>s%s 2>>%s" % (codeDir, input_file, metaphlan_intermediate_map, codeDir, codeDir, codeDir, metaphlan_intermediate_bowtie2out,logMetaphlan,logMetaphlan)
+    cmd = cmd + "\n" + "python %s/tools/metaphlan2.py --mpa_pkl %s/db/metaphlan/mpa_v20_m200.pkl --bowtie2_exe %s/tools/bowtie2 --input_type bowtie2out %s -t rel_ab > %s 2>>%s" %(codeDir, codeDir, codeDir, metaphlan_intermediate_bowtie2out, metaphlan_output,logMetaphlan)
+    write2Log(cmd,cmdLogfile,"False")
+
+    if args.qsub or args.qsubArray:
+        f= open(run_metaphlan_file, 'w')
+        f.write(cmd + "\n")
+        f.write("echo \"done!\" > %s/%s_metaphlan.done \n" % (metaphlanDir, basename))
+        f.close()
+        if args.qsub:
+            if args.maui:
+                cmdQsub="qsub -d `pwd`  -l walltime=10:00:00 -l nodes=1:m16G:ppn=12 %s" %(run_metaphlan_file)
+            else:
                 cmdQsub="qsub -cwd -V -N metaphlan -l h_data=16G,time=24:00:00 %s" %(run_metaphlan_file)
-                os.system(cmdQsub)
-        else:
-            os.chdir(metaphlanDir)
-            os.system(cmd)
-            print cmd
-            write2Log("***Microbiome profiling by Metaphlan2: Microbial organisms (taxonomic profile) detected by Metaphlan2 is available here: %s" %(metaphlanDir) ,gLogfile,args.quiet)
-
+            os.system(cmdQsub)
+            write2Log("Job for Metaphlan has been submitted via qsub",gLogfile, args.quiet)
 
     else:
-        print "Metaphlan Profiling Step is deselected - This step is skipped."
+        os.chdir(metaphlanDir)
+        os.system(cmd)
+        write2Log("***Microbiome profiling by Metaphlan2: taxonomic profile of microbial organisms detected by Metaphlan2 is available here: %s" %(metaphlanDir) ,gLogfile,args.quiet)
+
+
+else:
+    print "Metaphlan Profiling Step is deselected - This step is skipped."
 
 
 #######################################################################################################################################
@@ -1031,9 +1082,7 @@ if args.microbiome:
     
     
     if args.nonReductive or args.qsub or args.qsubArray:
-        print "nonReductive mode was selected"
         input_file = branch_point_file
-        print "Opens ",input_file
     else:
         input_file = afterImmuneFasta
 
@@ -1064,8 +1113,13 @@ if args.microbiome:
         f.write("echo \"done!\">%s/%s_bacteria.done \n"%(bacteriaDir, basename))
         f.close()
         if args.qsub:
-            cmdQsub="qsub -cwd -V -N bacteria -l h_data=16G,time=24:00:00 %s" %(runBacteriaFile)
+            if args.maui:
+                cmdQsub="qsub -d `pwd`  -l walltime=10:00:00 -l nodes=1:m16G:ppn=12 %s" %(runBacteriaFile)
+            else:
+                cmdQsub="qsub -cwd -V -N bacteria -l h_data=16G,time=24:00:00 %s" %(runBacteriaFile)
             os.system(cmdQsub)
+            write2Log("Job for STEP6 (bacteriaProfile) has been submitted via qsub",gLogfile, args.quiet)
+
     else:
         os.chdir(bacteriaDir)
         os.system(cmd)
@@ -1082,7 +1136,6 @@ if args.microbiome:
 
     if args.nonReductive or args.qsub or args.qsubArray:
         input_file = branch_point_file
-        print "Opens ",input_file
     else:
         input_file = afterBacteraFasta
         if not args.dev:
@@ -1104,8 +1157,13 @@ if args.microbiome:
         f.write("echo \"done!\">%s/%s_virus.done \n"%(bacteriaDir, basename))
         f.close()
         if args.qsub:
-            cmdQsub="qsub -cwd -V -N virus -l h_data=16G,time=24:00:00 %s" %(runBacteriaFile)
+            if args.maui:
+                cmdQsub="qsub -d `pwd`  -l walltime=10:00:00 -l nodes=1:m16G:ppn=12 %s" %(runBacteriaFile)
+            else:
+                cmdQsub="qsub -cwd -V -N virus -l h_data=16G,time=24:00:00 %s" %(runBacteriaFile)
             os.system(cmdQsub)
+            write2Log("Job for STEP6 (viralProfile) has been submitted via qsub",gLogfile, args.quiet)
+
     else:
         os.system(cmd)
         virusReads=nMicrobialReads(virusFile,readLength,virusFileFiltered)
@@ -1131,7 +1189,6 @@ if args.microbiome:
 
     if args.nonReductive or args.qsub or args.qsubArray:
         inFasta = branch_point_file
-        print "Opens ",input_file
     else:
         inFasta = afterVirusFasta
         if not args.dev:
@@ -1159,8 +1216,12 @@ if args.microbiome:
             f.write("echo \"done!\">%s/%s.done" %(eupathdbDir, db)+ "\n")
             f.close()
             if args.qsub:
-                cmdQsub="qsub -cwd -V -N %s -l h_data=16G,time=24:00:00 %s" %(db,runEupathdbFile)
+                if args.maui:
+                    cmdQsub="qsub -d `pwd`  -l walltime=10:00:00 -l nodes=1:m16G:ppn=12 %s" %(runEupathdbFile)
+                else:
+                    cmdQsub="qsub -cwd -V -N %s -l h_data=16G,time=24:00:00 %s" %(db,runEupathdbFile)
                 os.system(cmdQsub)
+                write2Log("Job for STEP6 (%s) has been submitted via qsub" %(db),gLogfile, args.quiet)
         else:
             os.chdir(eupathdbDir)
             os.system(cmd)
@@ -1202,18 +1263,45 @@ if args.microbiome:
         write2Log("Summary: The ROP protocol is able to account for %s reads" %(nTotalReads) ,gLogfile,args.quiet)
         write2Log("***Unaccounted reads (not explained by ROP) are saved to %s" %(unaccountedReadsFasta) ,gLogfile,args.quiet)
         
+        write2Log("***Log file with all the commands used is available here: " %(cmdLogfile) ,gLogfile,args.quiet)
 
+        tLog=args.dir+"/"+"numberReads_"+basename+".log"
+        tLogfile=open(tLog,'w')
         tLogfile.write("sample,totalUnmapped,nLowQReads,nLowCReads,n_rRNAReads,nlostHumanReads,nRepeatReads,nNCLReads,nReadsImmuneTotal,nMicrobialReads")
         tLogfile.write("\n")
         message=basename+","+str(n)+","+str(nLowQReads)+","+str(nLowCReads)+","+str(n_rRNAReads)+","+str(nlostHumanReads)+","+str(nRepeatReads)+","+str(nNCLReads)+","+str(nReadsImmuneTotal)+","+str(nReadsBacteria+nReadsVirus+nReadsEP)
         tLogfile.write(message)
         tLogfile.write("\n")
+        tLogfile.close()
 else:
     print "Microbiome Profiling step is deselected - this step is skipped."
 
 
+#tools
+write2Log("The list of the tools used by ROP and the paramemers are provided below" ,toolsLogfile,"False")
 
-tLogfile.close()
+write2Log("Step_ROP,Tools,version, link, reference database, parameters" ,toolsLogfile,"False")
+
+
+write2Log("Step1, FastQC, http://www.bioinformatics.babraham.ac.uk/projects/fastqc/,-, " ,toolsLogfile,"False")
+write2Log("Step1, SEQLEAN, seqclean-x86_64, https://sourceforge.net/projects/seqclean/, " ,toolsLogfile,"False")
+write2Log("Step1, BLAST+, ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/, " ,toolsLogfile,"False")
+write2Log("Step2, Bowtie2, http://bowtie-bio.sourceforge.net/bowtie2/index.shtml,GRCh37/hg19,  " ,toolsLogfile,"False")
+write2Log("Step3, BLAST+, ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/, RepBase20.07,  " ,toolsLogfile,"False")
+write2Log("Step4, CIRI, https://sourceforge.net/projects/ciri/, " ,toolsLogfile,"False")
+write2Log("Step5, IgBLAST, http://mirrors.vbi.vt.edu/mirrors/ftp.ncbi.nih.gov/blast/executables/igblast/release/1.4.0/, " ,toolsLogfile,"False")
+write2Log("Step6, BLAST+, ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/, ,  " ,toolsLogfile,"False")
+
+
+
+
+
+write2Log("Important: ROP relies on  several open source tools that were developed by other groups. These components are (c) their respective developers and are redistributed with ROP to provide ease-of-use. The list of the tools used by ROP and the paramemers/reference databases are provided here: %s " %(toolsLogfile) ,gLogfile,args.quiet)
+
+
+
+
+
 
 if args.rezip:
     write_gzip(branch_point_file, afterlostHumanFastaGzip)
