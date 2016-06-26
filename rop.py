@@ -158,7 +158,7 @@ def write_gzip(inFasta,outFasta):
 ####################################################################
 
 print "*********************************************"
-print "ROP (version 1.0.1) is a computational protocol aimed to discover the source of all reads, originated from complex RNA molecules, recombinant antibodies and microbial communities. Written by Serghei Mangul (smangul@ucla.edu) and Harry Taegyun Yang (harry2416@gmail.com), University of California, Los Angeles (UCLA). (c) 2016. Released under the terms of the General Public License version 3.0 (GPLv3)"
+print "ROP (version 1.0.3) is a computational protocol aimed to discover the source of all reads, originated from complex RNA molecules, recombinant antibodies and microbial communities. Written by Serghei Mangul (smangul@ucla.edu) and Harry Taegyun Yang (harry2416@gmail.com), University of California, Los Angeles (UCLA). (c) 2016. Released under the terms of the General Public License version 3.0 (GPLv3)"
 print ""
 print "For more details see:"
 print "https://sergheimangul.wordpress.com/rop/"
@@ -183,10 +183,10 @@ job_option_arguments.add_argument("--maui", help = "use this option together wit
 
 input_option_arguments = ap.add_argument_group('Input Options')
 input_option_arguments.add_argument("--b", '-b', help="unmapped reads in bam format", action="store_true")
-input_option_arguments.add_argument("--fastqGz", '-z', help="unmapped reads in fasta.gz format", action="store_true")
-input_option_arguments.add_argument("--skipLowq", help="skip step filtering low quality reads ", action="store_true")
-input_option_arguments.add_argument("--skipQC", help="skip entire QC step : filtering  low-quality, low-complexity and rRNA reads", action="store_true")
-input_option_arguments.add_argument("--skipPreliminary", '-s', help="skip the preliminary steps including (1) QC and (2) Remapping to human references (lost human reads)", action="store_true")
+input_option_arguments.add_argument("--fastqGz", '-z', help="Currently not supported!!! unmapped reads in fasta.gz format.", action="store_true")
+input_option_arguments.add_argument("--skipLowq", help="skip step filtering low quality reads. The input reads need to be in the FASTA format", action="store_true")
+input_option_arguments.add_argument("--skipQC", help="skip entire QC step : filtering  low-quality, low-complexity and rRNA reads. The input reads need to be in the FASTA format", action="store_true")
+input_option_arguments.add_argument("--skipPreliminary", '-s', help="skip the preliminary steps including (1) QC and (2) Remapping to human references (lost human reads). The input reads need to be in the FASTA format", action="store_true")
 
 
 
@@ -419,12 +419,48 @@ logEukaryotes=eupathdbDir + basename + "_eukaryotes.log"
 
 
 #######################################################################################################################################
+
+#to add args.fastqGz with gzip.open(unmappedFastq) as f:
+
+readLength=0
+n=0
+if not args.skipPreliminary and not args.skipQC and not args.skipLowq:
+    fastqfile = open(args.unmappedReads, "rU")
+    for record in SeqIO.parse(fastqfile,"fastq"):
+            readLength=len(record) #assumes the same length, will not work for Ion Torrent or Pac Bio
+            n+=1
+    fastqfile.close()
+else:
+    fastafile = open(args.unmappedReads, "rU")
+    for record in SeqIO.parse(fastafile,"fasta"):
+        readLength=len(record) #assumes the same length, will not work for Ion Torrent or Pac Bio
+        n+=1
+    fastafile.close()
+
+
+
+message="Processing %s unmapped reads of length %s" %(n,readLength)
+write2Log(message,gLogfile,args.quiet)
+
+
+
+
 if args.skipPreliminary:
     # afterrRNAFasta=args.unmappedReads
-    print "Preliminary filtering steps are skipped."
+    write2Log("1. Quality Control is skipped",gLogfile,args.quiet)
+    filename, file_extension = os.path.splitext(args.unmappedReads)
+    if file_extension!=".fa" and file_extension!=".fasta":
+        write2Log("ERROR ::: --skipPreliminary option is selected. Reads needs to be in FASTA format",gLogfile,args.quiet)
+        sys.exit(1)
+
+
 elif args.skipQC:
+    filename, file_extension = os.path.splitext(args.unmappedReads)
+    if file_extension!=".fa" and file_extension!=".fasta":
+        write2Log("ERROR ::: --skipQC option is selected. Reads needs to be in FASTA format",gLogfile,args.quiet)
+        sys.exit(1)
     # afterrRNAFasta = args.unmappedReads
-    print "Preliminary filtering steps are skipped."
+    write2Log("1. Quality Control is skipped",gLogfile,args.quiet)
 else:
     if args.b:
         if args.skipLowq:
@@ -435,28 +471,9 @@ else:
         unmappedFastq=args.unmappedReads
 
 
-    #######################################################################################################################################
-    if args.skipLowq==False:
-        #number of reads
-        if args.fastqGz:
-            with gzip.open(unmappedFastq) as f:
-                for i, l in enumerate(f):
-                    pass
-            n=(i + 1)/4
-            
-            unmappedFastqGzip=unmappedFastq
-            unmappedFastq=unmappedFastqGzip.split(".gz")[0]
-            write_gzip_into_readable(unmappedFastqGzip,unmappedFastq)
-            
-            
-        else:
-            with open(unmappedFastq) as f:
-                for i, l in enumerate(f):
-                    pass
-            n=(i + 1)/4
 
-        message="Processing %s unmapped reads" %(n)
-        write2Log(message,gLogfile,args.quiet)
+
+
 
 
 
@@ -485,6 +502,8 @@ else:
         nLowQReads=n-nAfterLowQReads
         write2Log("--filtered %s low quality reads" %(nLowQReads) ,gLogfile,args.quiet)
 
+
+    
 
 
 
@@ -555,6 +574,8 @@ if not args.skipPreliminary:
     write2Log("2. Remapping to human references...",gLogfile,args.quiet)
     # If input is afterQC fasta.gz
     if args.skipQC and (args.fastqGz or args.gzip):
+        
+        
         write_gzip_into_readable(args.unmappedReads, afterrRNAFasta)
     elif args.skipQC and not args.fastqGz and not args.gzip:
         afterrRNAFasta = args.unmappedReads
@@ -622,11 +643,15 @@ if not args.skipPreliminary:
     write2File("done!",args.dir+"/step2_lostHumanReads.done")
 
     if not args.dev:
-        os.remove(afterrRNAFasta)
+        if not args.skipQC and not args.skipPreliminary:
+            os.remove(afterrRNAFasta)
     if args.clean:
         write2Log("Clean mode selected - removing analysis sam files", gLogfile, args.quiet)
         os.remove(gBamFile)
         os.remove(tBamFile)
+
+
+
 ### TODO
 else:
     if args.gzip or args.fastqGz:
@@ -1047,7 +1072,7 @@ if args.metaphlan:
         input_file = branch_point_file
     else:
         input_file = afterImmuneFasta
-    cmd = "python %s/tools/metaphlan2.py %s %s --mpa_pkl %s/db/metaphlan/mpa_v20_m200.pkl --bowtie2_exe %s/tools/bowtie2 --input_type multifasta --bowtie2db %s/db/metaphlan/mpa_v20_m200 -t reads_map --nproc 8 --bowtie2out %s>>s%s 2>>%s" % (codeDir, input_file, metaphlan_intermediate_map, codeDir, codeDir, codeDir, metaphlan_intermediate_bowtie2out,logMetaphlan,logMetaphlan)
+    cmd = "python %s/tools/metaphlan2.py %s %s --mpa_pkl %s/db/metaphlan/mpa_v20_m200.pkl --bowtie2_exe %s/tools/bowtie2 --input_type multifasta --bowtie2db %s/db/metaphlan/mpa_v20_m200 -t reads_map --nproc 8 --bowtie2out %s>>%s 2>>%s" % (codeDir, input_file, metaphlan_intermediate_map, codeDir, codeDir, codeDir, metaphlan_intermediate_bowtie2out,logMetaphlan,logMetaphlan)
     cmd = cmd + "\n" + "python %s/tools/metaphlan2.py --mpa_pkl %s/db/metaphlan/mpa_v20_m200.pkl --bowtie2_exe %s/tools/bowtie2 --input_type bowtie2out %s -t rel_ab > %s 2>>%s" %(codeDir, codeDir, codeDir, metaphlan_intermediate_bowtie2out, metaphlan_output,logMetaphlan)
     write2Log(cmd,cmdLogfile,"False")
 
@@ -1067,7 +1092,7 @@ if args.metaphlan:
     else:
         os.chdir(metaphlanDir)
         os.system(cmd)
-        write2Log("***Microbiome profiling by Metaphlan2: taxonomic profile of microbial organisms detected by Metaphlan2 is available here: %s" %(metaphlanDir) ,gLogfile,args.quiet)
+        write2Log("***Microbiome profiling by Metaphlan2: taxonomic profile of microbial communities detected by Metaphlan2 is available here: %s" %(metaphlanDir) ,gLogfile,args.quiet)
 
 
 else:
@@ -1263,7 +1288,7 @@ if args.microbiome:
         write2Log("Summary: The ROP protocol is able to account for %s reads" %(nTotalReads) ,gLogfile,args.quiet)
         write2Log("***Unaccounted reads (not explained by ROP) are saved to %s" %(unaccountedReadsFasta) ,gLogfile,args.quiet)
         
-        write2Log("***Log file with all the commands used is available here: " %(cmdLogfile) ,gLogfile,args.quiet)
+        write2Log("***Log file with all the commands used is available here: %s" %(cmdLogfile) ,gLogfile,args.quiet)
 
         tLog=args.dir+"/"+"numberReads_"+basename+".log"
         tLogfile=open(tLog,'w')
@@ -1279,24 +1304,22 @@ else:
 
 #tools
 write2Log("The list of the tools used by ROP and the paramemers are provided below" ,toolsLogfile,"False")
-
-write2Log("Step_ROP,Tools,version, link, reference database, parameters" ,toolsLogfile,"False")
-
-
-write2Log("Step1, FastQC, http://www.bioinformatics.babraham.ac.uk/projects/fastqc/,-, " ,toolsLogfile,"False")
-write2Log("Step1, SEQLEAN, seqclean-x86_64, https://sourceforge.net/projects/seqclean/, " ,toolsLogfile,"False")
-write2Log("Step1, BLAST+, ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/, " ,toolsLogfile,"False")
-write2Log("Step2, Bowtie2, http://bowtie-bio.sourceforge.net/bowtie2/index.shtml,GRCh37/hg19,  " ,toolsLogfile,"False")
-write2Log("Step3, BLAST+, ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/, RepBase20.07,  " ,toolsLogfile,"False")
-write2Log("Step4, CIRI, https://sourceforge.net/projects/ciri/, " ,toolsLogfile,"False")
-write2Log("Step5, IgBLAST, http://mirrors.vbi.vt.edu/mirrors/ftp.ncbi.nih.gov/blast/executables/igblast/release/1.4.0/, " ,toolsLogfile,"False")
-write2Log("Step6, BLAST+, ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/, ,  " ,toolsLogfile,"False")
-
-
+write2Log("************" ,toolsLogfile,"False")
+write2Log("**We have used FastQC (version 0.0.13, with the default parameters) downloaded from  http://www.bioinformatics.babraham.ac.uk/projects/fastqc/ to filter out low quality reads" ,toolsLogfile,"False")
+write2Log("**We have used SEQLEAN (seqclean-x86_64, with the default parameters) downloaded from https://sourceforge.net/projects/seqclean/ to filter out low complexity reads , " ,toolsLogfile,"False")
+write2Log("**We have used Megablast (BLAST+ version 2.2.30, with the following parameters: task	=	megablast,	use_index	=	 true; -outfmt 6 ;-evalue 1e-05; perc_identity	=	100) downloaded from ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ to filter out reads mapped to rRNA	repeat sequence	(HSU13369 Human ribosomal DNA	complete repeating	unit) " ,toolsLogfile,"False")
+write2Log("**We have used Bowtie2(version 2.0.5, with the following parameters: -k 1; -p 8; -f ) downloaded from  http://bowtie-bio.sourceforge.net/bowtie2/index.shtml to identify lost human reads mapped to reference transcriptome and genome (Ensembl GRCh37GRCh37/hg19)" ,toolsLogfile,"False")
+write2Log("**We have used Megablast (BLAST+ version 2.2.30, with the following options : task=megablast, use_index=true, -outfmt 6 -evalue 1e-05, perc_identity	=	90) downloaded from  ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/  to identify lost repeat reads mapped to database of 	repeat	sequences (RepBase20.07) " ,toolsLogfile,"False")
+write2Log("**We have used CIRI (version 1.2 with the following parameters : -S -I ) downloaded from https://sourceforge.net/projects/ciri/ to identify reads from circRNAs" ,toolsLogfile,"False")
+write2Log("**We have used IgBLAST (version v 1.4.0 with the following parameters: -germline_db_V;	germline_db_D; -germline_db_J; -organism=human;	-outfmt 7 std qseq sseq; -evalue = 1e-05 )  downloaded from http://mirrors.vbi.vt.edu/mirrors/ftp.ncbi.nih.gov/blast/executables/igblast/release/1.4.0/  to identify immune reads spanningBCR/TCR	 receptor gene	 rearrangement	in	 the	variable	domain (V(D)J	recombinations)",toolsLogfile,"False")
+write2Log("**We have used Megablast (BLAST+ version 2.2.30, with the following parameters: task=megablast, use_index=true; -outfmt 6 ;-evalue 1e-05) downloaded from ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ to identify microbial reads mapped onto the microbial genomes (Bacteria, Viruses, and Eukaryotic Pathogens)" ,toolsLogfile,"False")
+write2Log("**We have used Metaphlan2 (version 2.2.0, with the following parameters: --mpa_pkl ; --bowtie2_exe;  --input_type multifasta; --bowtie2db ; -t reads_map/rel_ab ;  --nproc 8) downloaded from https://bitbucket.org/biobakery/metaphlan2 to obtain taxonomic profile of microbial communities" ,toolsLogfile,"False")
+write2Log("************" ,toolsLogfile,"False")
+write2Log("For more information about the paramemers and databases used by ROP, please see the preprint : Dumpster diving in RNA-sequencing to find the source of every last read http://biorxiv.org/content/early/2016/05/13/053041" ,toolsLogfile,"False")
 
 
-
-write2Log("Important: ROP relies on  several open source tools that were developed by other groups. These components are (c) their respective developers and are redistributed with ROP to provide ease-of-use. The list of the tools used by ROP and the paramemers/reference databases are provided here: %s " %(toolsLogfile) ,gLogfile,args.quiet)
+write2Log("********************",gLogfile,args.quiet)
+write2Log("Important: ROP relies on  several open source tools that were developed by other groups. These components are (c) their respective developers and are redistributed with ROP to provide ease-of-use. The list of the tools used by ROP and the parameters/reference databases are provided here: %s " %(toolsLogfile) ,gLogfile,args.quiet)
 
 
 
