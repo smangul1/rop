@@ -65,11 +65,13 @@ def bam2fastq(codeDir,inFile,outFile):
 
 #######################################################################
 
-def write2Log(message,logFile,option):
+def write2Log(message,gLog,option):
+    logFile=open(gLog,'a')
     if not option:
         print message
     logFile.write(message)
     logFile.write("\n")
+    logFile.close()
 
 #######################################################################
 
@@ -160,8 +162,6 @@ print "ROP (version 1.0.1) is a computational protocol aimed to discover the sou
 print ""
 print "For more details see:"
 print "https://sergheimangul.wordpress.com/rop/"
-#print "http://serghei.bioinformatics.ucla.edu/rop/"
-#print "https://github.com/smangul1/rop/ROPmanual.pdf"
 print "*********************************************"
 
 #######################################################################
@@ -178,6 +178,8 @@ necessary_arguments.add_argument('dir', help='directory to save results of the a
 job_option_arguments = ap.add_argument_group('Job Options')
 job_option_arguments.add_argument("--qsub", help="submit qsub jobs on hoffman2 (UCLA) cluster. If planning to use on your cluster contact smangul@ucla.edu", action="store_true")
 job_option_arguments.add_argument("--qsubArray", help="prepare qsub scripts to be run later using job array. Working on hoffman2 (UCLA) cluster. If planning to use on your cluster contact smangul@ucla.edu", action="store_true")
+job_option_arguments.add_argument("--maui", help = "use this option together with --qsub to submit jobs via  Maui scheduler. Maui is a job scheduler developped by Adaptive Computing. More details are here : https://wiki.calculquebec.ca/w/Maui/en", action = "store_true")
+
 
 input_option_arguments = ap.add_argument_group('Input Options')
 input_option_arguments.add_argument("--b", '-b', help="unmapped reads in bam format", action="store_true")
@@ -205,6 +207,10 @@ misc_option_arguments.add_argument("--nonReductive", help = "non-reductive analy
 
 
 args = ap.parse_args()
+
+
+
+
 
 # ONLY OPTION Configuration
 # IF none of them are selected: make everything true
@@ -327,23 +333,33 @@ metaphlan_output = metaphlanDir + basename + "_metaphlan_output.tsv"
 
 gBamFile=lostHumanDir+basename+"_genome.sam"
 tBamFile=lostHumanDir+basename+"_transcriptome.sam"
-repeatFile=lostRepeatDir+basename+"_lostRepeats_blastFormat6.csv"
+repeatFile=lostRepeatDir+basename+"_lostRepeats_blastFormat6.tsv"
 afterlostRepeatFasta=lostRepeatDir+basename+"_after_lostRepeat.fasta"
 NCL_CIRI_file=NCL_Dir + basename + "_NCL_CIRI_after_bwa.sam"
-after_NCL_CIRI_file_prefix = basename + "_circRNA.csv"
-ighFile=ighDir+basename+"_IGH_igblast.csv"
-igkFile=igkDir+basename+"_IGK_igblast.csv"
-iglFile=iglDir+basename+"_IGL_igblast.csv"
-tcraFile=tcraDir+basename+"_TCRA_igblast.csv"
-tcrbFile=tcrbDir+basename+"_TCRB_igblast.csv"
-tcrdFile=tcrdDir+basename+"_TCRD_igblast.csv"
-tcrgFile=tcrgDir+basename+"_TCRG_igblast.csv"
+after_NCL_CIRI_file_prefix = basename + "_circRNA.tsv"
+ighFile=ighDir+basename+"_IGH_igblast.tsv"
+igkFile=igkDir+basename+"_IGK_igblast.tsv"
+iglFile=iglDir+basename+"_IGL_igblast.tsv"
+tcraFile=tcraDir+basename+"_TCRA_igblast.tsv"
+tcrbFile=tcrbDir+basename+"_TCRB_igblast.tsv"
+tcrdFile=tcrdDir+basename+"_TCRD_igblast.tsv"
+tcrgFile=tcrgDir+basename+"_TCRG_igblast.tsv"
 
 #log files
 logQC=QCDir+basename+"_QC.log"
 logrRNA=QCDir + basename + "_rRNA.log"
 logHuman=lostHumanDir + basename + "_lostHuman.log"
+
+log_bowtieWG=lostHumanDir + basename + "_bowtieWG.log"
+log_bowtieTR=lostHumanDir + basename + "_bowtieTR.log"
+
+
+
+
+logLostRepeat=lostRepeatDir + basename + "_lostRepeat.log"
+
 logNCL=NCL_Dir + basename + "_NCL.log"
+
 
 
 bacteriaFile=bacteriaDir+basename+"_bacteria_blastFormat6.csv"
@@ -352,16 +368,18 @@ virusFile=virusDir+basename+"_virus_blastFormat6.csv"
 bacteriaFileFiltered=bacteriaDir+basename+"_bacteriaFiltered_blastFormat6.csv"
 virusFileFiltered=virusDir+basename+"_virusFiltered_blastFormat6.csv"
 
-gLog=args.dir+"/"+basename+".log"
-gLogfile=open(gLog,'w')
-
-tLog=args.dir+"/"+"numberReads_"+basename+".log"
-tLogfile=open(tLog,'w')
+gLogfile=args.dir+"/"+basename+".log"
 
 
 
-cmdLog=args.dir+"/"+"dev.log"
-cmdLogfile=open(cmdLog,'w')
+
+
+
+cmdLogfile=args.dir+"/"+"dev.log"
+
+toolsLogfile=args.dir+"/"+"tools.log"
+
+
 
 
 #runFiles
@@ -380,6 +398,25 @@ runVirusFile=virusDir +"/runVirus_"+basename+".sh"
 run_metaphlan_file = metaphlanDir + "/run_metaphlan_" + basename + ".sh"
 
 os.chdir(args.dir)
+
+
+
+logIGH=ighDir + basename + "_igh.log"
+logIGL=iglDir + basename + "_igl.log"
+logIGK=igkDir + basename + "_igk.log"
+
+logTCRA=tcraDir + basename + "_tcra.log"
+logTCRB=tcrbDir + basename + "_tcrb.log"
+logTCRG=tcrgDir + basename + "_tcrg.log"
+logTCRD=tcrdDir + basename + "_tcrd.log"
+
+logMetaphlan=metaphlanDir + basename + "_metaphlan.log"
+
+logBacteria=bacteriaDir + basename + "_bacteria.log"
+logVirus=virusDir + basename + "_virus.log"
+logEukaryotes=eupathdbDir + basename + "_eukaryotes.log"
+
+
 
 #######################################################################################################################################
 if args.skipPreliminary:
@@ -423,7 +460,7 @@ else:
 
 
 
-        
+
 
         #lowQ
         write2Log("1. Quality Control...",gLogfile,args.quiet)
@@ -521,25 +558,18 @@ if not args.skipPreliminary:
         write_gzip_into_readable(args.unmappedReads, afterrRNAFasta)
     elif args.skipQC and not args.fastqGz and not args.gzip:
         afterrRNAFasta = args.unmappedReads
-    cmdGenome="%s/tools/bowtie2 -k 1 -p 8 -f -x %s/db/human/Bowtie2Index/genome -U %s 2>>%s | %s/tools/samtools view -SF4 -   >%s" %(codeDir,codeDir, afterrRNAFasta,logHuman,codeDir,gBamFile)
+    cmdGenome="%s/tools/bowtie2 -k 1 -p 8 -f -x %s/db/human/Bowtie2Index/genome -U %s 2>>%s | %s/tools/samtools view -SF4 -   >%s" %(codeDir,codeDir, afterrRNAFasta,log_bowtieWG,codeDir,gBamFile)
 
     #transcriptome
-    cmdTranscriptome="%s/tools/bowtie2  -k 1 -f -p 8 -x %s/db/human/Bowtie2Index/hg19KnownGene.exon_polya200 -U %s 2>>%s | %s/tools/samtools view -SF4 -  >  %s " %(codeDir,codeDir, afterrRNAFasta,logHuman, codeDir,tBamFile)
+    cmdTranscriptome="%s/tools/bowtie2  -k 1 -f -p 8 -x %s/db/human/Bowtie2Index/hg19KnownGene.exon_polya200 -U %s 2>>%s | %s/tools/samtools view -SF4 -  >  %s " %(codeDir,codeDir, afterrRNAFasta,log_bowtieTR, codeDir,tBamFile)
     write2Log(cmdGenome,cmdLogfile,"False")
     write2Log(cmdTranscriptome,cmdLogfile,"False")
 
 
 
 
-    logHumanFile=open(logHuman,'w')
-    write2Log("Unmapped reads are remap to human transcriptome reference using bowtie2",logHumanFile,"False")
     os.system(cmdTranscriptome)
-    write2Log("Unmapped reads are remap to human genome reference using bowtie2",logHumanFile,"False")
     os.system(cmdGenome)
-    logHumanFile.close()
-
-
-
 
     lostHumanReads = set()
     lostHumanReads0= set()
@@ -577,6 +607,11 @@ if not args.skipPreliminary:
                     lostHumanReads2.add(line[0])
 
 
+
+    write2Log("Unmapped reads mapped to human genome and/or transcriptome (using bowtie2) are categorized as lost human reads and are excluded from the further analysis. This includes :  %s reads with 0 mismatches; %s reads with 1 mismatch; %s reads with 2 mismatches" %(len(lostHumanReads0),len(lostHumanReads1),len(lostHumanReads2)),logHuman,"False")
+    write2Log("Complete list of lost human reads is available from sam files: %s,%s" %(gBamFile,tBamFile),logHuman,"False")
+
+
     if args.gzip:
         excludeReadsFromFastaGzip(afterrRNAFasta,lostHumanReads,afterlostHumanFastaGzip)
     else:
@@ -601,9 +636,14 @@ else:
     else:
         afterlostHumanFasta = args.unmappedReads
 
-if args.nonReductive:
+if args.nonReductive or args.qsub or args.qsubArray:
     branch_point_file = afterlostHumanFasta
-    print "Non-reductive mode selected"
+    
+    write2Log("*********************************",gLogfile, args.quiet)
+    write2Log("Non-substractive mode is selected : Low quality, low complexity, rRNA reads and lost human reads are filtered out. Resulting high quality non-human reads are provided as input  for STEP3-STEP6",gLogfile, args.quiet)
+    write2Log("*********************************",gLogfile, args.quiet)
+
+    
 
 #######################################################################################################################################
 #3. Maping to repeat sequences...
@@ -615,11 +655,13 @@ if args.repeat:
     #gzip -dc %s | , query -
     # CHANGED 
     # cmd="%s/tools/blastn -task megablast -index_name %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa -use_index true -query %s -db %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa  -outfmt 6 -evalue 1e-05  > %s" %(codeDir, codeDir, afterlostHumanFasta, codeDir, repeatFile)
-    if args.nonReductive:
+    if args.nonReductive or args.qsub or args.qsubArray:
         input_file = branch_point_file
     else:
         input_file = afterlostHumanFasta
-    cmd="%s/tools/blastn -task megablast -index_name %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa -use_index true -query %s -db %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa  -outfmt 6 -evalue 1e-05  > %s" %(codeDir, codeDir, input_file, codeDir, repeatFile)
+    cmd="%s/tools/blastn -task megablast -index_name %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa -use_index true -query %s -db %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa  -outfmt 6 -evalue 1e-05  > %s 2>%s" %(codeDir, codeDir, input_file, codeDir, repeatFile,logLostRepeat)
+
+
 
 
     if args.qsub or args.qsubArray:
@@ -628,8 +670,14 @@ if args.repeat:
         f.write("echo \"done!\">%s/%s_lostRepeat.done \n" %(lostRepeatDir,basename))
         f.close()
         if args.qsub:
-            cmdQsub="qsub -cwd -V -N lostRepeat -l h_data=16G,time=10:00:00 %s" %(runLostRepeatFile)
+            if args.maui:
+                cmdQsub="qsub -d `pwd`  -l walltime=10:00:00 -l nodes=1:m16G:ppn=12 %s" %(runLostRepeatFile)
+            else:
+                cmdQsub="qsub -cwd -V -N lostRepeat -l h_data=16G,time=10:00:00 %s" %(runLostRepeatFile)
             os.system(cmdQsub)
+            write2Log("Job for STEP3 has been submitted via qsub",gLogfile, args.quiet)
+
+
     else:
         os.system(cmd)
         write2Log(cmd,cmdLogfile,"False")
@@ -657,6 +705,11 @@ if args.repeat:
         write2File("done!",args.dir+"/step3_lostRepeatSequences.done")
         if not args.dev:
             os.remove(afterlostHumanFasta)
+
+
+        write2Log("Lost repeat reads are mapped to the repeat sequences (using megablast)",logLostRepeat,"False")
+        write2Log("Complete list of lost repeat reads is available from tsv file: %s" %(repeatFile),logLostRepeat,"False")
+
 else:
     print "Lost Human Repeat Profiling step is deselected - this step is skipped."
 
@@ -673,7 +726,7 @@ nNCLReads=0
 
 
 if args.circRNA:
-    if args.nonReductive:   
+    if args.nonReductive or args.qsub or args.qsubArray:
         input_file = branch_point_file
     else:
         input_file = afterlostRepeatFasta
@@ -687,8 +740,12 @@ if args.circRNA:
         f.write("echo \"done!\">%s/%s_NCL_CIRI.done \n" %(NCL_Dir,basename))
         f.close()
         if args.qsub:
-            cmdQsub="qsub -cwd -V -N NCL_CIRI -l h_data=8G,time=10:00:00 %s" %(runNCL_CIRIfile)
+            if args.maui:
+                cmdQsub="qsub -d `pwd`  -l walltime=10:00:00 -l nodes=1:m16G:ppn=12 %s" %(runNCL_CIRIfile)
+            else:
+                cmdQsub="qsub -cwd -V -N NCL_CIRI -l h_data=8G,time=10:00:00 %s" %(runNCL_CIRIfile)
             os.system(cmdQsub)
+            write2Log("Job for STEP4 has been submitted via qsub",gLogfile, args.quiet)
     else:
         os.chdir(NCL_Dir)
         os.system(cmd)
@@ -709,7 +766,7 @@ else:
     print "Non-co-linear RNA Profiling step is deselected - this step is skipped."
 
 #######################################################################################################################################
-#4. T and B lymphocytes profiling
+#5. T and B lymphocytes profiling
 
 if args.immune:
     immuneReads=set()
@@ -723,12 +780,16 @@ if args.immune:
     cmd="ln -s %s//db/antibody/internal_data/ ./" %(codeDir)
     os.system(cmd)
 
-    if args.nonReductive:
+    if args.nonReductive or args.qsub or args.qsubArray:
         input_file = branch_point_file
     else:
         input_file = afterNCLFasta
 
-    cmd="%s/tools/igblastn -germline_db_V %s/db/antibody/IGHV.fa -germline_db_D %s/db/antibody/IGHD.fa  -germline_db_J %s/db/antibody/IGHJ.fa -query %s -outfmt 7 -evalue 1e-05  2>temp.txt | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"D\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,input_file, ighFile)
+    write2Log("IgBlast	was	used	to	identify	reads	spanning	VDJ recombinations of immunoglobulin heavy locus (IGH)",logIGH,"False")
+    write2Log("More details about IgBlast format are here : https://github.com/smangul1/rop/wiki/ROP-output-details ",logIGH,"False")
+
+
+    cmd="%s/tools/igblastn -germline_db_V %s/db/antibody/IGHV.fa -germline_db_D %s/db/antibody/IGHD.fa  -germline_db_J %s/db/antibody/IGHJ.fa -query %s -outfmt '7 std qseq sseq' -evalue 1e-05  2>>%s | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"D\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,input_file, logIGH,ighFile)
     write2Log(cmd,cmdLogfile,"False")
 
 
@@ -739,8 +800,12 @@ if args.immune:
         f.write("echo \"done!\"> %s/%s_igh.done \n" %(ighDir,basename))
         f.close()
         if args.qsub:
-            cmdQsub="qsub -cwd -V -N igh -l h_data=16G,time=24:00:00 %s" %(runIGHFile)
+            if args.maui:
+                cmdQsub="qsub -d `pwd`  -l walltime=10:00:00 -l nodes=1:m16G:ppn=12 %s" %(runIGHFile)
+            else:
+                cmdQsub="qsub -cwd -V -N igh -l h_data=16G,time=24:00:00 %s" %(runIGHFile)
             os.system(cmdQsub)
+            write2Log("Job for STEP5a(IGK) has been submitted via qsub",gLogfile, args.quiet)
     else:
         os.chdir(ighDir)
         os.system(cmd)
@@ -752,8 +817,16 @@ if args.immune:
     #IGK---------
     os.chdir(igkDir)
     cmd="ln -s %s//db/antibody/internal_data/ ./" %(codeDir)
+    os.system(cmd)
 
-    cmd="%s/tools/igblastn -germline_db_V %s/db/antibody/IGKV.fa -germline_db_D %s/db/antibody/IGHD.fa  -germline_db_J %s/db/antibody/IGKJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,input_file,igkFile)
+    write2Log("IgBlast	was	used	to	identify	reads	spanning	VJ recombinations of immunoglobulin kappa locus (IGK)",logIGK,"False")
+    write2Log("More details about IgBlast format are here : https://github.com/smangul1/rop/wiki/ROP-output-details ",logIGK,"False")
+
+    
+
+    cmd="%s/tools/igblastn -germline_db_V %s/db/antibody/IGKV.fa -germline_db_D %s/db/antibody/IGHD.fa  -germline_db_J %s/db/antibody/IGKJ.fa -query %s -outfmt '7 std qseq sseq' -evalue 1e-05  2>>%s | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"D\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,input_file, logIGK,igkFile)
+
+
     write2Log(cmd,cmdLogfile,"False")
 
     if args.qsub or args.qsubArray:
@@ -763,8 +836,12 @@ if args.immune:
         f.write("echo \"done!\"> %s/%s_igk.done \n" %(igkDir,basename))
         f.close()
         if args.qsub:
-            cmdQsub="qsub -cwd -V -N igk -l h_data=16G,time=24:00:00 %s" %(runIGKFile)
+            if args.maui:
+                cmdQsub="qsub -d `pwd`  -l walltime=10:00:00 -l nodes=1:m16G:ppn=12 %s" %(runIGKFile)
+            else:
+                cmdQsub="qsub -cwd -V -N igk -l h_data=16G,time=24:00:00 %s" %(runIGKFile)
             os.system(cmdQsub)
+            write2Log("Job for STEP5a(IGK) has been submitted via qsub",gLogfile, args.quiet)
     else:
         os.chdir(igkDir)
         os.system(cmd)
@@ -777,7 +854,14 @@ if args.immune:
     os.chdir(iglDir)
     cmd="ln -s %s//db/antibody/internal_data/ ./" %(codeDir)
     os.system(cmd)
-    cmd="%s/tools/igblastn -germline_db_V %s/db/antibody/IGLV.fa -germline_db_D %s/db/antibody/IGHD.fa  -germline_db_J %s/db/antibody/IGLJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,input_file,iglFile)
+
+    write2Log("IgBlast	was	used	to	identify	reads	spanning	VJ recombinations of immunoglobulin lambda locus (IGL)",logIGL,"False")
+    write2Log("More details about IgBlast format are here : https://github.com/smangul1/rop/wiki/ROP-output-details ",logIGL,"False")
+
+
+
+
+    cmd="%s/tools/igblastn -germline_db_V %s/db/antibody/IGLV.fa -germline_db_D %s/db/antibody/IGHD.fa  -germline_db_J %s/db/antibody/IGLJ.fa -query %s -outfmt '7 std qseq sseq' -evalue 1e-05 2>>%s  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,input_file,logIGL,iglFile)
     write2Log(cmd,cmdLogfile,"False")
 
     if args.qsub or args.qsubArray:
@@ -787,8 +871,12 @@ if args.immune:
         f.write("echo \"done!\">%s/%s_igl.done \n" %(iglDir,basename))
         f.close()
         if args.qsub:
-            cmdQsub="qsub -cwd -V -N igl -l h_data=16G,time=24:00:00 %s" %(runIGLFile)
+            if args.maui:
+                cmdQsub="qsub -d `pwd`  -l walltime=10:00:00 -l nodes=1:m16G:ppn=12 %s" %(runIGLFile)
+            else:
+                cmdQsub="qsub -cwd -V -N igl -l h_data=16G,time=24:00:00 %s" %(runIGLFile)
             os.system(cmdQsub)
+            write2Log("Job for STEP5a(IGL) has been submitted via qsub",gLogfile, args.quiet)
     else:
         os.chdir(iglDir)
         os.system(cmd)
@@ -806,7 +894,11 @@ if args.immune:
     os.chdir(tcraDir)
     cmd="ln -s %s//db/antibody/internal_data/ ./" %(codeDir)
     os.system(cmd)
-    cmd="%s/tools/igblastn -germline_db_V %s/db/antibody/TRAV.fa -germline_db_D %s/db/antibody/TRBD.fa  -germline_db_J %s/db/antibody/TRAJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,input_file,tcraFile)
+
+    write2Log("IgBlast	was	used	to	identify	reads	spanning	VJ recombinations of T cell receptor alpha locus (TCRA)",logTCRA,"False")
+    write2Log("More details about IgBlast format are here : https://github.com/smangul1/rop/wiki/ROP-output-details ",logTCRA,"False")
+    
+    cmd="%s/tools/igblastn -germline_db_V %s/db/antibody/TRAV.fa -germline_db_D %s/db/antibody/TRBD.fa  -germline_db_J %s/db/antibody/TRAJ.fa  -query %s -outfmt '7 std qseq sseq' -evalue 1e-05 2>>%s | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,input_file,logTCRA,tcraFile)
     write2Log(cmd,cmdLogfile,"False")
     if args.qsub or args.qsubArray:
         f = open(runTCRAFile,'w')
@@ -815,8 +907,12 @@ if args.immune:
         f.write("echo \"done!\">%s/%s_tcra.done \n"%(tcraDir,basename))
         f.close()
         if args.qsub:
-            cmdQsub="qsub -cwd -V -N tcra -l h_data=16G,time=24:00:00 %s" %(runTCRAFile)
+            if args.maui:
+                cmdQsub="qsub -d `pwd`  -l walltime=10:00:00 -l nodes=1:m16G:ppn=12 %s" %(runTCRAFile)
+            else:
+                cmdQsub="qsub -cwd -V -N tcra -l h_data=16G,time=24:00:00 %s" %(runTCRAFile)
             os.system(cmdQsub)
+            write2Log("Job for STEP5b(TCRA) has been submitted via qsub",gLogfile, args.quiet)
     else:
         os.chdir(tcraDir)
         os.system(cmd)
@@ -830,7 +926,11 @@ if args.immune:
     os.chdir(tcrbDir)
     cmd="ln -s %s//db/antibody/internal_data/ ./" %(codeDir)
     os.system(cmd)
-    cmd="%s/tools/igblastn -germline_db_V %s/db/antibody/TRBV.fa -germline_db_D %s/db/antibody/TRBD.fa  -germline_db_J %s/db/antibody/TRBJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,input_file,tcrbFile)
+
+    write2Log("IgBlast	was	used	to	identify	reads	spanning	VDJ recombinations of T cell receptor beta locus (TCRB)",logTCRB,"False")
+    write2Log("More details about IgBlast format are here : https://github.com/smangul1/rop/wiki/ROP-output-details ",logTCRB,"False")
+
+    cmd="%s/tools/igblastn -germline_db_V %s/db/antibody/TRBV.fa -germline_db_D %s/db/antibody/TRBD.fa  -germline_db_J %s/db/antibody/TRBJ.fa  -query %s -outfmt '7 std qseq sseq' -evalue 1e-05 2>>%s  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,input_file,logTCRB,tcrbFile)
     write2Log(cmd,cmdLogfile,"False")
     if args.qsub or args.qsubArray:
         f = open(runTCRBFile,'w')
@@ -839,8 +939,13 @@ if args.immune:
         f.write("echo \"done!\">%s/%s_tcrb.done \n"%(tcrbDir,basename))
         f.close()
         if args.qsub:
-            cmdQsub="qsub -cwd -V -N tcrb -l h_data=16G,time=24:00:00 %s" %(runTCRBFile)
+            if args.maui:
+                cmdQsub="qsub -d `pwd`  -l walltime=10:00:00 -l nodes=1:m16G:ppn=12 %s" %(runTCRBFile)
+            else:
+                cmdQsub="qsub -cwd -V -N tcrb -l h_data=16G,time=24:00:00 %s" %(runTCRBFile)
             os.system(cmdQsub)
+            write2Log("Job for STEP5b(TCRB) has been submitted via qsub",gLogfile, args.quiet)
+
     else:
         os.chdir(tcrbDir)
         os.system(cmd)
@@ -855,7 +960,11 @@ if args.immune:
     os.chdir(tcrdDir)
     cmd="ln -s %s//db/antibody/internal_data/ ./" %(codeDir)
     os.system(cmd)
-    cmd="%s/tools/igblastn -germline_db_V %s/db/antibody/TRDV.fa -germline_db_D %s/db/antibody/TRBD.fa  -germline_db_J %s/db/antibody/TRDJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,input_file,tcrdFile)
+
+    write2Log("IgBlast	was	used	to	identify	reads	spanning	VDJ recombinations of T cell receptor delta locus (TCRD)",logTCRD,"False")
+    write2Log("More details about IgBlast format are here : https://github.com/smangul1/rop/wiki/ROP-output-details ",logTCRD,"False")
+
+    cmd="%s/tools/igblastn -germline_db_V %s/db/antibody/TRDV.fa -germline_db_D %s/db/antibody/TRBD.fa  -germline_db_J %s/db/antibody/TRDJ.fa  -query %s -outfmt '7 std qseq sseq' -evalue 1e-05 2>>%s  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,input_file,logTCRD,tcrdFile)
     write2Log(cmd,cmdLogfile,"False")
     if args.qsub or args.qsubArray:
         f = open(runTCRDFile,'w')
@@ -864,8 +973,13 @@ if args.immune:
         f.write("echo \"done!\">%s/%s_tcrd.done \n" %(tcrdDir, basename))
         f.close()
         if args.qsub:
-            cmdQsub="qsub -cwd -V -N tcrd -l h_data=16G,time=24:00:00 %s" %(runTCRDFile)
+            if args.maui:
+                cmdQsub="qsub -d `pwd`  -l walltime=10:00:00 -l nodes=1:m16G:ppn=12 %s" %(runTCRDFile)
+            else:
+                cmdQsub="qsub -cwd -V -N tcrd -l h_data=16G,time=24:00:00 %s" %(runTCRDFile)
             os.system(cmdQsub)
+            write2Log("Job for STEP5b(TCRD) has been submitted via qsub",gLogfile, args.quiet)
+
     else:
         os.chdir(tcrdDir)
         os.system(cmd)
@@ -879,7 +993,12 @@ if args.immune:
     os.chdir(tcrgDir)
     cmd="ln -s %s//db/antibody/internal_data/ ./" %(codeDir)
     os.system(cmd)
-    cmd="%s/tools/igblastn -germline_db_V %s/db/antibody/TRGV.fa -germline_db_D %s/db/antibody/TRBD.fa  -germline_db_J %s/db/antibody/TRGJ.fa -query %s -outfmt 7 -evalue 1e-05 2>temp.txt  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,input_file,tcrgFile)
+
+    write2Log("IgBlast	was	used	to	identify	reads	spanning	VDJ recombinations of T cell receptor gamma locus (TCRG)",logTCRG,"False")
+    write2Log("More details about IgBlast format are here : https://github.com/smangul1/rop/wiki/ROP-output-details ",logTCRG,"False")
+
+
+    cmd="%s/tools/igblastn -germline_db_V %s/db/antibody/TRGV.fa -germline_db_D %s/db/antibody/TRBD.fa  -germline_db_J %s/db/antibody/TRGJ.fa  -query %s -outfmt '7 std qseq sseq' -evalue 1e-05 2>>%s  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,input_file,logTCRG,tcrgFile)
     write2Log(cmd,cmdLogfile,"False")
 
     if args.qsub or args.qsubArray:
@@ -889,8 +1008,13 @@ if args.immune:
         f.write("echo \"done!\">%s/%s_tcrg.done \n" %(tcrgDir,basename))
         f.close()
         if args.qsub:
-            cmdQsub="qsub -cwd -V -N tcrg -l h_data=16G,time=24:00:00 %s" %(runTCRGFile)
+            if args.maui:
+                cmdQsub="qsub -d `pwd`  -l walltime=10:00:00 -l nodes=1:m16G:ppn=12 %s" %(runTCRGFile)
+            else:
+                cmdQsub="qsub -cwd -V -N tcrg -l h_data=16G,time=24:00:00 %s" %(runTCRGFile)
             os.system(cmdQsub)
+            write2Log("Job for STEP5b(TCRG) has been submitted via qsub",gLogfile, args.quiet)
+
     else:
         os.chdir(tcrgDir)
         os.system(cmd)
@@ -914,16 +1038,17 @@ else:
 #######################################################################################################################################
 # 5. Metaphlan
 
-#TODO 
+
+
 if args.metaphlan:
-    write2Log("5.  Metaphlan profiling...",cmdLogfile,"False")
-    write2Log("5.  Metaphlan profiling...",gLogfile,args.quiet)
-    if args.nonReductive:
+    write2Log("***Extra step.  Metaphlan profiling...",cmdLogfile,"False")
+    write2Log("***Extra step.  Metaphlan profiling...",gLogfile,args.quiet)
+    if args.nonReductive or args.qsub or args.qsubArray:
         input_file = branch_point_file
     else:
         input_file = afterImmuneFasta
-    cmd = "python %s/tools/metaphlan2.py %s %s --mpa_pkl %s/db/metaphlan/mpa_v20_m200.pkl --bowtie2_exe %s/tools/bowtie2 --input_type multifasta --bowtie2db %s/db/metaphlan/mpa_v20_m200 -t reads_map --nproc 8 --bowtie2out %s" % (codeDir, input_file, metaphlan_intermediate_map, codeDir, codeDir, codeDir, metaphlan_intermediate_bowtie2out)
-    cmd = cmd + "\n" + "python %s/tools/metaphlan2.py --mpa_pkl %s/db/metaphlan/mpa_v20_m200.pkl --bowtie2_exe %s/tools/bowtie2 --input_type bowtie2out %s -t rel_ab > %s" %(codeDir, codeDir, codeDir, metaphlan_intermediate_bowtie2out, metaphlan_output)
+    cmd = "python %s/tools/metaphlan2.py %s %s --mpa_pkl %s/db/metaphlan/mpa_v20_m200.pkl --bowtie2_exe %s/tools/bowtie2 --input_type multifasta --bowtie2db %s/db/metaphlan/mpa_v20_m200 -t reads_map --nproc 8 --bowtie2out %s>>s%s 2>>%s" % (codeDir, input_file, metaphlan_intermediate_map, codeDir, codeDir, codeDir, metaphlan_intermediate_bowtie2out,logMetaphlan,logMetaphlan)
+    cmd = cmd + "\n" + "python %s/tools/metaphlan2.py --mpa_pkl %s/db/metaphlan/mpa_v20_m200.pkl --bowtie2_exe %s/tools/bowtie2 --input_type bowtie2out %s -t rel_ab > %s 2>>%s" %(codeDir, codeDir, codeDir, metaphlan_intermediate_bowtie2out, metaphlan_output,logMetaphlan)
     write2Log(cmd,cmdLogfile,"False")
 
     if args.qsub or args.qsubArray:
@@ -932,15 +1057,20 @@ if args.metaphlan:
         f.write("echo \"done!\" > %s/%s_metaphlan.done \n" % (metaphlanDir, basename))
         f.close()
         if args.qsub:
-            cmdQsub="qsub -cwd -V -N metaphlan -l h_data=16G,time=24:00:00 %s" %(run_metaphlan_file)
+            if args.maui:
+                cmdQsub="qsub -d `pwd`  -l walltime=10:00:00 -l nodes=1:m16G:ppn=12 %s" %(run_metaphlan_file)
+            else:
+                cmdQsub="qsub -cwd -V -N metaphlan -l h_data=16G,time=24:00:00 %s" %(run_metaphlan_file)
             os.system(cmdQsub)
+            write2Log("Job for Metaphlan has been submitted via qsub",gLogfile, args.quiet)
+
     else:
         os.chdir(metaphlanDir)
         os.system(cmd)
-        nMetaphlanRead=len(nReadsMetaphlan(metaphlan_intermediate_map))
-        # nReadsImmuneTCRG=len(immuneReadsTCRG)
-        write2Log("--identified %s reads mapped on metaphlan analysis" % (nMetaphlanRead) ,gLogfile,args.quiet)        
-else:       
+        write2Log("***Microbiome profiling by Metaphlan2: taxonomic profile of microbial organisms detected by Metaphlan2 is available here: %s" %(metaphlanDir) ,gLogfile,args.quiet)
+
+
+else:
     print "Metaphlan Profiling Step is deselected - This step is skipped."
 
 
@@ -950,7 +1080,8 @@ if args.microbiome:
     write2Log("6.  Microbiome profiling...",cmdLogfile,"False")
     write2Log("6.  Microbiome profiling...",gLogfile,args.quiet)
     
-    if args.nonReductive:
+    
+    if args.nonReductive or args.qsub or args.qsubArray:
         input_file = branch_point_file
     else:
         input_file = afterImmuneFasta
@@ -960,8 +1091,8 @@ if args.microbiome:
 
 
 
-    #bacteria ----------
-
+    #bacteria -------------------------------
+    os.chdir(bacteriaDir)
     readLength=0
     fastafile = open(input_file, "rU")
     for record in SeqIO.parse(fastafile,"fasta"):
@@ -969,7 +1100,11 @@ if args.microbiome:
         break;
 
 
-    cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/bacteria/bacteria -use_index true -query %s -db %s/db/microbiome/bacteria/bacteria  -outfmt 6 -evalue 1e-05  >%s 2>temp.txt" %(codeDir,codeDir,input_file,codeDir,bacteriaFile)
+    write2Log("Megablast was used to map the reads onto the	bacterial reference	genomes ",logBacteria,"False")
+    write2Log("Reads with 0.9 identity and more than 0.8 of nucleotides aligned are considered microbial reads and are saved into %s " %(bacteriaFileFiltered), logBacteria,"False")
+    write2Log("---------------",logBacteria,"False")
+
+    cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/bacteria/bacteria -use_index true -query %s -db %s/db/microbiome/bacteria/bacteria  -outfmt 6 -evalue 1e-05  >%s 2>>%s" %(codeDir,codeDir,input_file,codeDir,bacteriaFile,logBacteria)
     write2Log(cmd,cmdLogfile,"False")
 
     if args.qsub or args.qsubArray:
@@ -978,8 +1113,13 @@ if args.microbiome:
         f.write("echo \"done!\">%s/%s_bacteria.done \n"%(bacteriaDir, basename))
         f.close()
         if args.qsub:
-            cmdQsub="qsub -cwd -V -N bacteria -l h_data=16G,time=24:00:00 %s" %(runBacteriaFile)
+            if args.maui:
+                cmdQsub="qsub -d `pwd`  -l walltime=10:00:00 -l nodes=1:m16G:ppn=12 %s" %(runBacteriaFile)
+            else:
+                cmdQsub="qsub -cwd -V -N bacteria -l h_data=16G,time=24:00:00 %s" %(runBacteriaFile)
             os.system(cmdQsub)
+            write2Log("Job for STEP6 (bacteriaProfile) has been submitted via qsub",gLogfile, args.quiet)
+
     else:
         os.chdir(bacteriaDir)
         os.system(cmd)
@@ -991,27 +1131,40 @@ if args.microbiome:
 
 
 
-    #virus-----------
+    #virus-----------------------------------------------------
+    os.chdir(virusDir)
+
+    if args.nonReductive or args.qsub or args.qsubArray:
+        input_file = branch_point_file
+    else:
+        input_file = afterBacteraFasta
+        if not args.dev:
+            os.remove(afterImmuneFasta)
+
+
+    write2Log("Megablast was used to map the reads onto the	viral reference	genomes ",logVirus,"False")
+    write2Log("Reads with 0.9 identity and more than 0.8 of nucleotides aligned are considered microbial reads and are saved into %s" %(virusFileFiltered),logVirus,"False")
+    write2Log("----------------------",logVirus,"False")
+
+
+
+    cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/virus/viruses -use_index true -query %s -db %s/db/microbiome/virus/viruses  -outfmt 6 -evalue 1e-05  >%s 2>>%s" %(codeDir,codeDir,input_file,codeDir,virusFile,logVirus)
+    write2Log(cmd,cmdLogfile,"False")
 
     if args.qsub or args.qsubArray:
-        if args.nonReductive:
-            input_file = branch_point_file
-        else:
-            input_file = afterBacteraFasta
-
-        cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/virus/viruses -use_index true -query %s -db %s/db/microbiome/virus/viruses  -outfmt 6 -evalue 1e-05  >%s 2>temp" %(codeDir,codeDir,input_file,codeDir,virusFile)
-        write2Log(cmd,cmdLogfile,"False")
         f = open(runVirusFile,'w')
         f.write(cmd+"\n")
-        f.write("echo \"done!\">%s/%s_virus.done \n" %(virusDir, basename))
+        f.write("echo \"done!\">%s/%s_virus.done \n"%(bacteriaDir, basename))
         f.close()
         if args.qsub:
-            cmdQsub="qsub -cwd -V -N virus -l h_data=16G,time=24:00:00 %s" %(runVirusFile)
+            if args.maui:
+                cmdQsub="qsub -d `pwd`  -l walltime=10:00:00 -l nodes=1:m16G:ppn=12 %s" %(runBacteriaFile)
+            else:
+                cmdQsub="qsub -cwd -V -N virus -l h_data=16G,time=24:00:00 %s" %(runBacteriaFile)
             os.system(cmdQsub)
+            write2Log("Job for STEP6 (viralProfile) has been submitted via qsub",gLogfile, args.quiet)
+
     else:
-        cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/virus/viruses -use_index true -query %s -db %s/db/microbiome/virus/viruses  -outfmt 6 -evalue 1e-05  >%s 2>temp" %(codeDir,codeDir,input_file,codeDir,virusFile)
-        write2Log(cmd,cmdLogfile,"False")
-        os.chdir(virusDir)
         os.system(cmd)
         virusReads=nMicrobialReads(virusFile,readLength,virusFileFiltered)
         nReadsVirus=len(virusReads)
@@ -1019,7 +1172,11 @@ if args.microbiome:
         excludeReadsFromFasta(input_file,virusReads,afterVirusFasta)
 
 
-    #eukaryotic pathogens----------------
+
+
+    #eukaryotic pathogens-----------------------
+    os.chdir(eupathdbDir)
+
     dbList=["ameoba",
             "crypto",
             "giardia",
@@ -1030,30 +1187,41 @@ if args.microbiome:
             "trich",
             "tritryp"]
 
-
-
-    if args.nonReductive:
+    if args.nonReductive or args.qsub or args.qsubArray:
         inFasta = branch_point_file
-    else:    
+    else:
         inFasta = afterVirusFasta
+        if not args.dev:
+            os.remove(afterBacteraFasta)
+
+
     nReadsEP=0
 
     for db in dbList:
+        afterFasta=eupathdbDir+"%s_after_%s.fasta" %(basename,db)
         eupathdbFile=eupathdbDir+basename+"_"+db+"_blastFormat6.csv"
         eupathdbFileFiltered=eupathdbDir+basename+"_"+db+"Filtered_blastFormat6.csv"
         runEupathdbFile=eupathdbDir+"/run_"+basename+"_"+db+".sh"
 
-
-        cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/eupathdb/%s -use_index true -query %s -db %s/db/microbiome/eupathdb/%s  -outfmt 6 -evalue 1e-05  >%s 2>temp.txt" %(codeDir,codeDir,db,inFasta,codeDir,db,eupathdbFile)
+        write2Log("Megablast was used to map the reads onto the	reference genomes of Eukaryotes (http://eupathdb.org/eupathdb/)",logEukaryotes,"False")
+        write2Log("Reads with 0.9 identity and more than 0.8 of nucleotides aligned are considered microbial reads and are saved into %s" %(afterFasta), logEukaryotes,"False")
+        write2Log("-------------",logEukaryotes,"False")
+    
+        cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/eupathdb/%s -use_index true -query %s -db %s/db/microbiome/eupathdb/%s  -outfmt 6 -evalue 1e-05  >%s 2>>%s" %(codeDir,codeDir,db,inFasta,codeDir,db,eupathdbFile,logEukaryotes)
         write2Log(cmd,cmdLogfile,"False")
+        
         if args.qsub or args.qsubArray:
             f = open(runEupathdbFile,'w')
             f.write(cmd+"\n")
             f.write("echo \"done!\">%s/%s.done" %(eupathdbDir, db)+ "\n")
             f.close()
             if args.qsub:
-                cmdQsub="qsub -cwd -V -N %s -l h_data=16G,time=24:00:00 %s" %(db,runEupathdbFile)
+                if args.maui:
+                    cmdQsub="qsub -d `pwd`  -l walltime=10:00:00 -l nodes=1:m16G:ppn=12 %s" %(runEupathdbFile)
+                else:
+                    cmdQsub="qsub -cwd -V -N %s -l h_data=16G,time=24:00:00 %s" %(db,runEupathdbFile)
                 os.system(cmdQsub)
+                write2Log("Job for STEP6 (%s) has been submitted via qsub" %(db),gLogfile, args.quiet)
         else:
             os.chdir(eupathdbDir)
             os.system(cmd)
@@ -1061,7 +1229,7 @@ if args.microbiome:
             eupathdbReads=nMicrobialReads(eupathdbFile,readLength,eupathdbFileFiltered)
             nEupathdbReads=len(eupathdbReads)
             write2Log("--identified %s reads mapped %s genomes" %(nEupathdbReads,db) ,gLogfile,args.quiet)
-            afterFasta=eupathdbDir+"%s_after_%s.fasta" %(basename,db)
+           
             excludeReadsFromFasta(inFasta,eupathdbReads,afterFasta)
             inFasta=afterFasta
             nReadsEP+=nEupathdbReads
@@ -1083,26 +1251,57 @@ if args.microbiome:
 
 
 
+
+
+
     if not args.qsub and  not args.qsubArray and args.microbiome and args.repeat and args.circRNA and args.immune:
+
+        
         write2Log("In toto : %s reads mapped to microbial genomes" %(nReadsBacteria+nReadsVirus+nReadsEP) ,gLogfile,args.quiet)
         write2File("done!",args.dir+"/step6_microbiomeProfile.done")
         nTotalReads=nLowQReads+nLowCReads+n_rRNAReads+nlostHumanReads+nRepeatReads+nNCLReads+nReadsImmuneTotal+nReadsBacteria+nReadsVirus+nReadsEP
         write2Log("Summary: The ROP protocol is able to account for %s reads" %(nTotalReads) ,gLogfile,args.quiet)
         write2Log("***Unaccounted reads (not explained by ROP) are saved to %s" %(unaccountedReadsFasta) ,gLogfile,args.quiet)
         
+        write2Log("***Log file with all the commands used is available here: " %(cmdLogfile) ,gLogfile,args.quiet)
 
-
-        message=basename+","+str(n)+","+str(nLowQReads)+","+str(nLowCReads)+","+str(n_rRNAReads)+","+str(nlostHumanReads)+","+str(nRepeatReads)+","+str(nReadsImmuneTotal)+","+str(nReadsBacteria+nReadsVirus+nReadsEP)
+        tLog=args.dir+"/"+"numberReads_"+basename+".log"
+        tLogfile=open(tLog,'w')
+        tLogfile.write("sample,totalUnmapped,nLowQReads,nLowCReads,n_rRNAReads,nlostHumanReads,nRepeatReads,nNCLReads,nReadsImmuneTotal,nMicrobialReads")
+        tLogfile.write("\n")
+        message=basename+","+str(n)+","+str(nLowQReads)+","+str(nLowCReads)+","+str(n_rRNAReads)+","+str(nlostHumanReads)+","+str(nRepeatReads)+","+str(nNCLReads)+","+str(nReadsImmuneTotal)+","+str(nReadsBacteria+nReadsVirus+nReadsEP)
         tLogfile.write(message)
         tLogfile.write("\n")
+        tLogfile.close()
 else:
     print "Microbiome Profiling step is deselected - this step is skipped."
 
 
+#tools
+write2Log("The list of the tools used by ROP and the paramemers are provided below" ,toolsLogfile,"False")
 
-tLogfile.close()
-gLogfile.close()
-cmdLogfile.close()
+write2Log("Step_ROP,Tools,version, link, reference database, parameters" ,toolsLogfile,"False")
+
+
+write2Log("Step1, FastQC, http://www.bioinformatics.babraham.ac.uk/projects/fastqc/,-, " ,toolsLogfile,"False")
+write2Log("Step1, SEQLEAN, seqclean-x86_64, https://sourceforge.net/projects/seqclean/, " ,toolsLogfile,"False")
+write2Log("Step1, BLAST+, ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/, " ,toolsLogfile,"False")
+write2Log("Step2, Bowtie2, http://bowtie-bio.sourceforge.net/bowtie2/index.shtml,GRCh37/hg19,  " ,toolsLogfile,"False")
+write2Log("Step3, BLAST+, ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/, RepBase20.07,  " ,toolsLogfile,"False")
+write2Log("Step4, CIRI, https://sourceforge.net/projects/ciri/, " ,toolsLogfile,"False")
+write2Log("Step5, IgBLAST, http://mirrors.vbi.vt.edu/mirrors/ftp.ncbi.nih.gov/blast/executables/igblast/release/1.4.0/, " ,toolsLogfile,"False")
+write2Log("Step6, BLAST+, ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/, ,  " ,toolsLogfile,"False")
+
+
+
+
+
+write2Log("Important: ROP relies on  several open source tools that were developed by other groups. These components are (c) their respective developers and are redistributed with ROP to provide ease-of-use. The list of the tools used by ROP and the paramemers/reference databases are provided here: %s " %(toolsLogfile) ,gLogfile,args.quiet)
+
+
+
+
+
 
 if args.rezip:
     write_gzip(branch_point_file, afterlostHumanFastaGzip)
