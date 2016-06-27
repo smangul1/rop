@@ -184,7 +184,7 @@ job_option_arguments.add_argument("--maui", help = "use this option together wit
 input_option_arguments = ap.add_argument_group('Input Options')
 input_option_arguments.add_argument("--b", '-b', help="unmapped reads in bam format", action="store_true")
 input_option_arguments.add_argument("--fastqGz", '-z', help="Currently not supported!!! unmapped reads in fasta.gz format.", action="store_true")
-input_option_arguments.add_argument("--skipLowq", help="skip step filtering low quality reads. The input reads need to be in the FASTA format", action="store_true")
+input_option_arguments.add_argument("--skipLowq", help="skip step filtering low quality reads. The input reads need to be in the bam format", action="store_true")
 input_option_arguments.add_argument("--skipQC", help="skip entire QC step : filtering  low-quality, low-complexity and rRNA reads. The input reads need to be in the FASTA format", action="store_true")
 input_option_arguments.add_argument("--skipPreliminary", '-s', help="skip the preliminary steps including (1) QC and (2) Remapping to human references (lost human reads). The input reads need to be in the FASTA format", action="store_true")
 
@@ -192,8 +192,8 @@ input_option_arguments.add_argument("--skipPreliminary", '-s', help="skip the pr
 
 run_only_options = ap.add_argument_group('Run Options - select analysis (multi-selection possible)')
 run_only_options.add_argument("--repeat", help = "Run lost repeat profiling ONLY", action = "store_true")
-run_only_options.add_argument("--immune", help = "Run antibody profiling ONLY", action = "store_true")
-run_only_options.add_argument("--metaphlan", help = "Run metaphlan profiling ONLY", action = "store_true")
+run_only_options.add_argument("--immune", help = "Run BCR/TCR profiling ONLY", action = "store_true")
+run_only_options.add_argument("--metaphlan", help = "Run Metaphlan2 ONLY to obtain taxonomic profile of microbial communities", action = "store_true")
 run_only_options.add_argument("--circRNA", help = "Run circular RNA profiling ONLY", action="store_true")
 run_only_options.add_argument("--microbiome", help = "Run microbime profiling ONLY", action = "store_true")
 
@@ -443,11 +443,17 @@ message="Processing %s unmapped reads of length %s" %(n,readLength)
 write2Log(message,gLogfile,args.quiet)
 
 
+nLowQReads=0
+nLowCReads=0
+n_rRNAReads=0
+nlostHumanReads=0
 
 
 if args.skipPreliminary:
     # afterrRNAFasta=args.unmappedReads
     write2Log("1. Quality Control is skipped",gLogfile,args.quiet)
+    write2Log("2. Remapping to human references is skipped",gLogfile,args.quiet)
+    
     filename, file_extension = os.path.splitext(args.unmappedReads)
     if file_extension!=".fa" and file_extension!=".fasta":
         write2Log("ERROR ::: --skipPreliminary option is selected. Reads needs to be in FASTA format",gLogfile,args.quiet)
@@ -729,14 +735,15 @@ if args.repeat:
         excludeReadsFromFasta(afterlostHumanFasta,lostRepeatReads,afterlostRepeatFasta)
         write2File("done!",args.dir+"/step3_lostRepeatSequences.done")
         if not args.dev:
-            os.remove(afterlostHumanFasta)
+            if not args.skipPreliminary:
+                os.remove(afterlostHumanFasta)
 
 
         write2Log("Lost repeat reads are mapped to the repeat sequences (using megablast)",logLostRepeat,"False")
         write2Log("Complete list of lost repeat reads is available from tsv file: %s" %(repeatFile),logLostRepeat,"False")
 
 else:
-    print "Lost Human Repeat Profiling step is deselected - this step is skipped."
+    print "3. Maping to repeat sequences is skipped."
 
 #######################################################################################################################################
 #3. Non-co-linear RNA profiling
@@ -778,17 +785,17 @@ if args.circRNA:
         nReadsNCL=len(NCL_reads)
         write2Log("--identified %s reads from circRNA" %(nReadsNCL) ,gLogfile,args.quiet)
         write2Log("***Note: circRNAs detected by CIRI are available here: %s" %(after_NCL_CIRI_file_prefix) ,gLogfile,args.quiet)
-        excludeReadsFromFasta(afterlostRepeatFasta,NCL_reads,afterNCLFasta)
+        excludeReadsFromFasta(input_file,NCL_reads,afterNCLFasta)
         nNCLReads=len(NCL_reads)
         write2File("done!",args.dir+"/step4_NCL.done")
         if not args.dev:
-            os.remove(afterlostRepeatFasta)
+            os.remove(input_file)
 
 
 
 
 else:
-    print "Non-co-linear RNA Profiling step is deselected - this step is skipped."
+    print "4. Non-co-linear RNA profiling is skipped."
 
 #######################################################################################################################################
 #5. T and B lymphocytes profiling
@@ -1059,13 +1066,14 @@ if args.immune:
             if args.circRNA:           
                 os.remove(afterNCLFasta)
 else:
-    print "Immune Profiling Step is deselected - This step is skipped."
+    print "5a. B lymphocytes profiling is skipped."
+    print "5b. T lymphocytes profiling is skipped."
 #######################################################################################################################################
 # 5. Metaphlan
 
 
 
-if args.metaphlan:
+if args.microbiome:
     write2Log("***Extra step.  Metaphlan profiling...",cmdLogfile,"False")
     write2Log("***Extra step.  Metaphlan profiling...",gLogfile,args.quiet)
     if args.nonReductive or args.qsub or args.qsubArray:
@@ -1096,7 +1104,7 @@ if args.metaphlan:
 
 
 else:
-    print "Metaphlan Profiling Step is deselected - This step is skipped."
+    print "Extra step.  Metaphlan profiling is skipped."
 
 
 #######################################################################################################################################
@@ -1276,14 +1284,12 @@ if args.microbiome:
 
 
 
-
-
-
-    if not args.qsub and  not args.qsubArray and args.microbiome and args.repeat and args.circRNA and args.immune:
-
-        
-        write2Log("In toto : %s reads mapped to microbial genomes" %(nReadsBacteria+nReadsVirus+nReadsEP) ,gLogfile,args.quiet)
+    if not args.qsub and  not args.qsubArray:
         write2File("done!",args.dir+"/step6_microbiomeProfile.done")
+
+    if not args.qsub and  not args.qsubArray and not args.nonReductive:
+        write2Log("In toto : %s reads mapped to microbial genomes" %(nReadsBacteria+nReadsVirus+nReadsEP) ,gLogfile,args.quiet)
+        
         nTotalReads=nLowQReads+nLowCReads+n_rRNAReads+nlostHumanReads+nRepeatReads+nNCLReads+nReadsImmuneTotal+nReadsBacteria+nReadsVirus+nReadsEP
         write2Log("Summary: The ROP protocol is able to account for %s reads" %(nTotalReads) ,gLogfile,args.quiet)
         write2Log("***Unaccounted reads (not explained by ROP) are saved to %s" %(unaccountedReadsFasta) ,gLogfile,args.quiet)
@@ -1299,7 +1305,7 @@ if args.microbiome:
         tLogfile.write("\n")
         tLogfile.close()
 else:
-    print "Microbiome Profiling step is deselected - this step is skipped."
+    print "6.  Microbiome profiling is skipped."
 
 
 #tools
