@@ -4,35 +4,41 @@ import argparse
 from subprocess import call, Popen, PIPE
 
 
-"""
-option requirements - TCR/BCR only option - in terms of database
+
+ap = argparse.ArgumentParser('python install.py')
+
+necessary_arguments = ap.add_argument_group('Necessary Inputs')
+necessary_arguments.add_argument("--standard", help="standard installation option", action="store_true")\
 
 
-"""
+input_option_arguments = ap.add_argument_group('Select Database')
+input_option_arguments.add_argument("--repeat", help="Set up database for repeat sequences ONLY (lost repeat reads) ", action="store_true")
+input_option_arguments.add_argument("--immune", help="Set up database for VDJ gene segments of B cell and T cell receptors (immune reads)", action="store_true")
 
-ap = argparse.ArgumentParser()
-ap.add_argument("--immune", help="Set up database for immune reads only (i.e. TCR/BCR) ", action="store_true")
-ap.add_argument("--standard", help="standard installation option", action="store_true")
+release = ap.add_argument_group('Connect database with the new release')
+release.add_argument("--link2db", help="Set up database for VDJ gene segments of B cell and T cell receptors (immune reads)", action="store_true")
+
+
+
 args = ap.parse_args()
 
-if args.immune:
-	print "Immune only option selected"
-	print "Unzipping Immune Databases (i.e. BCR/TCR)"
-	os.chdir('./db/')
-	call(["tar","-xvf", './immune.tar'])
+#=====================================================================================
 
-elif args.standard: 
+if args.standard:
 	checksum_original="1052af7849f099ed77fa6e668278a4ec" 
 	print "Standard installation option selected"
 	print "Downloading the database (~65GB) takes up to 45 minute"
 	print "Please wait until the installation is completed."
 	print "Downloading the database files"
 	os.chdir('./db/')
-	call(["wget", "https://googledrive.com/host/0B_NUyiE86yDwaUxoVjhlSjN5SkE/database.tar", "--no-check-certificate"]) 
+	call(["wget", "https://googledrive.com/host/0Bx1fyWeQo3cOMjFNMzBrcWZfXzA/rRNA.tar.gz", "--no-check-certificate"])
 	
 	print "Checking md5sum of the databases" 
 	downloaded = Popen(["md5sum",'./database.tar'], stdout=PIPE)
 	checksum_downloaded = downloaded.communicate()[0].split()[0]
+    
+    
+    sys.exit(1)
 
 	if checksum_downloaded != checksum_original:
 		print "DOWNLOAD failed. Please re-run the script"
