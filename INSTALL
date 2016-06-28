@@ -1,11 +1,13 @@
-No installation is required. The ROP comes with no pre-requirements except Python. Python is required to be installed on the cluster you are planning to perform the analysis. ROP is distributed with several open source components that were developed by other groups (see section Third Party software from software web page).
+No installation is required. The ROP comes with no pre-requirements except Python. Python 2.7 is required to be installed on the cluster. ROP relies on  several open source tools that were developed by other groups. These components are (c) their respective developers and are redistributed with ROP to provide ease-of-use. The list of the tools used by ROP and the parameters/reference databases is provided (see section Third Party software from the software web page and tools.log under the analysis directory). 
 
-ROP requires the prepared reference databases for human and microbial sequences, which can be download as shown bellow. 
+ROP requires prepared reference databases for human and microbial sequences, which can be download as shown bellow. 
 
 cd rop
-python install.py --standard
+python getDB.py <dirDB>
 
-The 'installation' might take up to 45 minutes on average and requires 50Gb of available space to download the references.
+where dirDB is a directory where the reference databases will be downloaded
+
+Downloading  might take up to 45 minutes on average and requires 50Gb of available space to store the references.
 
 For more details see: https://sergheimangul.wordpress.com/rop/
 ROP Tutorial: https://github.com/smangul1/rop/wiki
