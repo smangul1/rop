@@ -111,7 +111,7 @@ dict['metaphlan_db']='c0e06113269d1042c84b32abef99951c'
 dict['antibody']='8f2d8884677fe2e05736a3b92a57739b'
 dict['virus']='82980243db39b2d96bd2ffc633e40ce2'
 dict['eupathdb']='34c6ffb1f0d8664ba549ce45fefa8724'
-dict['bacteria']='e224295cf6eb066d76e147a53af39226'
+dict['bacteria']='19f09bfe965693ff9778e177c57a21bb'
 
 
 if args.link2db:
@@ -199,7 +199,7 @@ else:
         print "Reference databases are ready. Please use rop.py"
     if args.microbiome:
         print "--mirobiome options was selected. Refrence database for microbiome will be downloaded"
-        for dbName in ['rRNA','bowtie2Index','virus','bacteria','eupathdb']:
+        for dbName in ['bacteria','rRNA','bowtie2Index','virus','eupathdb']:
             print "Downloading %s database files ..." %(dbName)
             download(dbName,dict[dbName],dirDB)
         os.chdir(codeDir)
