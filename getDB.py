@@ -7,9 +7,27 @@ from subprocess import call, Popen, PIPE
 #codeDir
 codeDir=os.path.dirname(os.path.realpath(__file__))
 
-#Gets MD5 from file
-def getmd5(filename):
-    return m.hexdigest()
+def download(dbName,md5sum,dirDB):
+
+    os.chdir(dirDB)
+    tarName=dirDB+"/"+"%s.tar.gz" %(dbName)
+    link="https://googledrive.com/host/0Bx1fyWeQo3cOMjFNMzBrcWZfXzA/%s.tar.gz" %(dbName)
+    print "-----------------------------"
+    print "Downloading %s" %(link)
+    call(["wget", link, "--no-check-certificate"])
+    print "Checking md5sum of %s database" %(dbName)
+    downloaded = Popen(["md5sum",tarName], stdout=PIPE)
+    checksum_downloaded = downloaded.communicate()[0].split()[0]
+    print checksum_downloaded
+        
+    if checksum_downloaded != md5sum:
+            print "DOWNLOAD of %s failed. Please re-run the script" %(link)
+            sys.exit(23)
+        
+        
+    cmd="tar -zxvf %s" %(tarName)
+    os.system(cmd)
+    os.remove(tarName)
 
 
 ####################################################################
@@ -33,13 +51,17 @@ necessary_arguments = ap.add_argument_group('Necessary Inputs')
 necessary_arguments.add_argument('dirDB', help='directory where the reference databases will be downloaded')
 
 
-input_option_arguments = ap.add_argument_group('Select Database')
+input_option_arguments = ap.add_argument_group('Select Database (multi-selection is possible)')
 input_option_arguments.add_argument("--repeat", help="Set up database for repeat sequences ONLY (lost repeat reads) ", action="store_true")
-input_option_arguments.add_argument("--immune", help="Set up database for VDJ gene segments of B cell and T cell receptors (immune reads)", action="store_true")
+input_option_arguments.add_argument("--immune", help="Set up database for VDJ gene segments of B cell and T cell receptors ONLY (immune reads)", action="store_true")
+input_option_arguments.add_argument("--metaphlan", help = " Set up database for Metaphlan2 ONLY", action = "store_true")
+input_option_arguments.add_argument("--circRNA", help = "Set up database for circular RNAs ONLY", action="store_true")
+input_option_arguments.add_argument("--microbiome", help = "Set up database for microbime  ONLY", action = "store_true")
+
 
 release = ap.add_argument_group('Connect database with the new release')
 release.add_argument("--link2db", help="Connect the reference database with ROP", action="store_true")
-release.add_argument("--f", help="Reconnect the ROP to the new database provided. Please note the existing link will romoved", action="store_true")
+release.add_argument("--f", help="Reconnect the ROP to the new database provided. Please note the existing link will removed", action="store_true")
 
 
 
@@ -47,16 +69,27 @@ args = ap.parse_args()
 
 #=====================================================================================
 
+
+
+# IF none of them are selected: make everything true
+if not args.repeat and not args.immune and not args.circRNA and not args.microbiome and not args.metaphlan:
+    args.repeat = True
+    args.immune = True
+    args.circRNA = True
+    args.microbiome = True
+    args.metaphlan = True
+else:
+    #It is gonna be non-reductive for now
+    targeted = True
+
+
+
+
 dirDB=args.dirDB+"/db/"
 
-if not os.path.exists(dirDB):
-    os.makedirs(dirDB)
-else:
-    print "Error: Directory %s already exists. Please use  --link2db to connect the ROP with the reference databases " %(dirDB)
-    sys.exit(23)
-
-
 currentDB=codeDir+'/db'
+
+
 
 
 
@@ -69,48 +102,109 @@ if os.path.exists(currentDB):
         sys.exit(23)
 
 
+dict={}
+dict['rRNA']='3f85a14df97ad844e5175265e54148f5'
+dict['bowtie2Index']='5988f3f86b41252e005f78b6a022b7b8'
+dict['repeats']='34948f44b0a393228e93ce6bd2c4d512'
+dict['BWAIndex']='a48d8b93a69ac5a4301ede641e51e429'
+dict['metaphlan_db']='c0e06113269d1042c84b32abef99951c'
+dict['antibody']='8f2d8884677fe2e05736a3b92a57739b'
+dict['virus']='82980243db39b2d96bd2ffc633e40ce2'
+dict['eupathdb']='34c6ffb1f0d8664ba549ce45fefa8724'
+dict['bacteria']='e224295cf6eb066d76e147a53af39226'
+
+
+if args.link2db:
+    os.chdir(codeDir)
+    
+    if os.path.exists(args.dirDB):
+        cmd="ln -s %s db" %(args.dirDB)
+        os.system(cmd)
+        print "Reference databases are connected. Please use rop.py"
+    else:
+        print "Error : Directory with reference databases doesn't exist! Please download the reference databases first. "
+else:
+    if not os.path.exists(dirDB):
+        os.makedirs(dirDB)
+    else:
+        print "Error: Directory %s already exists. Please use  --link2db to connect the ROP with the reference databases " %(dirDB)
+        sys.exit(23)
 
 
 
 
 
-if not args.repeat and not args.immune:
-    print "Standard installation option selected"
+if not targeted:
+    
+    print "The complete refrence database will be downloaded"
+    
+
+
+
+
+    
+    
     print "Downloading the database (~65GB) takes up to 45 minute"
     print "Please wait until the installation is completed."
-    print "Downloading the database files"
-
-
-    for dbName in ['rRNA','bowtie2Index','repeats']:
-    
-        print "Downloading "
-        os.chdir(dirDB)
-        tarName=dirDB+"/"+"%s.tar.gz" %(dbName)
-        
-        
-        link="https://googledrive.com/host/0Bx1fyWeQo3cOMjFNMzBrcWZfXzA/%s.tar.gz" %(dbName)
-        print "-----------------------------"
-        print "Downloading %s" %(link)
-
-        call(["wget", link, "--no-check-certificate"])
-        
 
 
 
-        cmd="tar -zxvf %s" %(tarName)
-        
-        
-        
-        os.system(cmd)
-        os.remove(tarName)
+
+
+    for dbName in ['eupathdb']:#['rRNA','bowtie2Index','repeats','BWAIndex','metaphlan_db','antibody','virus']:
+        print "Downloading %s database files ..." %(dbName)
+        download(dbName,dict[dbName],dirDB)
+
         
     os.chdir(codeDir)
     cmd="ln -s %s ./" %(dirDB)
     os.system(cmd)
-    print "Installation Completed! Please use rop.py"
+    print "Reference databases are ready. Please use rop.py"
 
 else:
-    print "No option is selected. Please use -h option to see available options"
-    sys.exit(233)
+    
+    
+    if args.repeat:
+        for dbName in ['rRNA','bowtie2Index','repeats']:
+            print "Downloading %s database files ..." %(dbName)
+            download(dbName,dict[dbName],dirDB)
+        os.chdir(codeDir)
+        cmd="ln -s %s ./" %(dirDB)
+        os.system(cmd)
+        print "Reference databases are ready. Please use rop.py"
+
+    if args.immune:
+        for dbName in ['rRNA','bowtie2Index','antibody']:
+            print "Downloading %s database files ..." %(dbName)
+            download(dbName,dict[dbName],dirDB)
+        os.chdir(codeDir)
+        cmd="ln -s %s ./" %(dirDB)
+        os.system(cmd)
+        print "Reference databases are ready. Please use rop.py"
+    if args.metaphlan:
+        for dbName in ['rRNA','bowtie2Index','metaphlan_db']:
+            print "Downloading %s database files ..." %(dbName)
+            download(dbName,dict[dbName],dirDB)
+        os.chdir(codeDir)
+        cmd="ln -s %s ./" %(dirDB)
+        os.system(cmd)
+        print "Reference databases are ready. Please use rop.py"
+    if args.circRNA:
+        for dbName in ['rRNA','bowtie2Index','BWAIndex']:
+            print "Downloading %s database files ..." %(dbName)
+            download(dbName,dict[dbName],dirDB)
+        os.chdir(codeDir)
+        cmd="ln -s %s ./" %(dirDB)
+        os.system(cmd)
+        print "Reference databases are ready. Please use rop.py"
+    if args.microbiome:
+        print "--mirobiome options was selected. Refrence database for microbiome will be downloaded"
+        for dbName in ['rRNA','bowtie2Index','virus','bacteria','eupathdb']:
+            print "Downloading %s database files ..." %(dbName)
+            download(dbName,dict[dbName],dirDB)
+        os.chdir(codeDir)
+        cmd="ln -s %s ./" %(dirDB)
+        os.system(cmd)
+        print "Reference databases are ready. Please use rop.py"
 
 

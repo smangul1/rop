@@ -1137,7 +1137,7 @@ if args.microbiome:
     write2Log("Reads with 0.9 identity and more than 0.8 of nucleotides aligned are considered microbial reads and are saved into %s " %(bacteriaFileFiltered), logBacteria,"False")
     write2Log("---------------",logBacteria,"False")
 
-    cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/bacteria/bacteria -use_index true -query %s -db %s/db/microbiome/bacteria/bacteria  -outfmt 6 -evalue 1e-05  >%s 2>>%s" %(codeDir,codeDir,input_file,codeDir,bacteriaFile,logBacteria)
+    cmd="%s/tools/blastn -task megablast -index_name %s/db/bacteria/bacteria -use_index true -query %s -db %s/db/bacteria/bacteria  -outfmt 6 -evalue 1e-05  >%s 2>>%s" %(codeDir,codeDir,input_file,codeDir,bacteriaFile,logBacteria)
     write2Log(cmd,cmdLogfile,"False")
 
     if args.qsub or args.qsubArray:
@@ -1181,7 +1181,7 @@ if args.microbiome:
 
 
 
-    cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/virus/viruses -use_index true -query %s -db %s/db/microbiome/virus/viruses  -outfmt 6 -evalue 1e-05  >%s 2>>%s" %(codeDir,codeDir,input_file,codeDir,virusFile,logVirus)
+    cmd="%s/tools/blastn -task megablast -index_name %s/db/virus/viruses -use_index true -query %s -db %s/db/virus/viruses  -outfmt 6 -evalue 1e-05  >%s 2>>%s" %(codeDir,codeDir,input_file,codeDir,virusFile,logVirus)
     write2Log(cmd,cmdLogfile,"False")
 
     if args.qsub or args.qsubArray:
@@ -1240,7 +1240,7 @@ if args.microbiome:
         write2Log("Reads with 0.9 identity and more than 0.8 of nucleotides aligned are considered microbial reads and are saved into %s" %(afterFasta), logEukaryotes,"False")
         write2Log("-------------",logEukaryotes,"False")
     
-        cmd="%s/tools/blastn -task megablast -index_name %s/db/microbiome/eupathdb/%s -use_index true -query %s -db %s/db/microbiome/eupathdb/%s  -outfmt 6 -evalue 1e-05  >%s 2>>%s" %(codeDir,codeDir,db,inFasta,codeDir,db,eupathdbFile,logEukaryotes)
+        cmd="%s/tools/blastn -task megablast -index_name %s/db/eupathdb/%s -use_index true -query %s -db %s/db/eupathdb/%s  -outfmt 6 -evalue 1e-05  >%s 2>>%s" %(codeDir,codeDir,db,inFasta,codeDir,db,eupathdbFile,logEukaryotes)
         write2Log(cmd,cmdLogfile,"False")
         
         if args.qsub or args.qsubArray:
