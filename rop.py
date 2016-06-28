@@ -585,10 +585,10 @@ if not args.skipPreliminary:
         write_gzip_into_readable(args.unmappedReads, afterrRNAFasta)
     elif args.skipQC and not args.fastqGz and not args.gzip:
         afterrRNAFasta = args.unmappedReads
-    cmdGenome="%s/tools/bowtie2 -k 1 -p 8 -f -x %s/db/human/Bowtie2Index/genome -U %s 2>>%s | %s/tools/samtools view -SF4 -   >%s" %(codeDir,codeDir, afterrRNAFasta,log_bowtieWG,codeDir,gBamFile)
+    cmdGenome="%s/tools/bowtie2 -k 1 -p 8 -f -x %s/db/bowtie2Index/genome -U %s 2>>%s | %s/tools/samtools view -SF4 -   >%s" %(codeDir,codeDir, afterrRNAFasta,log_bowtieWG,codeDir,gBamFile)
 
     #transcriptome
-    cmdTranscriptome="%s/tools/bowtie2  -k 1 -f -p 8 -x %s/db/human/Bowtie2Index/hg19KnownGene.exon_polya200 -U %s 2>>%s | %s/tools/samtools view -SF4 -  >  %s " %(codeDir,codeDir, afterrRNAFasta,log_bowtieTR, codeDir,tBamFile)
+    cmdTranscriptome="%s/tools/bowtie2  -k 1 -f -p 8 -x %s/db/bowtie2Index/hg19KnownGene.exon_polya200 -U %s 2>>%s | %s/tools/samtools view -SF4 -  >  %s " %(codeDir,codeDir, afterrRNAFasta,log_bowtieTR, codeDir,tBamFile)
     write2Log(cmdGenome,cmdLogfile,"False")
     write2Log(cmdTranscriptome,cmdLogfile,"False")
 
