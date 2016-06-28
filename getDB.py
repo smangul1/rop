@@ -69,7 +69,7 @@ args = ap.parse_args()
 
 #=====================================================================================
 
-
+targeted=False
 
 # IF none of them are selected: make everything true
 if not args.repeat and not args.immune and not args.circRNA and not args.microbiome and not args.metaphlan:
