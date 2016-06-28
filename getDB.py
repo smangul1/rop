@@ -151,7 +151,7 @@ if not targeted:
 
 
 
-    for dbName in ['eupathdb']:#['rRNA','bowtie2Index','repeats','BWAIndex','metaphlan_db','antibody','virus']:
+    for dbName in ['rRNA','bowtie2Index','repeats','BWAIndex','metaphlan_db','antibody','virus','eupathdb','bacteria']:
         print "Downloading %s database files ..." %(dbName)
         download(dbName,dict[dbName],dirDB)
 
