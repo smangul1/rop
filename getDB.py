@@ -44,6 +44,9 @@ print "*********************************************"
 #######################################################################
 
 
+
+
+
 ap = argparse.ArgumentParser('python rop.py')
 
 
@@ -68,6 +71,10 @@ release.add_argument("--f", help="Reconnects the ROP to the new database. Please
 args = ap.parse_args()
 
 #=====================================================================================
+
+#relative path to absolute path
+args.dirDB=os.path.abspath(args.dirDB)
+
 
 targeted=False
 
