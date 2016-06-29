@@ -60,8 +60,8 @@ input_option_arguments.add_argument("--microbiome", help = "Set up database for 
 
 
 release = ap.add_argument_group('Connect database with the new release')
-release.add_argument("--link2db", help="Connect the reference database with ROP", action="store_true")
-release.add_argument("--f", help="Reconnect the ROP to the new database provided. Please note the existing link will removed", action="store_true")
+release.add_argument("--link2db", help="Connect the existing reference database with ROP", action="store_true")
+release.add_argument("--f", help="Reconnects the ROP to the new database. Please note the existing link will removed", action="store_true")
 
 
 
