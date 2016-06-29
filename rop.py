@@ -762,8 +762,8 @@ if args.circRNA:
         input_file = branch_point_file
     else:
         input_file = afterlostRepeatFasta
-    cmd="%s/tools/bwa mem -T -S %s/db/human/BWAIndex/genome.fa %s > %s 2>%s \n" %(codeDir,codeDir,input_file,NCL_CIRI_file,logNCL)
-    cmd = cmd + "perl %s/tools/CIRI_v1.2.pl -S -I %s -O %s -F %s/db/human/BWAIndex/genome.fa 1>>%s 2>>%s" %(codeDir,NCL_CIRI_file,after_NCL_CIRI_file_prefix,codeDir,logNCL,logNCL)
+    cmd="%s/tools/bwa mem -T -S %s/db/BWAIndex/genome.fa %s > %s 2>%s \n" %(codeDir,codeDir,input_file,NCL_CIRI_file,logNCL)
+    cmd = cmd + "perl %s/tools/CIRI_v1.2.pl -S -I %s -O %s -F %s/db/BWAIndex/genome.fa 1>>%s 2>>%s" %(codeDir,NCL_CIRI_file,after_NCL_CIRI_file_prefix,codeDir,logNCL,logNCL)
 
 
     if args.qsub or args.qsubArray:
