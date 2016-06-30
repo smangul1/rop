@@ -455,9 +455,13 @@ if args.skipPreliminary:
     write2Log("2. Remapping to human references is skipped",gLogfile,args.quiet)
     
     filename, file_extension = os.path.splitext(args.unmappedReads)
-    if file_extension!=".fa" and file_extension!=".fasta":
+    if file_extension!=".fa" and file_extension!=".fasta" and not args.gzip:
         write2Log("ERROR ::: --skipPreliminary option is selected. Reads needs to be in FASTA format",gLogfile,args.quiet)
         sys.exit(1)
+    elif file_extension == ".gz" and not args.gzip and not args.fastqGz:
+        write2Log("ERROR ::: --gzip option is not selected with gzip format input. Please try with --gzip option", gLogfile, args.quiet)
+    elif file_extension == ".gz" and args.gzip: 
+        write2Log("SkipPreliminary option is selected. The input is in gzip format. It will be decompressed in the analysis dir.", gLogfile, args.quiet)
 
 
 elif args.skipQC:
