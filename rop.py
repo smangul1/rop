@@ -424,14 +424,44 @@ logEukaryotes=eupathdbDir + basename + "_eukaryotes.log"
 
 readLength=0
 n=0
+
+### TODO : FIX WHEN INPUT IS BAM 
+# The current version assumes the input is fastq or fasta 
+
+
+
+# if the input is bam
+# change the input file so the num_unmapped can be assessed
+"""
+unmapped file is used just to handle the number of reads
+
+If input is bam: 
+    if lowq bam file - then it is going to be converted into fasta and use it as unmapped_file
+    else (if it is raw unmapped bam) - converted into fastq and used it as unmapped_file 
+else (if fastq): 
+    unmapped_file = input 
+"""
+if args.b:
+    if args.skipLowq:
+        bam2fasta(codeDir,args.unmappedReads,lowQFileFasta)
+        unmapped_file = lowQFileFasta
+    else:
+        bam2fastq(codeDir,args.unmappedReads,unmappedFastq)
+        unmapped_file = unmappedFastq
+else: 
+    unmapped_file = args.unmappedReads
+
+
+# Get Num Reads in unmapped fastq/fastas
+
 if not args.skipPreliminary and not args.skipQC and not args.skipLowq:
-    fastqfile = open(args.unmappedReads, "rU")
+    fastqfile = open(unmapped_file, "rU")
     for record in SeqIO.parse(fastqfile,"fastq"):
             readLength=len(record) #assumes the same length, will not work for Ion Torrent or Pac Bio
             n+=1
     fastqfile.close()
 else:
-    fastafile = open(args.unmappedReads, "rU")
+    fastafile = open(unmapped_file, "rU")
     for record in SeqIO.parse(fastafile,"fasta"):
         readLength=len(record) #assumes the same length, will not work for Ion Torrent or Pac Bio
         n+=1
@@ -472,12 +502,12 @@ elif args.skipQC:
     # afterrRNAFasta = args.unmappedReads
     write2Log("1. Quality Control is skipped",gLogfile,args.quiet)
 else:
-    if args.b:
-        if args.skipLowq:
-            bam2fasta(codeDir,args.unmappedReads,lowQFileFasta)
-        else:
-            bam2fastq(codeDir,args.unmappedReads,unmappedFastq)
-    else :
+    # if args.b:
+    #     if args.skipLowq:
+    #         bam2fasta(codeDir,args.unmappedReads,lowQFileFasta)
+    #     else:
+    #         bam2fastq(codeDir,args.unmappedReads,unmappedFastq)
+    if not args.b:
         unmappedFastq=args.unmappedReads
 
 
@@ -488,7 +518,7 @@ else:
 
 
 
-
+    if not args.skipLowq:
         #lowQ
         write2Log("1. Quality Control...",gLogfile,args.quiet)
         cmd=codeDir+"/tools/fastq_quality_filter -v -Q 33 -q 20 -p 75 -i %s -o %s > %s \n" %(unmappedFastq,lowQFile,logQC)
@@ -498,19 +528,26 @@ else:
             os.remove(unmappedFastq)
 
 
+
+
+
+
+
         readLength=0
         #Convert from fastq to fasta
-        fastafile=open(lowQFileFasta,'w')
+        fastafile=open(lowQFileFasta, 'w')
         fastqfile = open(lowQFile, "rU")
         nAfterLowQReads=0
-        for record in SeqIO.parse(fastqfile,"fastq"):
+        for record in SeqIO.parse(fastqfile, "fastq"):
             readLength=len(record) #assumes the same length, will not work for Ion Torrent or Pac Bio
-            fastafile.write(str(">"+record.name)+"\n")
-            fastafile.write(str(record.seq)+"\n")
-            nAfterLowQReads+=1
+            fastafile.write(str(">" + record.name) + "\n")
+            fastafile.write(str(record.seq) + "\n")
+            nAfterLowQReads += 1
         fastafile.close()
         nLowQReads=n-nAfterLowQReads
-        write2Log("--filtered %s low quality reads" %(nLowQReads) ,gLogfile,args.quiet)
+        write2Log("--filtered %s low quality reads" % (nLowQReads) ,gLogfile,args.quiet)
+    else:
+        write2Log("skipLowq option is selected - low quality filtering step is skipped" ,gLogfile, args.quiet)
 
 
     
