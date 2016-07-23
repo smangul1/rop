@@ -158,7 +158,7 @@ def write_gzip(inFasta,outFasta):
 ####################################################################
 
 print "*********************************************"
-print "ROP (version 1.0.3) is a computational protocol aimed to discover the source of all reads, originated from complex RNA molecules, recombinant antibodies and microbial communities. Written by Serghei Mangul (smangul@ucla.edu) and Harry Taegyun Yang (harry2416@gmail.com), University of California, Los Angeles (UCLA). (c) 2016. Released under the terms of the General Public License version 3.0 (GPLv3)"
+print "ROP (version 1.0.4) is a computational protocol aimed to discover the source of all reads, originated from complex RNA molecules, recombinant antibodies and microbial communities. Written by Serghei Mangul (smangul@ucla.edu) and Harry Taegyun Yang (harry2416@gmail.com), University of California, Los Angeles (UCLA). (c) 2016. Released under the terms of the General Public License version 3.0 (GPLv3)"
 print ""
 print "For more details see:"
 print "https://sergheimangul.wordpress.com/rop/"
@@ -183,7 +183,7 @@ job_option_arguments.add_argument("--maui", help = "use this option together wit
 
 input_option_arguments = ap.add_argument_group('Input Options')
 input_option_arguments.add_argument("--b", '-b', help="unmapped reads in bam format", action="store_true")
-input_option_arguments.add_argument("--gzip", '-z', help="Currently not supported!!! unmapped reads in fasta.gz format.", action="store_true")
+input_option_arguments.add_argument("--gzip", '-z', help="unmapped reads in .gz format.", action="store_true")
 input_option_arguments.add_argument("--skipLowq", help="skip step filtering low quality reads. The input reads need to be in the bam format", action="store_true")
 input_option_arguments.add_argument("--skipQC", help="skip entire QC step : filtering  low-quality, low-complexity and rRNA reads. The input reads need to be in the FASTA format", action="store_true")
 input_option_arguments.add_argument("--skipPreliminary", '-s', help="skip the preliminary steps including (1) QC and (2) Remapping to human references (lost human reads). The input reads need to be in the FASTA format", action="store_true")
@@ -198,6 +198,8 @@ run_only_options.add_argument("--circRNA", help = "Run circular RNA profiling ON
 run_only_options.add_argument("--microbiome", help = "Run microbime profiling ONLY", action = "store_true")
 
 misc_option_arguments = ap.add_argument_group('Miscellenous Options')
+
+misc_option_arguments.add_argument("--outGz", help = "Beta Mode. Intermediate fasta files are stored as fasta.gz", action = "store_true")
 misc_option_arguments.add_argument("--rezip", help = "rezip the fasta files after analysis", action = "store_true")
 misc_option_arguments.add_argument("--clean", help = "clean all the intermediate files for maximum space efficiency - use with caution", action = "store_true")
 misc_option_arguments.add_argument("--quiet", help = "Suppress progress report and warnings", action = "store_true")
@@ -549,11 +551,7 @@ elif args.skipQC:
     # afterrRNAFasta = args.unmappedReads
     write2Log("1. Quality Control is skipped",gLogfile,args.quiet)
 else:
-    # if args.b:
-    #     if args.skipLowq:
-    #         bam2fasta(codeDir,args.unmappedReads,lowQFileFasta)
-    #     else:
-    #         bam2fastq(codeDir,args.unmappedReads,unmappedFastq)
+
     if not args.b and not args.gzip:
         unmappedFastq=args.unmappedReads
 
@@ -574,7 +572,6 @@ else:
         nLowQReads=0
         nAfterLowQReads=0
         
-        temp=[]
         
         for record in SeqIO.parse(unmappedFastq, "fastq"):
             
@@ -582,7 +579,6 @@ else:
             
             j=record.letter_annotations["phred_quality"]
             
-            temp+=j
             prc=len([i for i in j if i>=20])/float(len(j))
             if prc>0.75:
                 fastafile.write(str(">" + record.name) + "\n")
@@ -623,7 +619,7 @@ else:
     write2Log(cmd,cmdLogfile,"False")
     os.system(cmd)
 
-    cmd = "rm -rf %s/cleaning_1/ ; rm -f %s/*.cln ; rm -f %s/*.cidx; rm -f %s/*.sort" % (QCDir,QCDir,QCDir,QCDir)
+    cmd = "rm -rf %s/cleaning_1/ >temp 2 >temp; rm -f %s/*.cln >temp 2 >temp; rm -f %s/*.cidx>temp 2 >temp; rm -f %s/*.sort>temp 2 >temp" % (QCDir,QCDir,QCDir,QCDir)
     os.system(cmd)
     proc = subprocess.Popen(["grep trashed %s | awk -F \":\" '{print $2}'" %(logQC) ], stdout=subprocess.PIPE, shell=True)
     (nLowCReadsTemp, err) = proc.communicate()
@@ -679,11 +675,11 @@ if not args.skipPreliminary:
     write2Log("2. Remapping to human references...",cmdLogfile,"False")
     write2Log("2. Remapping to human references...",gLogfile,args.quiet)
     # If input is afterQC fasta.gz
-    if args.skipQC and (args.gzip or args.gzip):
+    if args.skipQC and args.outGz:
         
         
         write_gzip_into_readable(args.unmappedReads, afterrRNAFasta)
-    elif args.skipQC and not args.gzip and not args.gzip:
+    elif args.skipQC and not args.outGz:
         afterrRNAFasta = args.unmappedReads
     cmdGenome="%s/tools/bowtie2 -k 1 -p 8 -f -x %s/db/bowtie2Index/genome -U %s 2>>%s | %s/tools/samtools view -SF4 -   >%s" %(codeDir,codeDir, afterrRNAFasta,log_bowtieWG,codeDir,gBamFile)
 
@@ -739,7 +735,7 @@ if not args.skipPreliminary:
     write2Log("Complete list of lost human reads is available from sam files: %s,%s" %(gBamFile,tBamFile),logHuman,"False")
 
 
-    if args.gzip:
+    if args.outGz:
         excludeReadsFromFastaGzip(afterrRNAFasta,lostHumanReads,afterlostHumanFastaGzip)
     else:
         excludeReadsFromFasta(afterrRNAFasta,lostHumanReads,afterlostHumanFasta)
@@ -760,7 +756,7 @@ if not args.skipPreliminary:
 
 ### TODO
 else:
-    if args.gzip or args.gzip:
+    if args.outGz:
         write_gzip_into_readable(args.unmappedReads, afterlostHumanFasta)
 
     else:
@@ -1226,7 +1222,11 @@ if args.microbiome:
     #bacteria -------------------------------
     os.chdir(bacteriaDir)
     readLength=0
-    fastafile = open(input_file, "rU")
+    if not args.outGz:
+        fastafile = open(input_file, "rU")
+    else:
+        fastafile = gzip.open(input_file, "rU")
+
     for record in SeqIO.parse(fastafile,"fasta"):
         readLength=len(record) #assumes the same length, will not work for Ion Torrent or Pac Bio
         break;
