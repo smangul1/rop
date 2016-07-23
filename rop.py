@@ -183,7 +183,7 @@ job_option_arguments.add_argument("--maui", help = "use this option together wit
 
 input_option_arguments = ap.add_argument_group('Input Options')
 input_option_arguments.add_argument("--b", '-b', help="unmapped reads in bam format", action="store_true")
-input_option_arguments.add_argument("--fastqGz", '-z', help="Currently not supported!!! unmapped reads in fasta.gz format.", action="store_true")
+input_option_arguments.add_argument("--gzip", '-z', help="Currently not supported!!! unmapped reads in fasta.gz format.", action="store_true")
 input_option_arguments.add_argument("--skipLowq", help="skip step filtering low quality reads. The input reads need to be in the bam format", action="store_true")
 input_option_arguments.add_argument("--skipQC", help="skip entire QC step : filtering  low-quality, low-complexity and rRNA reads. The input reads need to be in the FASTA format", action="store_true")
 input_option_arguments.add_argument("--skipPreliminary", '-s', help="skip the preliminary steps including (1) QC and (2) Remapping to human references (lost human reads). The input reads need to be in the FASTA format", action="store_true")
@@ -198,12 +198,12 @@ run_only_options.add_argument("--circRNA", help = "Run circular RNA profiling ON
 run_only_options.add_argument("--microbiome", help = "Run microbime profiling ONLY", action = "store_true")
 
 misc_option_arguments = ap.add_argument_group('Miscellenous Options')
-misc_option_arguments.add_argument("--gzip", help = "Gzip the fasta files after filtering step", action = "store_true")
 misc_option_arguments.add_argument("--rezip", help = "rezip the fasta files after analysis", action = "store_true")
 misc_option_arguments.add_argument("--clean", help = "clean all the intermediate files for maximum space efficiency - use with caution", action = "store_true")
 misc_option_arguments.add_argument("--quiet", help = "Suppress progress report and warnings", action = "store_true")
 misc_option_arguments.add_argument("--dev", help = "Keep intermediate files", action = "store_true")
 misc_option_arguments.add_argument("--nonReductive", help = "non-reductive analysis - Dev mode - Please use with caution", action = "store_true")
+misc_option_arguments.add_argument("--f", help = "force option to overwrite the analysis directory(provided as dir option) - Please use with caution  ", action = "store_true")
 
 
 args = ap.parse_args()
@@ -236,8 +236,32 @@ args.unmappedReads=os.path.abspath(args.unmappedReads)
 args.dir=os.path.abspath(args.dir)
 
 
+
+
+#check if args.dir exist
+if os.path.exists(args.dir) and not args.f:
+    message="ERROR ::::: The directory %s exist. Please choose different directory to save results of the analysis. Alternatively choose --f option to overwrite the results in %s" %(args.dir,args.dir)
+    print message
+    sys.exit(1)
+
+if os.path.exists(args.dir) and args.f:
+    cmd="rm -fr %s>temp 2>temp" %(args.dir)
+    os.system(cmd)
+    cmd="rm temp"
+    os.system(cmd)
+
 #basename
-basename=os.path.splitext(os.path.basename(args.unmappedReads))[0]
+basename=os.path.splitext(os.path.basename(args.unmappedReads))[0].split(".fastq")[0]
+
+
+#check if the input format is gzip and option --gzip provided
+filename, file_extension = os.path.splitext(args.unmappedReads)
+if file_extension == ".gz" and not args.gzip:
+    print "ERROR ::: --gzip option is not selected with gzip format input. Please try with --gzip option"
+    sys.exit(1)
+
+
+
 
 
 
@@ -420,7 +444,6 @@ logEukaryotes=eupathdbDir + basename + "_eukaryotes.log"
 
 #######################################################################################################################################
 
-#to add args.fastqGz with gzip.open(unmappedFastq) as f:
 
 readLength=0
 n=0
@@ -441,6 +464,8 @@ If input is bam:
 else (if fastq): 
     unmapped_file = input 
 """
+
+
 if args.b:
     if args.skipLowq:
         bam2fasta(codeDir,args.unmappedReads,lowQFileFasta)
@@ -448,8 +473,15 @@ if args.b:
     else:
         bam2fastq(codeDir,args.unmappedReads,unmappedFastq)
         unmapped_file = unmappedFastq
-else: 
+elif args.gzip and not args.skipPreliminary and not args.skipQC and not args.skipLowq:
+    write2Log("--gzip option is selected. The input is in gzip format. It will be decompressed in the analysis dir.", gLogfile, args.quiet)
+    unmappedFastq=args.dir+"/"+basename+".fastq"
+    write_gzip_into_readable(args.unmappedReads, unmappedFastq)
+    unmapped_file = unmappedFastq
+else:
     unmapped_file = args.unmappedReads
+
+
 
 
 # Get Num Reads in unmapped fastq/fastas
@@ -460,12 +492,19 @@ if not args.skipPreliminary and not args.skipQC and not args.skipLowq:
             readLength=len(record) #assumes the same length, will not work for Ion Torrent or Pac Bio
             n+=1
     fastqfile.close()
-else:
+elif not args.gzip:
     fastafile = open(unmapped_file, "rU")
     for record in SeqIO.parse(fastafile,"fasta"):
         readLength=len(record) #assumes the same length, will not work for Ion Torrent or Pac Bio
         n+=1
     fastafile.close()
+elif args.gzip:
+    fastafile = gzip.open(unmapped_file, "rU")
+    for record in SeqIO.parse(fastafile,"fasta"):
+        readLength=len(record) #assumes the same length, will not work for Ion Torrent or Pac Bio
+        n+=1
+    fastafile.close()
+
 
 
 
@@ -485,11 +524,19 @@ if args.skipPreliminary:
     write2Log("2. Remapping to human references is skipped",gLogfile,args.quiet)
     
     filename, file_extension = os.path.splitext(args.unmappedReads)
-    if file_extension!=".fa" and file_extension!=".fasta" and not args.gzip:
+    print file_extension
+    if file_extension!=".fa" and file_extension!=".fasta" and not args.gzip :
         write2Log("ERROR ::: --skipPreliminary option is selected. Reads needs to be in FASTA format",gLogfile,args.quiet)
         sys.exit(1)
-    elif file_extension == ".gz" and not args.gzip and not args.fastqGz:
-        write2Log("ERROR ::: --gzip option is not selected with gzip format input. Please try with --gzip option", gLogfile, args.quiet)
+    elif file_extension == ".gz":
+        temp=args.unmappedReads.split(".gz")[0]
+        filename2, file_extension2 = os.path.splitext(temp)
+        if file_extension2!=".fa" and file_extension2!=".fasta":
+            write2Log("ERROR ::: --skipPreliminary option is selected. Reads needs to be in FASTA format",gLogfile,args.quiet)
+            sys.exit(1)
+        
+        if not args.gzip:
+            write2Log("ERROR ::: --gzip option is not selected with gzip format input. Please try with --gzip option", gLogfile, args.quiet)
     elif file_extension == ".gz" and args.gzip: 
         write2Log("SkipPreliminary option is selected. The input is in gzip format. It will be decompressed in the analysis dir.", gLogfile, args.quiet)
 
@@ -507,7 +554,7 @@ else:
     #         bam2fasta(codeDir,args.unmappedReads,lowQFileFasta)
     #     else:
     #         bam2fastq(codeDir,args.unmappedReads,unmappedFastq)
-    if not args.b:
+    if not args.b and not args.gzip:
         unmappedFastq=args.unmappedReads
 
 
@@ -521,9 +568,31 @@ else:
     if not args.skipLowq:
         #lowQ
         write2Log("1. Quality Control...",gLogfile,args.quiet)
-        cmd=codeDir+"/tools/fastq_quality_filter -v -Q 33 -q 20 -p 75 -i %s -o %s > %s \n" %(unmappedFastq,lowQFile,logQC)
-        write2Log(cmd,cmdLogfile,"False")
-        os.system(cmd)
+        
+        fastafile=open(lowQFileFasta, 'w')
+        readLength=0
+        nLowQReads=0
+        nAfterLowQReads=0
+        
+        temp=[]
+        
+        for record in SeqIO.parse(unmappedFastq, "fastq"):
+            
+            readLength=len(record) #assumes the same length, will not work for Ion Torrent or Pac Bio
+            
+            j=record.letter_annotations["phred_quality"]
+            
+            temp+=j
+            prc=len([i for i in j if i>=20])/float(len(j))
+            if prc>0.75:
+                fastafile.write(str(">" + record.name) + "\n")
+                fastafile.write(str(record.seq) + "\n")
+                nAfterLowQReads+=1
+        
+            
+
+
+
         if args.b:
             os.remove(unmappedFastq)
 
@@ -533,16 +602,7 @@ else:
 
 
 
-        readLength=0
-        #Convert from fastq to fasta
-        fastafile=open(lowQFileFasta, 'w')
-        fastqfile = open(lowQFile, "rU")
-        nAfterLowQReads=0
-        for record in SeqIO.parse(fastqfile, "fastq"):
-            readLength=len(record) #assumes the same length, will not work for Ion Torrent or Pac Bio
-            fastafile.write(str(">" + record.name) + "\n")
-            fastafile.write(str(record.seq) + "\n")
-            nAfterLowQReads += 1
+
         fastafile.close()
         nLowQReads=n-nAfterLowQReads
         write2Log("--filtered %s low quality reads" % (nLowQReads) ,gLogfile,args.quiet)
@@ -604,7 +664,6 @@ else:
     write2Log(message,cmdLogfile,"False")
 
     if not args.dev:
-        os.remove(lowQFile)
         os.remove(lowQCFile)
         os.remove(lowQFileFasta)
         os.remove(rRNAFile)
@@ -620,11 +679,11 @@ if not args.skipPreliminary:
     write2Log("2. Remapping to human references...",cmdLogfile,"False")
     write2Log("2. Remapping to human references...",gLogfile,args.quiet)
     # If input is afterQC fasta.gz
-    if args.skipQC and (args.fastqGz or args.gzip):
+    if args.skipQC and (args.gzip or args.gzip):
         
         
         write_gzip_into_readable(args.unmappedReads, afterrRNAFasta)
-    elif args.skipQC and not args.fastqGz and not args.gzip:
+    elif args.skipQC and not args.gzip and not args.gzip:
         afterrRNAFasta = args.unmappedReads
     cmdGenome="%s/tools/bowtie2 -k 1 -p 8 -f -x %s/db/bowtie2Index/genome -U %s 2>>%s | %s/tools/samtools view -SF4 -   >%s" %(codeDir,codeDir, afterrRNAFasta,log_bowtieWG,codeDir,gBamFile)
 
@@ -701,8 +760,7 @@ if not args.skipPreliminary:
 
 ### TODO
 else:
-    if args.gzip or args.fastqGz:
-        print "gzip file %s is loaded." %(args.unmappedReads)
+    if args.gzip or args.gzip:
         write_gzip_into_readable(args.unmappedReads, afterlostHumanFasta)
 
     else:
