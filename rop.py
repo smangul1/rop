@@ -561,7 +561,7 @@ else:
 
 
 
-
+    valid = 'ACTG'
 
     if not args.skipLowq:
         #lowQ
@@ -575,12 +575,16 @@ else:
         
         for record in SeqIO.parse(unmappedFastq, "fastq"):
             
+            
+            
+            
+            
             readLength=len(record) #assumes the same length, will not work for Ion Torrent or Pac Bio
             
             j=record.letter_annotations["phred_quality"]
             
             prc=len([i for i in j if i>=20])/float(len(j))
-            if prc>0.75:
+            if prc>0.75 and all(i in valid for i in record.seq):
                 fastafile.write(str(">" + record.name) + "\n")
                 fastafile.write(str(record.seq) + "\n")
                 nAfterLowQReads+=1
