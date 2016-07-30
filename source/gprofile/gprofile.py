@@ -129,6 +129,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument('bam', help='sorted bam file with mapped reads')
 ap.add_argument('out', help='file to save the number of reads per genome category')
 ap.add_argument("--perCategory", help="reports the assigment for each read. A separate file per chromosome will be created",action="store_true")
+ap.add_argument("--mouse", help="Use mouse genome annotations (NCBIM37). Default is human",action="store_true")
 args = ap.parse_args()
 
 
@@ -151,12 +152,26 @@ chr_list=[]
 
                 
                 
+if not args.mouse:
+    for i in range(1,23):
+        chr_list.append(str(i))
+    chr_list.append('X')
+    chr_list.append('Y')
 
-#for now we assume human
-for i in range(1,23):
-    chr_list.append(str(i))
-chr_list.append('X')
-chr_list.append('Y')
+    utr3_file=os.path.dirname(os.path.realpath(__file__))+'/annotations/human/bedPrepared/UTR3_GRCh37_prepared.bed'
+    utr5_file=os.path.dirname(os.path.realpath(__file__))+'/annotations/human/bedPrepared/UTR5_GRCh37_prepared.bed'
+    cds_file=os.path.dirname(os.path.realpath(__file__))+'/annotations/human/bedPrepared/CDS_GRCh37_prepared.bed'
+geneCoordinates_file=os.path.dirname(os.path.realpath(__file__))+'/annotations/human/bedPrepared/geneCoordinatesType_prepared.bed'
+
+elif args.mouse:
+    for i in range(1,20):
+        chr_list.append(str(i))
+    chr_list.append('X')
+    chr_list.append('Y')
+    utr3_file=os.path.dirname(os.path.realpath(__file__))+'/annotations/mouse/bedPrepared/UTR3_NCBIM37_prepared.bed'
+    utr5_file=os.path.dirname(os.path.realpath(__file__))+'/annotations/mouse/bedPrepared/UTR5_NCBIM37_prepared.bed'
+    cds_file=os.path.dirname(os.path.realpath(__file__))+'/annotations/mouse/bedPrepared/CDS_NCBIM37_prepared.bed'
+    geneCoordinates_file=os.path.dirname(os.path.realpath(__file__))+'/annotations/mouse/bedPrepared/geneCoordinates_NCBIM37.bed'
 
 
 base=os.path.basename(args.bam)
@@ -177,10 +192,7 @@ if args.perCategory:
 
 
 
-utr3_file=os.path.dirname(os.path.realpath(__file__))+'/annotations/human/bedPrepared/UTR3_GRCh37_prepared.bed'
-utr5_file=os.path.dirname(os.path.realpath(__file__))+'/annotations/human/bedPrepared/UTR5_GRCh37_prepared.bed'
-cds_file=os.path.dirname(os.path.realpath(__file__))+'/annotations/human/bedPrepared/CDS_GRCh37_prepared.bed'
-geneCoordinates_file=os.path.dirname(os.path.realpath(__file__))+'/annotations/human/bedPrepared/geneCoordinatesType_prepared.bed'
+
 
 
 
