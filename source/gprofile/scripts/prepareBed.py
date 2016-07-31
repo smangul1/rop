@@ -6,6 +6,8 @@ import argparse
 
 ap = argparse.ArgumentParser()
 ap.add_argument('bed', help='File in bed format donwloaded from UCSC')
+ap.add_argument('gt', help='File with gene Ids as a first column, and transcript Ids as a second one. Please see the instruction how to prepare file https://github.com/smangul1/rop/wiki/How-to-prepare-gene-annotations-for-gprofile')
+ap.add_argument('gc', help='File prepare from gtf by extractGeneBoundaries.py')
 ap.add_argument('out', help='clean bed fileto be created')
 ap.add_argument('organism', help='h- human, m - for mouse')
 
@@ -64,19 +66,50 @@ else:
 
 bed=[]
 
+
+trIDSet=set()
+
+#-------------------------
+dictTrID_GeneID={}
+#ENSMUSG00000090025,ENSMUST00000160944
+with open(args.gt,'r') as f:
+    reader=csv.reader(f)
+    for line in reader:
+        trID=line[1]
+        geneID=line[0]
+        dictTrID_GeneID[trID]=geneID
+        trIDSet.add(trID)
+
+#-------------------------
+dictGeneID_GeneName={}
+#1,non-rRNA,ENSMUSG00000000544,Gpa33,168060369,168096641
+with open(args.gc,'r') as f:
+    reader=csv.reader(f)
+    for line in reader:
+        geneID=line[2]
+        geneName=line[3]
+        dictGeneID_GeneName[geneID]=geneName
+
+
+
+
+
+
 with open(args.bed,'r') as f:
     
     reader=csv.reader(f,delimiter='\t')
     for line in reader:
         chr=line[0].split('chr')[1]
         if chr in chr_list:
+            
             x=line[1]
             y=line[2]
-            bed.append((chr,x,y))
+            trID=line[3]
+            if trID in trIDSet:
+                geneID=dictTrID_GeneID[trID]
+                geneName=dictGeneID_GeneName[geneID]
+                bed.append((chr,x,y,geneID,geneName))
 
-print "Number of element initially",len(bed)
-bed=set(bed)
-print "Number of element after removing dublicated elements",len(bed)
 
 
 print "Save to",args.out

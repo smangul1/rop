@@ -23,12 +23,17 @@ def is_junction(read):
     return False
 
 
+
+
+
 def whichFeature(read,chr):
     find_list_cds=find(read.reference_start, read.reference_end , tree_cds[chr])
     find_list_utr3=find(read.reference_start, read.reference_end , tree_utr3[chr])
     find_list_utr5=find(read.reference_start, read.reference_end , tree_utr5[chr])
     find_list_intron=find(read.reference_start, read.reference_end , tree_geneCoordinates[chr])
     find_list_intergenic=find(read.reference_start, read.reference_end , tree_intergenic[chr])
+    
+
     
     threshold=len(read.query_sequence)*0.75
     
@@ -87,20 +92,33 @@ def whichFeature(read,chr):
         print "-------"
         return 'MIXED'
     elif tag_utr3+tag_utr5>1:
-        return 'UTR_'
+        x=find_list_utr3[0][0]
+        y=find_list_utr3[0][1]
+        return ('UTR_',geneUTR3[(x,y)])
     elif tag_cds==1:
-        return 'CDS'
+        
+        x=find_list_cds[0][0]
+        y=find_list_cds[0][1]
+        return ('CDS',geneCDS[(x,y)])
     elif tag_utr3==1:
-        return 'UTR3'
+        x=find_list_utr3[0][0]
+        y=find_list_utr3[0][1]
+        return ('UTR3',geneUTR3[(x,y)])
     elif tag_utr5==1:
-        return 'UTR5'
+        x=find_list_utr5[0][0]
+        y=find_list_utr5[0][1]
+        return ('UTR5',geneUTR5[(x,y)])
     elif tag_cds+tag_utr3+tag_utr5==0:
         if len(find_list_intron)>0:
-            return 'INTRON'
+            x=find_list_intron[0][0]
+            y=find_list_intron[0][1]
+            
+            
+            return ('INTRON',dictGeneNames[x,y])
         elif len(find_list_intergenic)>0:
-            return 'INTERGENIC'
+            return ('INTERGENIC',("NA,NA"))
         else:
-            return 'DEEP'
+            return ('DEEP',("NA","NA"))
 
         
         
@@ -161,7 +179,7 @@ if not args.mouse:
     utr3_file=os.path.dirname(os.path.realpath(__file__))+'/annotations/human/bedPrepared/UTR3_GRCh37_prepared.bed'
     utr5_file=os.path.dirname(os.path.realpath(__file__))+'/annotations/human/bedPrepared/UTR5_GRCh37_prepared.bed'
     cds_file=os.path.dirname(os.path.realpath(__file__))+'/annotations/human/bedPrepared/CDS_GRCh37_prepared.bed'
-geneCoordinates_file=os.path.dirname(os.path.realpath(__file__))+'/annotations/human/bedPrepared/geneCoordinatesType_prepared.bed'
+    geneCoordinates_file=os.path.dirname(os.path.realpath(__file__))+'/annotations/human/bedPrepared/geneCoordinates_GRCh37.bed'
 
 elif args.mouse:
     for i in range(1,20):
@@ -177,14 +195,22 @@ elif args.mouse:
 base=os.path.basename(args.bam)
 prefix=os.path.splitext(base)[0]
 
+dirOutPerCategory=""
+
+
+#-------perCategory-------
 if args.perCategory:
+    dirOutPerCategory=outDir+"/"+prefix+"_perCategory/"
+    if not os.path.exists(dirOutPerCategory):
+        os.makedirs(dirOutPerCategory)
+    
     outFile={}
     for chr in chr_list:
-        f_file=outDir+"/"+prefix+"."+chr+".genomicFeature"
+        f_file=dirOutPerCategory+prefix+"."+chr+".genomicFeature"
         outfile = open(f_file, 'w' )
         outFile[chr]=open(f_file, 'w' )
     #MT
-    f_file=outDir+"/"+prefix+"."+'MT'+".genomicFeature"
+    f_file=dirOutPerCategory+prefix+"."+'MT'+".genomicFeature"
     outfile = open(f_file, 'w' )
     outFile['MT']=open(f_file, 'w' )
 
@@ -230,6 +256,7 @@ for chr in chr_list:
 print "Load gene annotations ..."
 
 
+geneUTR3={}
 
 #UTR3
 print "Load",utr3_file
@@ -241,6 +268,9 @@ with open(utr3_file,'r') as f:
         if chr in chr_list:
             x=int(line[1])
             y=int(line[2])
+            geneID=line[3]
+            geneName=line[4]
+            geneUTR3[(x,y)]=(geneID,geneName)
             tree_utr3[chr]=tree_utr3[chr].insert( x, y )
 
 
@@ -252,6 +282,8 @@ with open(utr3_file,'r') as f:
 
 #find_list=find(67208778, 67210057 , tree_utr3[chr])
 
+geneUTR5={}
+
 #UTR5
 print "Load",utr5_file
 with open(utr5_file,'r') as f:
@@ -262,10 +294,16 @@ with open(utr5_file,'r') as f:
         if chr in chr_list:
             x=int(line[1])
             y=int(line[2])
+            geneID=line[3]
+            geneName=line[4]
+            geneUTR5[(x,y)]=(geneID,geneName)
             tree_utr5[chr]=tree_utr5[chr].insert( x, y )
 
 
 #CDS
+geneCDS={}
+
+
 print "Load",cds_file
 with open(cds_file,'r') as f:
     
@@ -275,6 +313,9 @@ with open(cds_file,'r') as f:
         if chr in chr_list:
             x=int(line[1])
             y=int(line[2])
+            geneID=line[3]
+            geneName=line[4]
+            geneCDS[(x,y)]=(geneID,geneName)
             tree_cds[chr]=tree_cds[chr].insert( x, y )
 
 
@@ -283,7 +324,6 @@ with open(cds_file,'r') as f:
 
 
 #gene coordinates
-#1,non-rRNA,ENSG00000008128,1634169,1655766
 nGenes_non_rRNA=0
 nGenes_rRNA=0
 
@@ -292,17 +332,28 @@ nGenes_rRNA=0
 
 
 print "Load",geneCoordinates_file
+
+#1,non-rRNA,ENSMUSG00000000544,Gpa33,168060369,168096
+
+dictGeneNames={}
+
 with open(geneCoordinates_file,'r') as f:
     
     reader=csv.reader(f)
     for line in reader:
         chr=line[0]
         if chr in chr_list:
-            x=int(line[3])
-            y=int(line[4])
+            x=int(line[4])
+            y=int(line[5])
+            geneID=line[2]
+            geneName=line[3]
+            
             if line[1]=='non-rRNA':
                 nGenes_non_rRNA+=1
                 tree_geneCoordinates[chr]=tree_geneCoordinates[chr].insert( x, y )
+                dictGeneNames[x,y]=(geneID,geneName)
+                
+                
                 x_10K=x-10000
                 y_10K=y+10000
                 if x_10K<0:
@@ -325,13 +376,13 @@ with open(geneCoordinates_file,'r') as f:
 if args.perCategory:
     outFile={}
     for chr in chr_list:
-        f_file=outDir+"/"+prefix+"."+chr+".genomicFeature"
+        f_file=dirOutPerCategory+prefix+"."+chr+".genomicFeature"
         outfile = open(f_file, 'w' )
         outFile[chr]=open(f_file, 'w' )
 
 
     #MT
-    f_file=outDir+"/"+prefix+"."+'MT'+".genomicFeature"
+    f_file=dirOutPerCategory+prefix+"."+'MT'+".genomicFeature"
     outfile = open(f_file, 'w' )
     outFile['MT']=open(f_file, 'w' )
 
@@ -363,6 +414,7 @@ nMT=0
 singleton=[]
 
 for chr in chr_list:
+    
     print "Process chr",chr
     for read in bamfile.fetch(chr):
         readName=read.query_name
@@ -370,26 +422,28 @@ for chr in chr_list:
         if read.mapq!=50:
             multiMappedReads.append(readName)
         elif is_junction(read):
+            feature=whichFeature(read,chr)
+            
             if args.perCategory:
-                outFile[chr].write( readName+','+chr + ',' + 'junction' + '\n' )
+                outFile[chr].write( readName+','+chr + ',' + 'junction' + ',' + feature[1][0] + ',' + feature[1][1] + '\n' )
             nJunction+=1
         else:
             feature=whichFeature(read,chr)
             if args.perCategory:
-                outFile[chr].write( readName+','+chr + ',' + feature + '\n' )
-            if feature=='CDS':
+                outFile[chr].write( readName+','+chr + ',' + feature[0] + ',' + feature[1][0] + ',' + feature[1][1] + '\n' )
+            if feature[0]=='CDS':
                 nCDS+=1
-            elif feature=='INTRON':
+            elif feature[0]=='INTRON':
                 nIntron+=1
-            elif feature=='UTR3':
+            elif feature[0]=='UTR3':
                 nUTR3+=1
-            elif feature=='UTR5':
+            elif feature[0]=='UTR5':
                 nUTR5+=1
-            elif feature=='UTR_':
+            elif feature[0]=='UTR_':
                  nUTR_+=1
-            elif feature=='INTERGENIC':
+            elif feature[0]=='INTERGENIC':
                 nIntergenic+=1
-            elif feature=='DEEP':
+            elif feature[0]=='DEEP':
                 nDeep+=1
                     
 
@@ -404,7 +458,7 @@ for read in bamfile.fetch('MT'):
             multiMappedReads.append(readName)
     else:
         if args.perCategory:
-            outFile[chr].write( readName+','+'MT' + ',' + 'MT' + '\n' )
+            outFile['MT'].write( readName+','+'MT' + ',' + 'MT' + ",NA,NA"+'\n' )
         nMT+=1
 
 multiMappedReads=set(multiMappedReads)
@@ -415,7 +469,7 @@ multiMappedReads=set(multiMappedReads)
 
 if args.perCategory:
     #multiMappedReads
-    f_multiMappedReads=outDir+"/"+prefix+"."+'_multiMappedReads.reads'
+    f_multiMappedReads=outDir+"/"+prefix+'__multiMappedReads.reads'
     outfile = open(f_multiMappedReads, 'w' )
     for i in multiMappedReads:
         outfile.write(i)
