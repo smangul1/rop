@@ -3,8 +3,8 @@ ROP is a computational protocol aimed to discover the source of all reads,
 originated from complex RNA molecules, recombinant antibodies and microbial 
 communities.
 
-Written by Serghei Mangul (smangul@ucla.edu) and Harry Taegyun Yang 
-(harry2416@gmail.com), University of California, Los Angeles (UCLA). (c) 2016. 
+Written by Serghei Mangul (smangul@ucla.edu), Harry Taegyun Yang
+(harry2416@gmail.com), Kevin Hsieh(kevin.hsieh@ucla.edu), Linus Chen (u6.30cl@gmail.com), University of California, Los Angeles (UCLA). (c) 2016.
 
 Released under the terms of the General Public License version 3.0 (GPLv3)
 
@@ -249,8 +249,8 @@ ROP is a computational protocol aimed to discover the source of all reads,
 originated from complex RNA molecules, recombinant antibodies and microbial 
 communities. 
 
-Written by Serghei Mangul (smangul@ucla.edu) and Harry Taegyun Yang 
-(harry2416@gmail.com), University of California, Los Angeles (UCLA). (c) 2016. 
+Written by Serghei Mangul (smangul@ucla.edu), Harry Taegyun Yang
+(harry2416@gmail.com), Kevin Hsieh(kevin.hsieh@ucla.edu), Linus Chen (u6.30cl@gmail.com), University of California, Los Angeles (UCLA). (c) 2016.
 
 Released under the terms of the General Public License version 3.0 (GPLv3)
 
@@ -260,13 +260,13 @@ ROP Tutorial: https://github.com/smangul1/rop/wiki
 
 # check if args.dir exists
 if os.path.exists(args.dir) and not args.f:
-    print """ERROR: The directory """ + args.dir + """ exists. Please choose a different 
-directory to save results of the analysis. Alternatively choose --f option to 
+    print """ERROR ::: The directory """ + args.dir + """ exists. Please choose a different directory to save results of the analysis. Alternatively choose --f option to
 overwrite the results into """ + args.dir
+    sys.exit(2)
+
 if os.path.exists(args.dir) and args.f:
     cmd = "rm -fr " + args.dir + " &>/dev/null"
-    if subprocess.Popen([cmd], shell=True).wait():
-        sys.exit(2)
+    os.system(cmd)
 
 # database folder path
 db_folder = "/db_" + args.organism
@@ -433,7 +433,14 @@ elif args.gzip:
     fastafile.close()
 
 message="Processing %s unmapped reads of length %s" %(n,readLength)
+
+
 write2Log(message,logfns["gLogfile"],args.quiet)
+
+
+if n==0:
+    write2Log("ERROR ::: The input file is empty.",logfns["gLogfile"],0)
+    sys.exit(1)
 
 ################################################################################
 # 1. QC
@@ -475,41 +482,50 @@ else:
     valid = 'ACTG'
     if not args.skipLowq:
         
-        #lowQ
-        write2Log("1. Quality Control...",logfns["gLogfile"],args.quiet)  
-        fastafile=open(intfns["lowQFileFasta"], 'w')
-        readLength=0
-        nLowQReads=0
-        nAfterLowQReads=0
-        for record in SeqIO.parse(intfns["unmappedFastq"], "fastq"):
-            readLength=len(record) #assumes the same length, will not work for Ion Torrent or Pac Bio
-            j=record.letter_annotations["phred_quality"]
-            prc=len([i for i in j if i>=20])/float(len(j))
-            if prc>0.75 and all(i in valid for i in record.seq):
-                fastafile.write(str(">" + record.name) + "\n")
-                fastafile.write(str(record.seq) + "\n")
-                nAfterLowQReads+=1
-        if args.b:
-            os.remove(intfns["unmappedFastq"])
-        fastafile.close()
-        nLowQReads=n-nAfterLowQReads
-        write2Log("--filtered %s low quality reads" % (nLowQReads) ,logfns["gLogfile"],args.quiet)
+        try:
+        
+            #lowQ
+            write2Log("1. Quality Control...",logfns["gLogfile"],args.quiet)  
+            fastafile=open(intfns["lowQFileFasta"], 'w')
+            readLength=0
+            nLowQReads=0
+            nAfterLowQReads=0
+            for record in SeqIO.parse(intfns["unmappedFastq"], "fastq"):
+                readLength=len(record) #assumes the same length, will not work for Ion Torrent or Pac Bio
+                j=record.letter_annotations["phred_quality"]
+                prc=len([i for i in j if i>=20])/float(len(j))
+                if prc>0.75 and all(i in valid for i in record.seq):
+                    fastafile.write(str(">" + record.name) + "\n")
+                    fastafile.write(str(record.seq) + "\n")
+                    nAfterLowQReads+=1
+            if args.b:
+                os.remove(intfns["unmappedFastq"])
+            fastafile.close()
+            nLowQReads=n-nAfterLowQReads
+            write2Log("--filtered %s low quality reads" % (nLowQReads) ,logfns["gLogfile"],args.quiet)
+        except lowQaulityReadsError:
+            write2Log("ERROR ::: ROP was not able to process low quality reads. Consider reporting the bug here : https://github.com/smangul1/rop/issues ",logfns["gLogfile"],0)
+            sys.exit(1)
     else:
         write2Log("skipLowq option is selected - low quality filtering step is skipped" ,logfns["gLogfile"], args.quiet)
     os.chdir(dirs["QC"])
-    
-    #lowC
-    cmd="export PATH=$PATH:%s/tools/seqclean-x86_64/bin" %(cd)
-    os.system(cmd)
-    cmd=cd+"/tools/seqclean-x86_64/seqclean %s -l 50 -M -o %s 2>>%s" %(intfns["lowQFileFasta"], intfns["lowQCFile"],logfns["logQC"])
-    write2Log(cmd,logfns["cmdLogfile"],"False")
-    os.system(cmd)
-    cmd = "rm -rf %s/cleaning_1/ >temp 2 >temp; rm -f %s/*.cln >temp 2 >temp; rm -f %s/*.cidx>temp 2 >temp; rm -f %s/*.sort>temp 2 >temp" % (dirs["QC"],dirs["QC"],dirs["QC"],dirs["QC"])
-    os.system(cmd)
-    proc = subprocess.Popen(["grep trashed %s | awk -F \":\" '{print $2}'" %(logfns["logQC"]) ], stdout=subprocess.PIPE, shell=True)
-    (nLowCReadsTemp, err) = proc.communicate()
-    nLowCReads=int(nLowCReadsTemp.rstrip().strip())
-    write2Log("--filtered %s low complexity reads (e.g. ACACACAC...)" %(nLowCReads) ,logfns["gLogfile"],args.quiet)
+    try:
+        #lowC
+        cmd="export PATH=$PATH:%s/tools/seqclean-x86_64/bin" %(cd)
+        os.system(cmd)
+        cmd=cd+"/tools/seqclean-x86_64/seqclean %s -l 50 -M -o %s 2>>%s" %(intfns["lowQFileFasta"], intfns["lowQCFile"],logfns["logQC"])
+        write2Log(cmd,logfns["cmdLogfile"],"False")
+        os.system(cmd)
+        cmd = "rm -rf %s/cleaning_1/ >temp 2 >temp; rm -f %s/*.cln >temp 2 >temp; rm -f %s/*.cidx>temp 2 >temp; rm -f %s/*.sort>temp 2 >temp" % (dirs["QC"],dirs["QC"],dirs["QC"],dirs["QC"])
+        os.system(cmd)
+        proc = subprocess.Popen(["grep trashed %s | awk -F \":\" '{print $2}'" %(logfns["logQC"]) ], stdout=subprocess.PIPE, shell=True)
+        (nLowCReadsTemp, err) = proc.communicate()
+        nLowCReads=int(nLowCReadsTemp.rstrip().strip())
+        write2Log("--filtered %s low complexity reads (e.g. ACACACAC...)" %(nLowCReads) ,logfns["gLogfile"],args.quiet)
+    except lowCReadsError:
+        write2Log("ERROR ::: ROP was not able to process low complexity reads. Consider reporting the bug here : https://github.com/smangul1/rop/issues ",logfns["gLogfile"],0)
+        sys.exit(1)
+
 
     #rRNA
     cmd="%s/tools/blastn -task megablast -index_name %s/%s/rRNA/rRNA -use_index true -query %s -db %s/%s/rRNA/rRNA  -outfmt 6 -evalue 1e-05  >%s" %(cd,cd,db_folder,intfns["lowQCFile"],cd,db_folder,intfns["rRNAFile"])
