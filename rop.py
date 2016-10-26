@@ -32,10 +32,10 @@ nReads = {	"LowQ": 0,
 			"lost": 0,
 			"repeat": 0,
 			"NCL": 0,
+			"immune": 0,
 			"bacteria": 0,
 			"virus": 0,
 			"ep": 0 }
-nReadsImmuneTotal = 0
 
 ################################################################################
 # 1. Quality Control
@@ -213,258 +213,45 @@ else:
 
 if not readsPresent("5", unmapped_file):
 	ARGS.immune = False
-
-# temporary (until MiXCR switch)
-INTFNS["afterNCLFasta"] = unmapped_file
-branch_point_file = unmapped_file
-
+	
 if ARGS.immune:
-	immuneReads = set()
-	write2Log("5a. B lymphocytes profiling", LOGFNS["cmdLogfile"], "False")
-	write2Log("5a. B lymphocytes profiling", LOGFNS["gLogfile"], ARGS.quiet)
+	write2Log("5. Lymphocyte profiling", LOGFNS["cmdLogfile"], True)
+	write2Log("5. Lymphocyte profiling", LOGFNS["gLogfile"], ARGS.quiet)
+	os.chdir(DIRS["antibody"])
 	
-	# IGH
-	os.chdir(DIRS["igh"])
-	cmd="ln -s %s//%s/antibody/internal_data/ ./" %(CD,DB_FOLDER)
-	os.system(cmd)
-	if ARGS.nonReductive or ARGS.qsub or ARGS.qsubArray:
-		input_file = branch_point_file
-	else:
-		input_file = INTFNS["afterNCLFasta"]
-	write2Log("IgBlast	was	used	to	identify	reads	spanning	VDJ recombinations of immunoglobulin heavy locus (IGH)",LOGFNS["logIGH"],"False")
-	write2Log("More details about IgBlast format are here : https://github.com/smangul1/rop/wiki/ROP-output-details ",LOGFNS["logIGH"],"False")
-	if ARGS.organism == "human":
-		cmd = "%s/tools/igblastn -germline_db_V %s/%s/antibody/IGHV.fa -germline_db_D %s/%s/antibody/IGHD.fa  -germline_db_J %s/%s/antibody/IGHJ.fa -query %s -outfmt '7 std qseq sseq' -evalue 1e-05  2>>%s | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"D\" || $1==\"J\")) print }' >%s" %(CD,CD,DB_FOLDER,CD,DB_FOLDER,CD,DB_FOLDER,input_file, LOGFNS["logIGH"],INTFNS["ighFile"])
-	else:
-		cmd = CD + "/tools/igblastn -organism mouse -auxiliary_data " + CD + "/" + DB_FOLDER + "/antibody/optional_file/mouse_gl.aux -germline_db_V %s/%s/antibody/IGHV.fa -germline_db_D %s/%s/antibody/IGHD.fa  -germline_db_J %s/%s/antibody/IGHJ.fa -query %s -outfmt '7 std qseq sseq' -evalue 1e-05  2>>%s | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"D\" || $1==\"J\")) print }' >%s" %(CD,DB_FOLDER,CD,DB_FOLDER,CD,DB_FOLDER,input_file, LOGFNS["logIGH"],INTFNS["ighFile"])
-	write2Log(cmd,LOGFNS["cmdLogfile"],"False")
-	if ARGS.qsub or ARGS.qsubArray:
-		f = open(RUNFNS["runIGHFile"],'w')
-		f.write("ln -s %s//%s/antibody/internal_data/ ./ \n" %(CD,DB_FOLDER))
-		f.write(cmd+"\n")
-		f.write("echo \"done!\"> %s/%s_igh.done \n" %(DIRS["igh"],BASENAME))
-		f.close()
-		if ARGS.qsub:
-			if ARGS.maui:
-				cmdQsub="qsub -d `pwd`  -l walltime=10:00:00 -l nodes=1:m16G:ppn=12 %s" %(RUNFNS["runIGHFile"])
-			else:
-				cmdQsub="qsub -cwd -V -N igh -l h_data=16G,time=24:00:00 %s" %(RUNFNS["runIGHFile"])
-			os.system(cmdQsub)
-			write2Log("Job for STEP5a(IGH) has been submitted via qsub",LOGFNS["gLogfile"], ARGS.quiet)
-	else:
-		os.chdir(DIRS["igh"])
-		os.system(cmd)
-		immuneReadsIGH=nReadsImmune(INTFNS["ighFile"])
-		nReadsImmuneIGH=len(immuneReadsIGH)
-		write2Log("--identified %s reads mapped to immunoglobulin heavy (IGH) locus" %(nReadsImmuneIGH) ,LOGFNS["gLogfile"],ARGS.quiet)
-
-	#IGK	
-	os.chdir(DIRS["igk"])
-	cmd="ln -s %s//%s/antibody/internal_data/ ./" %(CD,DB_FOLDER)
-	os.system(cmd)
-	write2Log("IgBlast	was	used	to	identify	reads	spanning	VJ recombinations of immunoglobulin kappa locus (IGK)",LOGFNS["logIGK"],"False")
-	write2Log("More details about IgBlast format are here : https://github.com/smangul1/rop/wiki/ROP-output-details ",LOGFNS["logIGK"],"False")
-	if ARGS.organism == "human":
-		cmd = "%s/tools/igblastn -germline_db_V %s/%s/antibody/IGKV.fa -germline_db_D %s/%s/antibody/IGHD.fa  -germline_db_J %s/%s/antibody/IGKJ.fa -query %s -outfmt '7 std qseq sseq' -evalue 1e-05  2>>%s | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"D\" || $1==\"J\")) print }' >%s" %(CD,CD,DB_FOLDER,CD,DB_FOLDER,CD,DB_FOLDER,input_file, LOGFNS["logIGK"],INTFNS["igkFile"])
-	else:
-		cmd = CD + "/tools/igblastn -organism mouse -auxiliary_data " + CD + "/" + DB_FOLDER + "/antibody/optional_file/mouse_gl.aux -germline_db_V %s/%s/antibody/IGKV.fa -germline_db_D %s/%s/antibody/IGHD.fa  -germline_db_J %s/%s/antibody/IGKJ.fa -query %s -outfmt '7 std qseq sseq' -evalue 1e-05  2>>%s | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"D\" || $1==\"J\")) print }' >%s" %(CD,DB_FOLDER,CD,DB_FOLDER,CD,DB_FOLDER,input_file, LOGFNS["logIGK"],INTFNS["igkFile"])
-	write2Log(cmd,LOGFNS["cmdLogfile"],"False")
-	if ARGS.qsub or ARGS.qsubArray:
-		f = open(RUNFNS["runIGKFile"],'w')
-		f.write("ln -s %s//%s/antibody/internal_data/ ./ \n" %(CD,DB_FOLDER))
-		f.write(cmd+"\n")
-		f.write("echo \"done!\"> %s/%s_igk.done \n" %(DIRS["igk"],BASENAME))
-		f.close()
-		if ARGS.qsub:
-			if ARGS.maui:
-				cmdQsub="qsub -d `pwd`  -l walltime=10:00:00 -l nodes=1:m16G:ppn=12 %s" %(RUNFNS["runIGKFile"])
-			else:
-				cmdQsub="qsub -cwd -V -N igk -l h_data=16G,time=24:00:00 %s" %(RUNFNS["runIGKFile"])
-			os.system(cmdQsub)
-			write2Log("Job for STEP5a(IGK) has been submitted via qsub",LOGFNS["gLogfile"], ARGS.quiet)
-	else:
-		os.chdir(DIRS["igk"])
-		os.system(cmd)
-		immuneReadsIGK=nReadsImmune(INTFNS["igkFile"])
-		nReadsImmuneIGK=len(immuneReadsIGK)
-		write2Log("--identified %s reads mapped to immunoglobulin kappa (IGK) locus " %(nReadsImmuneIGK) ,LOGFNS["gLogfile"],ARGS.quiet)
-				
-	# IGL	
-	os.chdir(DIRS["igl"])
-	cmd="ln -s %s//%s/antibody/internal_data/ ./" %(CD,DB_FOLDER)
-	os.system(cmd)
-	write2Log("IgBlast	was	used	to	identify	reads	spanning	VJ recombinations of immunoglobulin lambda locus (IGL)",LOGFNS["logIGL"],"False")
-	write2Log("More details about IgBlast format are here : https://github.com/smangul1/rop/wiki/ROP-output-details ",LOGFNS["logIGL"],"False")
-	if ARGS.organism == "human":
-		cmd = "%s/tools/igblastn -germline_db_V %s/%s/antibody/IGLV.fa -germline_db_D %s/%s/antibody/IGHD.fa  -germline_db_J %s/%s/antibody/IGLJ.fa -query %s -outfmt '7 std qseq sseq' -evalue 1e-05 2>>%s  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(CD,CD,DB_FOLDER,CD,DB_FOLDER,CD,DB_FOLDER,input_file,LOGFNS["logIGL"],INTFNS["iglFile"])
-	else:
-		cmd = CD + "/tools/igblastn -organism mouse -auxiliary_data " + CD + "/" + DB_FOLDER + "/antibody/optional_file/mouse_gl.aux -germline_db_V %s/%s/antibody/IGLV.fa -germline_db_D %s/%s/antibody/IGHD.fa  -germline_db_J %s/%s/antibody/IGLJ.fa -query %s -outfmt '7 std qseq sseq' -evalue 1e-05 2>>%s  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(CD,DB_FOLDER,CD,DB_FOLDER,CD,DB_FOLDER,input_file,LOGFNS["logIGL"],INTFNS["iglFile"])
-	write2Log(cmd,LOGFNS["cmdLogfile"],"False")
-	if ARGS.qsub or ARGS.qsubArray:
-		f = open(RUNFNS["runIGLFile"],'w')
-		f.write("ln -s %s//%s/antibody/internal_data/ ./ \n" %(CD,DB_FOLDER))
-		f.write(cmd+"\n")
-		f.write("echo \"done!\">%s/%s_igl.done \n" %(DIRS["igl"],BASENAME))
-		f.close()
-		if ARGS.qsub:
-			if ARGS.maui:
-				cmdQsub="qsub -d `pwd`  -l walltime=10:00:00 -l nodes=1:m16G:ppn=12 %s" %(RUNFNS["runIGLFile"])
-			else:
-				cmdQsub="qsub -cwd -V -N igl -l h_data=16G,time=24:00:00 %s" %(RUNFNS["runIGLFile"])
-			os.system(cmdQsub)
-			write2Log("Job for STEP5a(IGL) has been submitted via qsub",LOGFNS["gLogfile"], ARGS.quiet)
-	else:
-		os.chdir(DIRS["igl"])
-		os.system(cmd)
-		immuneReadsIGL=nReadsImmune(INTFNS["iglFile"])
-		nReadsImmuneIGL=len(immuneReadsIGL)
-		write2Log("--identified %s reads mapped to immunoglobulin lambda (IGL) locus" %(nReadsImmuneIGL) ,LOGFNS["gLogfile"],ARGS.quiet)
-
-	write2Log("5b. T lymphocytes profiling...",LOGFNS["cmdLogfile"],"False")
-	write2Log("5b. T lymphocytes profiling...",LOGFNS["gLogfile"],ARGS.quiet)
+	species_code = {"human": "hsa", "mouse": "mmu"}
+	cmd = CD + "/tools/mixcr-1.8.2/mixcr align -nw " +\
+	  "-OvParameters.parameters.floatingLeftBound=false " +\
+	  "-OjParameters.parameters.floatingRightBound=false " +\
+	  "--library local --not-aligned-R1 " + INTFNS["afterImmuneFastq"] +\
+	  " --species " + species_code[ARGS.organism] + " " + unmapped_file + " " +\
+	  INTFNS["immuneAlignments"]
+	cmd = cmd + "\n" + CD + "/tools/mixcr-1.8.2/mixcr exportAlignments " +\
+	  "-sequence " + INTFNS["immuneAlignments"] + " " + INTFNS["immuneAligned"]
+	cmd = cmd + "\n" + "cat " + INTFNS["afterImmuneFastq"] + " | grep " +\
+	  "@ -A 1 --no-group-separator | sed 's ^@ > ' >" +\
+	  INTFNS["afterImmuneFasta"]
 	
-	# TCRA	
-	os.chdir(DIRS["tcra"])
-	cmd="ln -s %s//%s/antibody/internal_data/ ./" %(CD,DB_FOLDER)
-	os.system(cmd)
-	write2Log("IgBlast	was	used	to	identify	reads	spanning	VJ recombinations of T cell receptor alpha locus (TCRA)",LOGFNS["logTCRA"],"False")
-	write2Log("More details about IgBlast format are here : https://github.com/smangul1/rop/wiki/ROP-output-details ",LOGFNS["logTCRA"],"False")
-	if ARGS.organism == "human":
-		cmd = "%s/tools/igblastn -ig_seqtype TCR -germline_db_V %s/%s/antibody/TRAV.fa -germline_db_D %s/%s/antibody/TRBD.fa  -germline_db_J %s/%s/antibody/TRAJ.fa  -query %s -outfmt '7 std qseq sseq' -evalue 1e-05 2>>%s | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(CD,CD,DB_FOLDER,CD,DB_FOLDER,CD,DB_FOLDER,input_file,LOGFNS["logTCRA"],INTFNS["tcraFile"])
-	else:
-		cmd = CD + "/tools/igblastn -organism mouse -ig_seqtype TCR -auxiliary_data " + CD + "/" + DB_FOLDER + "/antibody/optional_file/mouse_gl.aux -germline_db_V %s/%s/antibody/TRAV.fa -germline_db_D %s/%s/antibody/TRBD.fa  -germline_db_J %s/%s/antibody/TRAJ.fa  -query %s -outfmt '7 std qseq sseq' -evalue 1e-05 2>>%s | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(CD,DB_FOLDER,CD,DB_FOLDER,CD,DB_FOLDER,input_file,LOGFNS["logTCRA"],INTFNS["tcraFile"])
-	write2Log(cmd,LOGFNS["cmdLogfile"],"False")
 	if ARGS.qsub or ARGS.qsubArray:
-		f = open(RUNFNS["runTCRAFile"],'w')
-		f.write("ln -s %s//%s/antibody/internal_data/ ./ \n" %(CD,DB_FOLDER))
-		f.write(cmd+"\n")
-		f.write("echo \"done!\">%s/%s_tcra.done \n"%(DIRS["tcra"],BASENAME))
-		f.close()
+		write2Log(cmd, RUNFNS["runAntibodyFile"], True)
+		write2Log("echo \"done!\" >" + DIRS["antibody"] + "/" + BASENAME +\
+		  "_antibodyProfile.done", RUNFNS["runAntibodyFile"], True)
 		if ARGS.qsub:
-			if ARGS.maui:
-				cmdQsub="qsub -d `pwd`  -l walltime=10:00:00 -l nodes=1:m16G:ppn=12 %s" %(RUNFNS["runTCRAFile"])
-			else:
-				cmdQsub="qsub -cwd -V -N tcra -l h_data=16G,time=24:00:00 %s" %(RUNFNS["runTCRAFile"])
-			os.system(cmdQsub)
-			write2Log("Job for STEP5b(TCRA) has been submitted via qsub",LOGFNS["gLogfile"], ARGS.quiet)
+			qsub("5", RUNFNS["runAntibodyFile"])
 	else:
-		os.chdir(DIRS["tcra"])
-		os.system(cmd)
-		immuneReadsTCRA=nReadsImmune(INTFNS["tcraFile"])
-		nReadsImmuneTCRA=len(immuneReadsTCRA)
-		write2Log("--identified %s reads mapped to T cell receptor alpha (TCRA) locus" %(nReadsImmuneTCRA) ,LOGFNS["gLogfile"],ARGS.quiet) 
-
-	# TCRB
-	os.chdir(DIRS["tcrb"])
-	cmd="ln -s %s//%s/antibody/internal_data/ ./" %(CD, DB_FOLDER)
-	os.system(cmd)
-	write2Log("IgBlast	was	used	to	identify	reads	spanning	VDJ recombinations of T cell receptor beta locus (TCRB)",LOGFNS["logTCRB"],"False")
-	write2Log("More details about IgBlast format are here : https://github.com/smangul1/rop/wiki/ROP-output-details ",LOGFNS["logTCRB"],"False")
-	if ARGS.organism == "human":
-		cmd = "%s/tools/igblastn -ig_seqtype TCR -germline_db_V %s/%s/antibody/TRBV.fa -germline_db_D %s/%s/antibody/TRBD.fa  -germline_db_J %s/%s/antibody/TRBJ.fa  -query %s -outfmt '7 std qseq sseq' -evalue 1e-05 2>>%s  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(CD,CD,DB_FOLDER,CD,DB_FOLDER,CD,DB_FOLDER,input_file,LOGFNS["logTCRB"],INTFNS["tcrbFile"])
-	else:
-		cmd = CD + "/tools/igblastn -organism mouse -ig_seqtype TCR -auxiliary_data " + CD + "/" + DB_FOLDER + "/antibody/optional_file/mouse_gl.aux -germline_db_V %s/%s/antibody/TRBV.fa -germline_db_D %s/%s/antibody/TRBD.fa  -germline_db_J %s/%s/antibody/TRBJ.fa  -query %s -outfmt '7 std qseq sseq' -evalue 1e-05 2>>%s  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(CD,DB_FOLDER,CD,DB_FOLDER,CD,DB_FOLDER,input_file,LOGFNS["logTCRB"],INTFNS["tcrbFile"])
-	write2Log(cmd,LOGFNS["cmdLogfile"],"False")
-	if ARGS.qsub or ARGS.qsubArray:
-		f = open(RUNFNS["runTCRBFile"],'w')
-		f.write("ln -s %s//%s/antibody/internal_data/ ./ \n" %(CD, DB_FOLDER))
-		f.write(cmd+"\n")
-		f.write("echo \"done!\">%s/%s_tcrb.done \n"%(DIRS["tcrb"],BASENAME))
-		f.close()
-		if ARGS.qsub:
-			if ARGS.maui:
-				cmdQsub="qsub -d `pwd`  -l walltime=10:00:00 -l nodes=1:m16G:ppn=12 %s" %(RUNFNS["runTCRBFile"])
-			else:
-				cmdQsub="qsub -cwd -V -N tcrb -l h_data=16G,time=24:00:00 %s" %(RUNFNS["runTCRBFile"])
-			os.system(cmdQsub)
-			write2Log("Job for STEP5b(TCRB) has been submitted via qsub",LOGFNS["gLogfile"], ARGS.quiet)
-	else:
-		os.chdir(DIRS["tcrb"])
-		os.system(cmd)
-		immuneReadsTCRB=nReadsImmune(INTFNS["tcrbFile"])
-		nReadsImmuneTCRB=len(immuneReadsTCRB)
-		write2Log("--identified %s reads mapped to T cell receptor beta (TCRB) locus" %(nReadsImmuneTCRB) ,LOGFNS["gLogfile"],ARGS.quiet)
-		
-	#TCRD	
-	os.chdir(DIRS["tcrd"])
-	cmd="ln -s %s//%s/antibody/internal_data/ ./" %(CD, DB_FOLDER)
-	os.system(cmd)
-	write2Log("IgBlast	was	used	to	identify	reads	spanning	VDJ recombinations of T cell receptor delta locus (TCRD)",LOGFNS["logTCRD"],"False")
-	write2Log("More details about IgBlast format are here : https://github.com/smangul1/rop/wiki/ROP-output-details ",LOGFNS["logTCRD"],"False")
-	if ARGS.organism == "human":
-		cmd = "%s/tools/igblastn -ig_seqtype TCR -germline_db_V %s/%s/antibody/TRDV.fa -germline_db_D %s/%s/antibody/TRBD.fa  -germline_db_J %s/%s/antibody/TRDJ.fa  -query %s -outfmt '7 std qseq sseq' -evalue 1e-05 2>>%s  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(CD,CD,DB_FOLDER,CD,DB_FOLDER,CD,DB_FOLDER,input_file,LOGFNS["logTCRD"],INTFNS["tcrdFile"])
-	else:
-		cmd = CD + "/tools/igblastn -organism mouse -ig_seqtype TCR -auxiliary_data " + CD + "/" + DB_FOLDER + "/antibody/optional_file/mouse_gl.aux -germline_db_V %s/%s/antibody/TRDV.fa -germline_db_D %s/%s/antibody/TRBD.fa  -germline_db_J %s/%s/antibody/TRDJ.fa  -query %s -outfmt '7 std qseq sseq' -evalue 1e-05 2>>%s  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(CD,DB_FOLDER,CD,DB_FOLDER,CD,DB_FOLDER,input_file,LOGFNS["logTCRD"],INTFNS["tcrdFile"])
-	write2Log(cmd,LOGFNS["cmdLogfile"],"False")
-	if ARGS.qsub or ARGS.qsubArray:
-		f = open(RUNFNS["runTCRDFile"],'w')
-		f.write("ln -s %s//%s/antibody/internal_data/ ./ \n" %(CD, DB_FOLDER))
-		f.write(cmd+"\n")
-		f.write("echo \"done!\">%s/%s_tcrd.done \n" %(DIRS["tcrd"], BASENAME))
-		f.close()
-		if ARGS.qsub:
-			if ARGS.maui:
-				cmdQsub="qsub -d `pwd`  -l walltime=10:00:00 -l nodes=1:m16G:ppn=12 %s" %(RUNFNS["runTCRDFile"])
-			else:
-				cmdQsub="qsub -cwd -V -N tcrd -l h_data=16G,time=24:00:00 %s" %(RUNFNS["runTCRDFile"])
-			os.system(cmdQsub)
-			write2Log("Job for STEP5b(TCRD) has been submitted via qsub",LOGFNS["gLogfile"], ARGS.quiet)
-	else:
-		os.chdir(DIRS["tcrd"])
-		os.system(cmd)
-		immuneReadsTCRD=nReadsImmune(INTFNS["tcrdFile"])
-		nReadsImmuneTCRD=len(immuneReadsTCRD)
-		write2Log("--identified %s reads mapped to T cell receptor delta (TCRD) locus" %(nReadsImmuneTCRD) ,LOGFNS["gLogfile"],ARGS.quiet)
-				
-	# TCRG	
-	os.chdir(DIRS["tcrg"])
-	cmd="ln -s %s//%s/antibody/internal_data/ ./" %(CD, DB_FOLDER)
-	os.system(cmd)
-	write2Log("IgBlast	was	used	to	identify	reads	spanning	VDJ recombinations of T cell receptor gamma locus (TCRG)",LOGFNS["logTCRG"],"False")
-	write2Log("More details about IgBlast format are here : https://github.com/smangul1/rop/wiki/ROP-output-details ",LOGFNS["logTCRG"],"False")
-	if ARGS.organism == "human":
-		cmd = "%s/tools/igblastn -ig_seqtype TCR -germline_db_V %s/%s/antibody/TRGV.fa -germline_db_D %s/%s/antibody/TRBD.fa  -germline_db_J %s/%s/antibody/TRGJ.fa  -query %s -outfmt '7 std qseq sseq' -evalue 1e-05 2>>%s  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(CD,CD,DB_FOLDER,CD,DB_FOLDER,CD,DB_FOLDER,input_file,LOGFNS["logTCRG"],INTFNS["tcrgFile"])
-	else:
-		cmd = CD + "/tools/igblastn -organism mouse -ig_seqtype TCR -auxiliary_data " + CD + "/" + DB_FOLDER + "/antibody/optional_file/mouse_gl.aux -germline_db_V %s/%s/antibody/TRGV.fa -germline_db_D %s/%s/antibody/TRBD.fa  -germline_db_J %s/%s/antibody/TRGJ.fa  -query %s -outfmt '7 std qseq sseq' -evalue 1e-05 2>>%s  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(CD,DB_FOLDER,CD,DB_FOLDER,CD,DB_FOLDER,input_file,LOGFNS["logTCRG"],INTFNS["tcrgFile"])
-	write2Log(cmd,LOGFNS["cmdLogfile"],"False")
-	if ARGS.qsub or ARGS.qsubArray:
-		f = open(RUNFNS["runTCRGFile"],'w')
-		f.write("ln -s %s//%s/antibody/internal_data/ ./ \n" %(CD, DB_FOLDER))
-		f.write(cmd+"\n")
-		f.write("echo \"done!\">%s/%s_tcrg.done \n" %(DIRS["tcrg"],BASENAME))
-		f.close()
-		if ARGS.qsub:
-			if ARGS.maui:
-				cmdQsub="qsub -d `pwd`  -l walltime=10:00:00 -l nodes=1:m16G:ppn=12 %s" %(RUNFNS["runTCRGFile"])
-			else:
-				cmdQsub="qsub -cwd -V -N tcrg -l h_data=16G,time=24:00:00 %s" %(RUNFNS["runTCRGFile"])
-			os.system(cmdQsub)
-			write2Log("Job for STEP5b(TCRG) has been submitted via qsub",LOGFNS["gLogfile"], ARGS.quiet)
-	else:
-		os.chdir(DIRS["tcrg"])
-		os.system(cmd)
-		immuneReadsTCRG=nReadsImmune(INTFNS["tcrgFile"])
-		nReadsImmuneTCRG=len(immuneReadsTCRG)
-		write2Log("--identified %s reads mapped to T cell receptor gamma locus (TCRG) locus" %(nReadsImmuneTCRG) ,LOGFNS["gLogfile"],ARGS.quiet)
-	nReadsImmuneTotal=0
-	if not ARGS.qsub and not ARGS.qsubArray:
-		nReadsImmuneTotal=nReadsImmuneIGH+nReadsImmuneIGL+nReadsImmuneIGK+nReadsImmuneTCRA+nReadsImmuneTCRB+nReadsImmuneTCRD+nReadsImmuneTCRG
-		write2Log("In total: %s reads mapped to antibody repertoire loci" %(nReadsImmuneTotal) ,LOGFNS["gLogfile"],ARGS.quiet)
-		write2Log("***Note: Combinatorial diversity of the antibody repertoire (recombinations of the of VJ gene segments)  will be available in the next release.",LOGFNS["gLogfile"],ARGS.quiet)
-		write2File("done!",ARGS.dir+"/step5_antibodyProfile.done")
-		immuneReads=set().union(immuneReadsTCRA,immuneReadsTCRB,immuneReadsTCRD,immuneReadsTCRG)
-		excludeReadsFromFasta(input_file,immuneReads,INTFNS["afterImmuneFasta"])
-		if not ARGS.dev:
-			if ARGS.circRNA:		   
-				os.remove(INTFNS["afterNCLFasta"])
+		write2Log(cmd, LOGFNS["cmdLogfile"], True)
+		nReads["immune"] = step_5(unmapped_file, cmd)
+		if not ARGS.nonReductive:
+			clean(unmapped_file)
+			unmapped_file = INTFNS["afterImmuneFasta"]
+		write2Log("In total: " + str(nReads["immune"]) + " reads mapped to " +\
+		  "antibody repertoire loci.", LOGFNS["gLogfile"], ARGS.quiet)
+		write2File("done!", ARGS.dir + "/step5_antibodyProfile.done")
 else:
-	print "5a. B lymphocytes profiling is skipped."
-	print "5b. T lymphocytes profiling is skipped."
+	write2Log("5. Lymphocyte profiling is skipped.", LOGFNS["gLogfile"], 
+	  ARGS.quiet)
 
-# temporary (until MiXCR switch)
-if os.path.exists(INTFNS["afterImmuneFasta"]):
-	unmapped_file = INTFNS["afterImmuneFasta"]
-	
+
 ################################################################################
 # 6. Microbiome profiling
 
@@ -613,7 +400,7 @@ else:
 
 if not ARGS.qsubArray and not ARGS.qsub:
 	write2Log("Summary: The ROP protocol is able to account for " +\
-	  str(nReadsImmuneTotal + sum(nReads.values())) + " reads", 
+	  str(sum(nReads.values())) + " reads", 
 	  LOGFNS["gLogfile"], ARGS.quiet)
 	write2Log("***Unaccounted reads (not explained by ROP) are saved to " +\
 	  INTFNS["unaccountedReadsFasta"], LOGFNS["gLogfile"], ARGS.quiet)
@@ -622,14 +409,14 @@ if not ARGS.qsubArray and not ARGS.qsub:
 	tLog = ARGS.dir + "/" + "numberReads_" + BASENAME + ".log"
 	write2Log("sample,totalUnmapped,nReads[\"LowQ\"],nReads[\"LowC\"]," +\
 	  "nReads[\"rRNA\"],nReads[\"lost\"],nReads[\"repeat\"]," +\
-	  "nReads[\"NCL\"],nReadsImmuneTotal,nMicrobialReads", tLog, True)
+	  "nReads[\"NCL\"],nReads[\"immune\"],nMicrobialReads", tLog, True)
 	write2Log(BASENAME + "," + str(n) + "," + str(nReads["LowQ"]) + "," +\
 	  str(nReads["LowC"]) + "," + str(nReads["rRNA"]) + "," +\
 	  str(nReads["lost"]) + "," + str(nReads["repeat"]) + "," +\
-	  str(nReads["NCL"]) + "," + str(nReadsImmuneTotal) + "," +\
+	  str(nReads["NCL"]) + "," + str(nReads["immune"]) + "," +\
 	  str(nReads["bacteria"] + nReads["virus"] + nReads["ep"]), tLog, True)
 
-write2Log("""The list of the tools used by ROP and the paramemers is provided below.
+write2Log("""The list of the tools used by ROP is provided below.
 ************
 **We have used FastQC (version 0.0.13, with the default parameters) downloaded from  http://www.bioinformatics.babraham.ac.uk/projects/fastqc/ to filter out low quality reads"
 **We have used SEQLEAN (seqclean-x86_64, with the default parameters) downloaded from https://sourceforge.net/projects/seqclean/ to filter out low complexity reads
@@ -637,7 +424,7 @@ write2Log("""The list of the tools used by ROP and the paramemers is provided be
 **We have used Bowtie2 (version 2.0.5, with the following parameters: -k 1; -p 8; -f) downloaded from http://bowtie-bio.sourceforge.net/bowtie2/index.shtml to identify lost reads mapped to reference transcriptome and genome
 **We have used Megablast (BLAST+ version 2.2.30, with the following options: task=megablast, use_index=true, -outfmt 6 -evalue 1e-05, perc_identity	= 90) downloaded from ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ to identify lost repeat reads mapped to database of repeat sequences (RepBase 20.07)
 **We have used CIRI (version 1.2 with the following parameters: -S -I ) downloaded from https://sourceforge.net/projects/ciri/ to identify reads from circRNAs
-**We have used IgBLAST (version v 1.4.0 with the following parameters: -germline_db_V;	germline_db_D; -germline_db_J; -outfmt 7 std qseq sseq; -evalue = 1e-05 ) downloaded from http://mirrors.vbi.vt.edu/mirrors/ftp.ncbi.nih.gov/blast/executables/igblast/release/1.4.0/ to identify immune reads spanningBCR/TCR receptor gene rearrangement in the variable domain (V(D)J recombinations)
+**We have used MiXCR (version 1.8.2) to identify immune reads spanningBCR/TCR receptor gene rearrangement in the variable domain (V(D)J recombinations)
 **We have used Megablast (BLAST+ version 2.2.30, with the following parameters: task=megablast, use_index=true; -outfmt 6 ;-evalue 1e-05) downloaded from ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ to identify microbial reads mapped onto the microbial genomes (bacteria, viruses, and eukaryotic pathogens)
 **We have used Metaphlan2 (version 2.2.0, with the following parameters: --mpa_pkl; --bowtie2_exe; --input_type multifasta; --bowtie2db ; -t reads_map/rel_ab ; --nproc 8) downloaded from https://bitbucket.org/biobakery/metaphlan2 to obtain taxonomic profile of microbial communities
 ************

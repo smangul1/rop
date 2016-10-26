@@ -355,6 +355,14 @@ def step_4(unmapped_file, cmd):
 	NCL_reads = nCircularReads(INTFNS["after_NCL_CIRI_file_prefix"])
 	excludeReadsFromFasta(unmapped_file, NCL_reads, INTFNS["afterNCLFasta"])
 	return len(NCL_reads)
+
+def step_5(unmapped_file, cmd):
+	if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
+	proc = subprocess.Popen(["cat " + INTFNS["immuneAligned"] + "| wc -l "], 
+	  shell=True, stdout=subprocess.PIPE)
+	(nReads, err) = proc.communicate()
+	if proc.wait(): raise SubprocessError()
+	return int(nReads) - 1 if int(nReads) > 0 else 0
 	
 def step_6b(unmapped_file, readLength, cmd):
 	if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
