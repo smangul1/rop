@@ -183,10 +183,11 @@ job_option_arguments.add_argument("--maui", help = "use this option together wit
 
 input_option_arguments = ap.add_argument_group('Input Options')
 input_option_arguments.add_argument("--b", '-b', help="unmapped reads in bam format", action="store_true")
+input_option_arguments.add_argument("--mouse", '-m', help="use mouse database instead of human database", action="store_true")
 input_option_arguments.add_argument("--gzip", '-z', help="unmapped reads in .gz format.", action="store_true")
 input_option_arguments.add_argument("--skipLowq", help="skip step filtering low quality reads. The input reads need to be in the bam format", action="store_true")
 input_option_arguments.add_argument("--skipQC", help="skip entire QC step : filtering  low-quality, low-complexity and rRNA reads. The input reads need to be in the FASTA format", action="store_true")
-input_option_arguments.add_argument("--skipPreliminary", '-s', help="skip the preliminary steps including (1) QC and (2) Remapping to human references (lost human reads). The input reads need to be in the FASTA format", action="store_true")
+input_option_arguments.add_argument("--skipPreliminary", '-s', help="skip the preliminary steps including (1) QC and (2) Remapping to references (lost reads). The input reads need to be in the FASTA format", action="store_true")
 
 
 
@@ -232,6 +233,9 @@ else:
 #######################################################################
 ### MAIN CODE
 #######################################################################
+
+#database folder name
+db_folder = "db_mouse" if args.mouse else "db_human"
 
 #relative path to absolute path
 args.unmappedReads=os.path.abspath(args.unmappedReads)
@@ -523,7 +527,7 @@ nlostHumanReads=0
 if args.skipPreliminary:
     # afterrRNAFasta=args.unmappedReads
     write2Log("1. Quality Control is skipped",gLogfile,args.quiet)
-    write2Log("2. Remapping to human references is skipped",gLogfile,args.quiet)
+    write2Log("2. Remapping to references is skipped",gLogfile,args.quiet)
     
     filename, file_extension = os.path.splitext(args.unmappedReads)
     print file_extension
@@ -637,7 +641,7 @@ else:
 
 
     #rRNA
-    cmd="%s/tools/blastn -task megablast -index_name %s/db/rRNA/rRNA -use_index true -query %s -db %s/db/rRNA/rRNA  -outfmt 6 -evalue 1e-05  >%s" %(codeDir,codeDir,lowQCFile,codeDir,rRNAFile)
+    cmd="%s/tools/blastn -task megablast -index_name %s/%s/rRNA/rRNA -use_index true -query %s -db %s/%s/rRNA/rRNA  -outfmt 6 -evalue 1e-05  >%s" %(codeDir,codeDir,db_folder,lowQCFile,codeDir,db_folder,rRNAFile)
     write2Log(cmd,cmdLogfile,"False")
     os.system(cmd)
 
@@ -676,8 +680,8 @@ else:
 #######################################################################################################################################
 #2. Remaping to human references...
 if not args.skipPreliminary:
-    write2Log("2. Remapping to human references...",cmdLogfile,"False")
-    write2Log("2. Remapping to human references...",gLogfile,args.quiet)
+    write2Log("2. Remapping to references...",cmdLogfile,"False")
+    write2Log("2. Remapping to references...",gLogfile,args.quiet)
     # If input is afterQC fasta.gz
     if args.skipQC and args.outGz:
         
@@ -685,10 +689,10 @@ if not args.skipPreliminary:
         write_gzip_into_readable(args.unmappedReads, afterrRNAFasta)
     elif args.skipQC and not args.outGz:
         afterrRNAFasta = args.unmappedReads
-    cmdGenome="%s/tools/bowtie2 -k 1 -p 8 -f -x %s/db/bowtie2Index/genome -U %s 2>>%s | %s/tools/samtools view -SF4 -   >%s" %(codeDir,codeDir, afterrRNAFasta,log_bowtieWG,codeDir,gBamFile)
+    cmdGenome="%s/tools/bowtie2 -k 1 -p 8 -f -x %s/%s/bowtie2Index/genome -U %s 2>>%s | %s/tools/samtools view -SF4 -   >%s" %(codeDir,codeDir,db_folder,afterrRNAFasta,log_bowtieWG,codeDir,gBamFile)
 
     #transcriptome
-    cmdTranscriptome="%s/tools/bowtie2  -k 1 -f -p 8 -x %s/db/bowtie2Index/hg19KnownGene.exon_polya200 -U %s 2>>%s | %s/tools/samtools view -SF4 -  >  %s " %(codeDir,codeDir, afterrRNAFasta,log_bowtieTR, codeDir,tBamFile)
+    cmdTranscriptome="%s/tools/bowtie2  -k 1 -f -p 8 -x %s/%s/bowtie2Index/hg19KnownGene.exon_polya200 -U %s 2>>%s | %s/tools/samtools view -SF4 -  >  %s " %(codeDir,codeDir,db_folder,afterrRNAFasta,log_bowtieTR, codeDir,tBamFile)
     write2Log(cmdGenome,cmdLogfile,"False")
     write2Log(cmdTranscriptome,cmdLogfile,"False")
 
@@ -735,8 +739,8 @@ if not args.skipPreliminary:
 
 
 
-    write2Log("Unmapped reads mapped to human genome and/or transcriptome (using bowtie2) are categorized as lost human reads and are excluded from the further analysis. This includes :  %s reads with 0 mismatches; %s reads with 1 mismatch; %s reads with 2 mismatches" %(len(lostHumanReads0),len(lostHumanReads1),len(lostHumanReads2)),logHuman,"False")
-    write2Log("Complete list of lost human reads is available from sam files: %s,%s" %(gBamFile,tBamFile),logHuman,"False")
+    write2Log("Unmapped reads mapped to genome and/or transcriptome (using bowtie2) are categorized as lost reads and are excluded from the further analysis. This includes :  %s reads with 0 mismatches; %s reads with 1 mismatch; %s reads with 2 mismatches" %(len(lostHumanReads0),len(lostHumanReads1),len(lostHumanReads2)),logHuman,"False")
+    write2Log("Complete list of lost reads is available from sam files: %s,%s" %(gBamFile,tBamFile),logHuman,"False")
 
 
     if args.outGz:
@@ -744,8 +748,8 @@ if not args.skipPreliminary:
     else:
         excludeReadsFromFasta(afterrRNAFasta,lostHumanReads,afterlostHumanFasta)
     nlostHumanReads=len(lostHumanReads)
-    write2Log("--identified %s lost human reads from unmapped reads. Among those: %s reads with 0 mismatches; %s reads with 1 mismatch; %s reads with 2 mismatches" %(len(lostHumanReads),len(lostHumanReads0),len(lostHumanReads1),len(lostHumanReads2)), gLogfile, args.quiet)
-    write2Log("***Note: Complete list of lost human reads is available from sam files: %s,%s" %(gBamFile,tBamFile), gLogfile, args.quiet)
+    write2Log("--identified %s lost reads from unmapped reads. Among those: %s reads with 0 mismatches; %s reads with 1 mismatch; %s reads with 2 mismatches" %(len(lostHumanReads),len(lostHumanReads0),len(lostHumanReads1),len(lostHumanReads2)), gLogfile, args.quiet)
+    write2Log("***Note: Complete list of lost reads is available from sam files: %s,%s" %(gBamFile,tBamFile), gLogfile, args.quiet)
     write2File("done!",args.dir+"/step2_lostHumanReads.done")
 
     if not args.dev:
@@ -770,7 +774,7 @@ if args.nonReductive or args.qsub or args.qsubArray:
     branch_point_file = afterlostHumanFasta
     
     write2Log("*********************************",gLogfile, args.quiet)
-    write2Log("Non-substractive mode is selected : Low quality, low complexity, rRNA reads and lost human reads are filtered out. Resulting high quality non-human reads are provided as input  for STEP3-STEP6",gLogfile, args.quiet)
+    write2Log("Non-substractive mode is selected : Low quality, low complexity, rRNA reads and lost reads are filtered out. Resulting high quality non-matching reads are provided as input  for STEP3-STEP6",gLogfile, args.quiet)
     write2Log("*********************************",gLogfile, args.quiet)
 
     
@@ -789,8 +793,8 @@ if args.repeat:
         input_file = branch_point_file
     else:
         input_file = afterlostHumanFasta
-    cmd="%s/tools/blastn -task megablast -index_name %s/db/repeats/repbase.fa -use_index true -query %s -db %s/db/repeats/repbase.fa  -outfmt 6 -evalue 1e-05  > %s 2>%s" %(codeDir, codeDir, input_file, codeDir, repeatFile,logLostRepeat)
-
+    #cmd="%s/tools/blastn -task megablast -index_name %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa -use_index true -query %s -db %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa  -outfmt 6 -evalue 1e-05  > %s 2>%s" %(codeDir, codeDir, input_file, codeDir, repeatFile,logLostRepeat)
+	cmd="%s/tools/blastn -task megablast -index_name %s/%s/repeats/repbase.fa -use_index true -query %s -db %s/%s/repeats/repbase.fa  -outfmt 6 -evalue 1e-05  > %s 2>%s" %(codeDir, codeDir, db_folder, input_file, codeDir, db_folder, repeatFile,logLostRepeat)
 
 
 
@@ -861,8 +865,8 @@ if args.circRNA:
         input_file = branch_point_file
     else:
         input_file = afterlostRepeatFasta
-    cmd="%s/tools/bwa mem -T -S %s/db/BWAIndex/genome.fa %s > %s 2>%s \n" %(codeDir,codeDir,input_file,NCL_CIRI_file,logNCL)
-    cmd = cmd + "perl %s/tools/CIRI_v1.2.pl -S -I %s -O %s -F %s/db/BWAIndex/genome.fa 1>>%s 2>>%s" %(codeDir,NCL_CIRI_file,after_NCL_CIRI_file_prefix,codeDir,logNCL,logNCL)
+    cmd="%s/tools/bwa mem -T -S %s/%s/BWAIndex/genome.fa %s > %s 2>%s \n" %(codeDir,codeDir,db_folder,input_file,NCL_CIRI_file,logNCL)
+    cmd = cmd + "perl %s/tools/CIRI_v1.2.pl -S -I %s -O %s -F %s/%s/BWAIndex/genome.fa 1>>%s 2>>%s" %(codeDir,NCL_CIRI_file,after_NCL_CIRI_file_prefix,codeDir,db_folder,logNCL,logNCL)
 
 
     if args.qsub or args.qsubArray:
@@ -908,7 +912,7 @@ if args.immune:
 
     #IGH-------
     os.chdir(ighDir)
-    cmd="ln -s %s//db/antibody/internal_data/ ./" %(codeDir)
+    cmd="ln -s %s//%s/antibody/internal_data/ ./" %(codeDir,db_folder)
     os.system(cmd)
 
     if args.nonReductive or args.qsub or args.qsubArray:
@@ -920,13 +924,13 @@ if args.immune:
     write2Log("More details about IgBlast format are here : https://github.com/smangul1/rop/wiki/ROP-output-details ",logIGH,"False")
 
 
-    cmd="%s/tools/igblastn -germline_db_V %s/db/antibody/IGHV.fa -germline_db_D %s/db/antibody/IGHD.fa  -germline_db_J %s/db/antibody/IGHJ.fa -query %s -outfmt '7 std qseq sseq' -evalue 1e-05  2>>%s | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"D\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,input_file, logIGH,ighFile)
+    cmd="%s/tools/igblastn -organism mouse -auxiliary_data /u/scratch/k/kahsieh/rop/db_mouse/antibody/optional_file/mouse_gl.aux -germline_db_V %s/%s/antibody/IGHV.fa -germline_db_D %s/%s/antibody/IGHD.fa  -germline_db_J %s/%s/antibody/IGHJ.fa -query %s -outfmt '7 std qseq sseq' -evalue 1e-05  2>>%s | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"D\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,db_folder,codeDir,db_folder,codeDir,db_folder,input_file, logIGH,ighFile)
     write2Log(cmd,cmdLogfile,"False")
 
 
     if args.qsub or args.qsubArray:
         f = open(runIGHFile,'w')
-        f.write("ln -s %s//db/antibody/internal_data/ ./ \n" %(codeDir))
+        f.write("ln -s %s//%s/antibody/internal_data/ ./ \n" %(codeDir,db_folder))
         f.write(cmd+"\n")
         f.write("echo \"done!\"> %s/%s_igh.done \n" %(ighDir,basename))
         f.close()
@@ -947,7 +951,7 @@ if args.immune:
 
     #IGK---------
     os.chdir(igkDir)
-    cmd="ln -s %s//db/antibody/internal_data/ ./" %(codeDir)
+    cmd="ln -s %s//%s/antibody/internal_data/ ./" %(codeDir,db_folder)
     os.system(cmd)
 
     write2Log("IgBlast	was	used	to	identify	reads	spanning	VJ recombinations of immunoglobulin kappa locus (IGK)",logIGK,"False")
@@ -955,14 +959,14 @@ if args.immune:
 
     
 
-    cmd="%s/tools/igblastn -germline_db_V %s/db/antibody/IGKV.fa -germline_db_D %s/db/antibody/IGHD.fa  -germline_db_J %s/db/antibody/IGKJ.fa -query %s -outfmt '7 std qseq sseq' -evalue 1e-05  2>>%s | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"D\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,input_file, logIGK,igkFile)
+    cmd="%s/tools/igblastn -organism mouse -auxiliary_data /u/scratch/k/kahsieh/rop/db_mouse/antibody/optional_file/mouse_gl.aux -germline_db_V %s/%s/antibody/IGKV.fa -germline_db_D %s/%s/antibody/IGHD.fa  -germline_db_J %s/%s/antibody/IGKJ.fa -query %s -outfmt '7 std qseq sseq' -evalue 1e-05  2>>%s | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"D\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,db_folder,codeDir,db_folder,codeDir,db_folder,input_file, logIGK,igkFile)
 
 
     write2Log(cmd,cmdLogfile,"False")
 
     if args.qsub or args.qsubArray:
         f = open(runIGKFile,'w')
-        f.write("ln -s %s//db/antibody/internal_data/ ./ \n" %(codeDir))
+        f.write("ln -s %s//%s/antibody/internal_data/ ./ \n" %(codeDir,db_folder))
         f.write(cmd+"\n")
         f.write("echo \"done!\"> %s/%s_igk.done \n" %(igkDir,basename))
         f.close()
@@ -983,7 +987,7 @@ if args.immune:
                 
     #IGL------------
     os.chdir(iglDir)
-    cmd="ln -s %s//db/antibody/internal_data/ ./" %(codeDir)
+    cmd="ln -s %s//%s/antibody/internal_data/ ./" %(codeDir,db_folder)
     os.system(cmd)
 
     write2Log("IgBlast	was	used	to	identify	reads	spanning	VJ recombinations of immunoglobulin lambda locus (IGL)",logIGL,"False")
@@ -992,12 +996,12 @@ if args.immune:
 
 
 
-    cmd="%s/tools/igblastn -germline_db_V %s/db/antibody/IGLV.fa -germline_db_D %s/db/antibody/IGHD.fa  -germline_db_J %s/db/antibody/IGLJ.fa -query %s -outfmt '7 std qseq sseq' -evalue 1e-05 2>>%s  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,input_file,logIGL,iglFile)
+    cmd="%s/tools/igblastn -organism mouse -auxiliary_data /u/scratch/k/kahsieh/rop/db_mouse/antibody/optional_file/mouse_gl.aux -germline_db_V %s/%s/antibody/IGLV.fa -germline_db_D %s/%s/antibody/IGHD.fa  -germline_db_J %s/%s/antibody/IGLJ.fa -query %s -outfmt '7 std qseq sseq' -evalue 1e-05 2>>%s  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,db_folder,codeDir,db_folder,codeDir,db_folder,input_file,logIGL,iglFile)
     write2Log(cmd,cmdLogfile,"False")
 
     if args.qsub or args.qsubArray:
         f = open(runIGLFile,'w')
-        f.write("ln -s %s//db/antibody/internal_data/ ./ \n" %(codeDir))
+        f.write("ln -s %s//%s/antibody/internal_data/ ./ \n" %(codeDir,db_folder))
         f.write(cmd+"\n")
         f.write("echo \"done!\">%s/%s_igl.done \n" %(iglDir,basename))
         f.close()
@@ -1023,17 +1027,17 @@ if args.immune:
 
     #TCRA-----------------
     os.chdir(tcraDir)
-    cmd="ln -s %s//db/antibody/internal_data/ ./" %(codeDir)
+    cmd="ln -s %s//%s/antibody/internal_data/ ./" %(codeDir,db_folder)
     os.system(cmd)
 
     write2Log("IgBlast	was	used	to	identify	reads	spanning	VJ recombinations of T cell receptor alpha locus (TCRA)",logTCRA,"False")
     write2Log("More details about IgBlast format are here : https://github.com/smangul1/rop/wiki/ROP-output-details ",logTCRA,"False")
     
-    cmd="%s/tools/igblastn -germline_db_V %s/db/antibody/TRAV.fa -germline_db_D %s/db/antibody/TRBD.fa  -germline_db_J %s/db/antibody/TRAJ.fa  -query %s -outfmt '7 std qseq sseq' -evalue 1e-05 2>>%s | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,input_file,logTCRA,tcraFile)
+    cmd="%s/tools/igblastn -organism mouse -ig_seqtype TCR -auxiliary_data /u/scratch/k/kahsieh/rop/db_mouse/antibody/optional_file/mouse_gl.aux -germline_db_V %s/%s/antibody/TRAV.fa -germline_db_D %s/%s/antibody/TRBD.fa  -germline_db_J %s/%s/antibody/TRAJ.fa  -query %s -outfmt '7 std qseq sseq' -evalue 1e-05 2>>%s | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,db_folder,codeDir,db_folder,codeDir,db_folder,input_file,logTCRA,tcraFile)
     write2Log(cmd,cmdLogfile,"False")
     if args.qsub or args.qsubArray:
         f = open(runTCRAFile,'w')
-        f.write("ln -s %s//db/antibody/internal_data/ ./ \n" %(codeDir))
+        f.write("ln -s %s//%s/antibody/internal_data/ ./ \n" %(codeDir,db_folder))
         f.write(cmd+"\n")
         f.write("echo \"done!\">%s/%s_tcra.done \n"%(tcraDir,basename))
         f.close()
@@ -1055,17 +1059,17 @@ if args.immune:
 
     #TCRB--------------
     os.chdir(tcrbDir)
-    cmd="ln -s %s//db/antibody/internal_data/ ./" %(codeDir)
+    cmd="ln -s %s//%s/antibody/internal_data/ ./" %(codeDir, db_folder)
     os.system(cmd)
 
     write2Log("IgBlast	was	used	to	identify	reads	spanning	VDJ recombinations of T cell receptor beta locus (TCRB)",logTCRB,"False")
     write2Log("More details about IgBlast format are here : https://github.com/smangul1/rop/wiki/ROP-output-details ",logTCRB,"False")
 
-    cmd="%s/tools/igblastn -germline_db_V %s/db/antibody/TRBV.fa -germline_db_D %s/db/antibody/TRBD.fa  -germline_db_J %s/db/antibody/TRBJ.fa  -query %s -outfmt '7 std qseq sseq' -evalue 1e-05 2>>%s  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,input_file,logTCRB,tcrbFile)
+    cmd="%s/tools/igblastn -organism mouse -ig_seqtype TCR -auxiliary_data /u/scratch/k/kahsieh/rop/db_mouse/antibody/optional_file/mouse_gl.aux -germline_db_V %s/%s/antibody/TRBV.fa -germline_db_D %s/%s/antibody/TRBD.fa  -germline_db_J %s/%s/antibody/TRBJ.fa  -query %s -outfmt '7 std qseq sseq' -evalue 1e-05 2>>%s  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,db_folder,codeDir,db_folder,codeDir,db_folder,input_file,logTCRB,tcrbFile)
     write2Log(cmd,cmdLogfile,"False")
     if args.qsub or args.qsubArray:
         f = open(runTCRBFile,'w')
-        f.write("ln -s %s//db/antibody/internal_data/ ./ \n" %(codeDir))
+        f.write("ln -s %s//%s/antibody/internal_data/ ./ \n" %(codeDir, db_folder))
         f.write(cmd+"\n")
         f.write("echo \"done!\">%s/%s_tcrb.done \n"%(tcrbDir,basename))
         f.close()
@@ -1089,17 +1093,17 @@ if args.immune:
 
     #TCRD----------------
     os.chdir(tcrdDir)
-    cmd="ln -s %s//db/antibody/internal_data/ ./" %(codeDir)
+    cmd="ln -s %s//%s/antibody/internal_data/ ./" %(codeDir, db_folder)
     os.system(cmd)
 
     write2Log("IgBlast	was	used	to	identify	reads	spanning	VDJ recombinations of T cell receptor delta locus (TCRD)",logTCRD,"False")
     write2Log("More details about IgBlast format are here : https://github.com/smangul1/rop/wiki/ROP-output-details ",logTCRD,"False")
 
-    cmd="%s/tools/igblastn -germline_db_V %s/db/antibody/TRDV.fa -germline_db_D %s/db/antibody/TRBD.fa  -germline_db_J %s/db/antibody/TRDJ.fa  -query %s -outfmt '7 std qseq sseq' -evalue 1e-05 2>>%s  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,input_file,logTCRD,tcrdFile)
+    cmd="%s/tools/igblastn -organism mouse -ig_seqtype TCR -auxiliary_data /u/scratch/k/kahsieh/rop/db_mouse/antibody/optional_file/mouse_gl.aux -germline_db_V %s/%s/antibody/TRDV.fa -germline_db_D %s/%s/antibody/TRBD.fa  -germline_db_J %s/%s/antibody/TRDJ.fa  -query %s -outfmt '7 std qseq sseq' -evalue 1e-05 2>>%s  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,db_folder,codeDir,db_folder,codeDir,db_folder,input_file,logTCRD,tcrdFile)
     write2Log(cmd,cmdLogfile,"False")
     if args.qsub or args.qsubArray:
         f = open(runTCRDFile,'w')
-        f.write("ln -s %s//db/antibody/internal_data/ ./ \n" %(codeDir))
+        f.write("ln -s %s//%s/antibody/internal_data/ ./ \n" %(codeDir, db_folder))
         f.write(cmd+"\n")
         f.write("echo \"done!\">%s/%s_tcrd.done \n" %(tcrdDir, basename))
         f.close()
@@ -1122,19 +1126,19 @@ if args.immune:
                 
     #TCRG---------------------
     os.chdir(tcrgDir)
-    cmd="ln -s %s//db/antibody/internal_data/ ./" %(codeDir)
+    cmd="ln -s %s//%s/antibody/internal_data/ ./" %(codeDir, db_folder)
     os.system(cmd)
 
     write2Log("IgBlast	was	used	to	identify	reads	spanning	VDJ recombinations of T cell receptor gamma locus (TCRG)",logTCRG,"False")
     write2Log("More details about IgBlast format are here : https://github.com/smangul1/rop/wiki/ROP-output-details ",logTCRG,"False")
 
 
-    cmd="%s/tools/igblastn -germline_db_V %s/db/antibody/TRGV.fa -germline_db_D %s/db/antibody/TRBD.fa  -germline_db_J %s/db/antibody/TRGJ.fa  -query %s -outfmt '7 std qseq sseq' -evalue 1e-05 2>>%s  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,codeDir,codeDir,input_file,logTCRG,tcrgFile)
+    cmd="%s/tools/igblastn -organism mouse -ig_seqtype TCR -auxiliary_data /u/scratch/k/kahsieh/rop/db_mouse/antibody/optional_file/mouse_gl.aux -germline_db_V %s/%s/antibody/TRGV.fa -germline_db_D %s/%s/antibody/TRBD.fa  -germline_db_J %s/%s/antibody/TRGJ.fa  -query %s -outfmt '7 std qseq sseq' -evalue 1e-05 2>>%s  | awk '{if($13<1e-05 && ($1==\"V\" || $1==\"J\")) print }' >%s" %(codeDir,codeDir,db_folder,codeDir,db_folder,codeDir,db_folder,input_file,logTCRG,tcrgFile)
     write2Log(cmd,cmdLogfile,"False")
 
     if args.qsub or args.qsubArray:
         f = open(runTCRGFile,'w')
-        f.write("ln -s %s//db/antibody/internal_data/ ./ \n" %(codeDir))
+        f.write("ln -s %s//%s/antibody/internal_data/ ./ \n" %(codeDir, db_folder))
         f.write(cmd+"\n")
         f.write("echo \"done!\">%s/%s_tcrg.done \n" %(tcrgDir,basename))
         f.close()
@@ -1179,8 +1183,8 @@ if args.microbiome:
         input_file = branch_point_file
     else:
         input_file = afterImmuneFasta
-    cmd = "python %s/tools/metaphlan2.py %s %s --mpa_pkl %s/db/metaphlan/mpa_v20_m200.pkl --bowtie2_exe %s/tools/bowtie2 --input_type multifasta --bowtie2db %s/db/metaphlan/mpa_v20_m200 -t reads_map --nproc 8 --bowtie2out %s>>%s 2>>%s" % (codeDir, input_file, metaphlan_intermediate_map, codeDir, codeDir, codeDir, metaphlan_intermediate_bowtie2out,logMetaphlan,logMetaphlan)
-    cmd = cmd + "\n" + "python %s/tools/metaphlan2.py --mpa_pkl %s/db/metaphlan/mpa_v20_m200.pkl --bowtie2_exe %s/tools/bowtie2 --input_type bowtie2out %s -t rel_ab > %s 2>>%s" %(codeDir, codeDir, codeDir, metaphlan_intermediate_bowtie2out, metaphlan_output,logMetaphlan)
+    cmd = "python %s/tools/metaphlan2.py %s %s --mpa_pkl %s/%s/metaphlan/mpa_v20_m200.pkl --bowtie2_exe %s/tools/bowtie2 --input_type multifasta --bowtie2db %s/%s/metaphlan/mpa_v20_m200 -t reads_map --nproc 8 --bowtie2out %s>>%s 2>>%s" % (codeDir, input_file, metaphlan_intermediate_map, codeDir, db_folder, codeDir, codeDir, db_folder, metaphlan_intermediate_bowtie2out,logMetaphlan,logMetaphlan)
+    cmd = cmd + "\n" + "python %s/tools/metaphlan2.py --mpa_pkl %s/%s/metaphlan/mpa_v20_m200.pkl --bowtie2_exe %s/tools/bowtie2 --input_type bowtie2out %s -t rel_ab > %s 2>>%s" %(codeDir, codeDir, db_folder, codeDir, metaphlan_intermediate_bowtie2out, metaphlan_output,logMetaphlan)
     write2Log(cmd,cmdLogfile,"False")
 
     if args.qsub or args.qsubArray:
@@ -1240,7 +1244,7 @@ if args.microbiome:
     write2Log("Reads with 0.9 identity and more than 0.8 of nucleotides aligned are considered microbial reads and are saved into %s " %(bacteriaFileFiltered), logBacteria,"False")
     write2Log("---------------",logBacteria,"False")
 
-    cmd="%s/tools/blastn -task megablast -index_name %s/db/bacteria/bacteria -use_index true -query %s -db %s/db/bacteria/bacteria  -outfmt 6 -evalue 1e-05  >%s 2>>%s" %(codeDir,codeDir,input_file,codeDir,bacteriaFile,logBacteria)
+    cmd="%s/tools/blastn -task megablast -index_name %s/%s/bacteria/bacteria -use_index true -query %s -db %s/%s/bacteria/bacteria  -outfmt 6 -evalue 1e-05  >%s 2>>%s" %(codeDir,codeDir,db_folder,input_file,codeDir,db_folder,bacteriaFile,logBacteria)
     write2Log(cmd,cmdLogfile,"False")
 
     if args.qsub or args.qsubArray:
@@ -1284,7 +1288,7 @@ if args.microbiome:
 
 
 
-    cmd="%s/tools/blastn -task megablast -index_name %s/db/virus/viruses -use_index true -query %s -db %s/db/virus/viruses  -outfmt 6 -evalue 1e-05  >%s 2>>%s" %(codeDir,codeDir,input_file,codeDir,virusFile,logVirus)
+    cmd="%s/tools/blastn -task megablast -index_name %s/%s/virus/viruses -use_index true -query %s -db %s/%s/virus/viruses  -outfmt 6 -evalue 1e-05  >%s 2>>%s" %(codeDir,codeDir,db_folder,input_file,codeDir,db_folder,virusFile,logVirus)
     write2Log(cmd,cmdLogfile,"False")
 
     if args.qsub or args.qsubArray:
@@ -1343,7 +1347,7 @@ if args.microbiome:
         write2Log("Reads with 0.9 identity and more than 0.8 of nucleotides aligned are considered microbial reads and are saved into %s" %(afterFasta), logEukaryotes,"False")
         write2Log("-------------",logEukaryotes,"False")
     
-        cmd="%s/tools/blastn -task megablast -index_name %s/db/eupathdb/%s -use_index true -query %s -db %s/db/eupathdb/%s  -outfmt 6 -evalue 1e-05  >%s 2>>%s" %(codeDir,codeDir,db,inFasta,codeDir,db,eupathdbFile,logEukaryotes)
+        cmd="%s/tools/blastn -task megablast -index_name %s/%s/eupathdb/%s -use_index true -query %s -db %s/%s/eupathdb/%s  -outfmt 6 -evalue 1e-05  >%s 2>>%s" %(codeDir,codeDir,db_folder,db,inFasta,codeDir,db_folder,db,eupathdbFile,logEukaryotes)
         write2Log(cmd,cmdLogfile,"False")
         
         if args.qsub or args.qsubArray:
@@ -1420,7 +1424,7 @@ write2Log("**We have used Megablast (BLAST+ version 2.2.30, with the following p
 write2Log("**We have used Bowtie2(version 2.0.5, with the following parameters: -k 1; -p 8; -f ) downloaded from  http://bowtie-bio.sourceforge.net/bowtie2/index.shtml to identify lost human reads mapped to reference transcriptome and genome (Ensembl GRCh37GRCh37/hg19)" ,toolsLogfile,"False")
 write2Log("**We have used Megablast (BLAST+ version 2.2.30, with the following options : task=megablast, use_index=true, -outfmt 6 -evalue 1e-05, perc_identity	=	90) downloaded from  ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/  to identify lost repeat reads mapped to database of 	repeat	sequences (RepBase20.07) " ,toolsLogfile,"False")
 write2Log("**We have used CIRI (version 1.2 with the following parameters : -S -I ) downloaded from https://sourceforge.net/projects/ciri/ to identify reads from circRNAs" ,toolsLogfile,"False")
-write2Log("**We have used IgBLAST (version v 1.4.0 with the following parameters: -germline_db_V;	germline_db_D; -germline_db_J; -organism=human;	-outfmt 7 std qseq sseq; -evalue = 1e-05 )  downloaded from http://mirrors.vbi.vt.edu/mirrors/ftp.ncbi.nih.gov/blast/executables/igblast/release/1.4.0/  to identify immune reads spanningBCR/TCR	 receptor gene	 rearrangement	in	 the	variable	domain (V(D)J	recombinations)",toolsLogfile,"False")
+write2Log("**We have used IgBLAST (version v 1.4.0 with the following parameters: -germline_db_V;	germline_db_D; -germline_db_J;	-outfmt 7 std qseq sseq; -evalue = 1e-05 )  downloaded from http://mirrors.vbi.vt.edu/mirrors/ftp.ncbi.nih.gov/blast/executables/igblast/release/1.4.0/  to identify immune reads spanningBCR/TCR	 receptor gene	 rearrangement	in	 the	variable	domain (V(D)J	recombinations)",toolsLogfile,"False")
 write2Log("**We have used Megablast (BLAST+ version 2.2.30, with the following parameters: task=megablast, use_index=true; -outfmt 6 ;-evalue 1e-05) downloaded from ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ to identify microbial reads mapped onto the microbial genomes (Bacteria, Viruses, and Eukaryotic Pathogens)" ,toolsLogfile,"False")
 write2Log("**We have used Metaphlan2 (version 2.2.0, with the following parameters: --mpa_pkl ; --bowtie2_exe;  --input_type multifasta; --bowtie2db ; -t reads_map/rel_ab ;  --nproc 8) downloaded from https://bitbucket.org/biobakery/metaphlan2 to obtain taxonomic profile of microbial communities" ,toolsLogfile,"False")
 write2Log("************" ,toolsLogfile,"False")
