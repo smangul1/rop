@@ -789,7 +789,7 @@ if args.repeat:
         input_file = branch_point_file
     else:
         input_file = afterlostHumanFasta
-    cmd="%s/tools/blastn -task megablast -index_name %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa -use_index true -query %s -db %s/db/repeats/human_repbase_20_07/human_repbase_20_07.fa  -outfmt 6 -evalue 1e-05  > %s 2>%s" %(codeDir, codeDir, input_file, codeDir, repeatFile,logLostRepeat)
+    cmd="%s/tools/blastn -task megablast -index_name %s/db/repeats/repbase.fa -use_index true -query %s -db %s/db/repeats/repbase.fa  -outfmt 6 -evalue 1e-05  > %s 2>%s" %(codeDir, codeDir, input_file, codeDir, repeatFile,logLostRepeat)
 
 
 
