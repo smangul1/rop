@@ -347,7 +347,10 @@ def step_4(unmapped_file, cmd):
 	return len(NCL_reads)
 
 def step_5(unmapped_file, cmd):
-	if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
+	proc = subprocess.Popen([cmd], shell=True, stdout=subprocess.PIPE)
+	(output, err) = proc.communicate()
+	if proc.wait(): raise SubprocessError()
+	write2Log(output.strip(), LOGFNS["gLogfile"], ARGS.quiet)
 	with open("immune_read_names.txt", "r") as immune_read_names:
 		immuneReads = set([line.strip() for line in immune_read_names])
 	excludeReadsFromFasta(unmapped_file, immuneReads, 

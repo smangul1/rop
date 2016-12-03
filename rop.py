@@ -153,7 +153,7 @@ if ARGS.repeat:
 			qsub("3", RUNFNS["runLostRepeatFile"])
 	else:
 		nReads["repeat"] = step_3(unmapped_file, readLength, cmd)
-		write2Log("-- Identified " + str(nReads["repeat"]) + " lost repeat " +\
+		write2Log("--identified " + str(nReads["repeat"]) + " lost repeat " +\
 		  "sequences from unmapped reads.", LOGFNS["gLogfile"], ARGS.quiet)
 		write2Log("***Note: Repeat sequences classification into classes " +\
 		  "(e.g. LINE) and families (e.g. Alu) will be available in next " +\
@@ -415,7 +415,7 @@ write2Log("""The list of the tools used by ROP is provided below.
 **We have used Bowtie2 (version 2.0.5, with the following parameters: -k 1; -p 8; -f) downloaded from http://bowtie-bio.sourceforge.net/bowtie2/index.shtml to identify lost reads mapped to reference transcriptome and genome
 **We have used Megablast (BLAST+ version 2.2.30, with the following options: task=megablast, use_index=true, -outfmt 6 -evalue 1e-05, perc_identity	= 90) downloaded from ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ to identify lost repeat reads mapped to database of repeat sequences (RepBase 20.07)
 **We have used CIRI (version 1.2 with the following parameters: -S -I ) downloaded from https://sourceforge.net/projects/ciri/ to identify reads from circRNAs
-**We have used MiXCR (version 1.8.2) to identify immune reads spanningBCR/TCR receptor gene rearrangement in the variable domain (V(D)J recombinations)
+**We have used ImReP (version 2.0) to identify immune reads spanning BCR/TCR receptor gene rearrangement in the variable domain (V(D)J recombinations)
 **We have used Megablast (BLAST+ version 2.2.30, with the following parameters: task=megablast, use_index=true; -outfmt 6 ;-evalue 1e-05) downloaded from ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ to identify microbial reads mapped onto the microbial genomes (bacteria, viruses, and eukaryotic pathogens)
 **We have used Metaphlan2 (version 2.2.0, with the following parameters: --mpa_pkl; --bowtie2_exe; --input_type multifasta; --bowtie2db ; -t reads_map/rel_ab ; --nproc 8) downloaded from https://bitbucket.org/biobakery/metaphlan2 to obtain taxonomic profile of microbial communities
 ************
