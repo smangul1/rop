@@ -123,16 +123,6 @@ def write_gzip(inFasta_name, outFasta_name):
 ### RESULT COUNTING
 ################################################################################
 
-def nReadsImmune(inFile_name):
-	readsImmune = set()
-	with open(inFile_name, "r") as inFile:
-		for line in csv.reader(inFile, delimiter='\t'):
-			read = line[1]
-			eValue = float(line[12])
-			if eValue < 1e-05:
-				readsImmune.add(read)
-	return readsImmune
-
 def nMicrobialReads(inFile_name, readLength, outFile_name):
 	readsMicrobiome = set()
 	with open(inFile_name, "r") as inFile:
@@ -358,11 +348,11 @@ def step_4(unmapped_file, cmd):
 
 def step_5(unmapped_file, cmd):
 	if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
-	proc = subprocess.Popen(["cat " + INTFNS["immuneAligned"] + "| wc -l "], 
-	  shell=True, stdout=subprocess.PIPE)
-	(nReads, err) = proc.communicate()
-	if proc.wait(): raise SubprocessError()
-	return int(nReads) - 1 if int(nReads) > 0 else 0
+	with open("immune_read_names.txt", "r") as immune_read_names:
+		immuneReads = set([line.strip() for line in immune_read_names])
+	excludeReadsFromFasta(unmapped_file, immuneReads, 
+	  INTFNS["afterImmuneFasta"])
+	return len(immuneReads)
 	
 def step_6b(unmapped_file, readLength, cmd):
 	if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()

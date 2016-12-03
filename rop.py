@@ -214,24 +214,12 @@ else:
 if not readsPresent("5", unmapped_file):
 	ARGS.immune = False
 	
-if ARGS.immune:
+if ARGS.immune and ARGS.organism == "human":
 	write2Log("5. Lymphocyte profiling", LOGFNS["cmdLogfile"], True)
 	write2Log("5. Lymphocyte profiling", LOGFNS["gLogfile"], ARGS.quiet)
 	os.chdir(DIRS["antibody"])
 	
-	species_code = {"human": "hsa", "mouse": "mmu"}
-	cmd = CD + "/tools/mixcr-1.8.2/mixcr align -nw " +\
-	  "-OvParameters.parameters.floatingLeftBound=false " +\
-	  "-OjParameters.parameters.floatingRightBound=false " +\
-	  "--library local --not-aligned-R1 " + INTFNS["afterImmuneFastq"] +\
-	  " --species " + species_code[ARGS.organism] + " " + unmapped_file + " " +\
-	  INTFNS["immuneAlignments"]
-	cmd = cmd + "\n" + CD + "/tools/mixcr-1.8.2/mixcr exportAlignments " +\
-	  "-sequence " + INTFNS["immuneAlignments"] + " " + INTFNS["immuneAligned"]
-	cmd = cmd + "\n" + "cat " + INTFNS["afterImmuneFastq"] + " | grep " +\
-	  "@ -A 1 --no-group-separator | sed 's ^@ > ' >" +\
-	  INTFNS["afterImmuneFasta"]
-	
+	cmd = CD + "/tools/imrep/imrep_wrapper.sh " + unmapped_file
 	if ARGS.qsub or ARGS.qsubArray:
 		write2Log(cmd, RUNFNS["runAntibodyFile"], True)
 		write2Log("echo \"done!\" >" + DIRS["antibody"] + "/" + BASENAME +\
@@ -244,9 +232,12 @@ if ARGS.immune:
 		if not ARGS.nonReductive:
 			clean(unmapped_file)
 			unmapped_file = INTFNS["afterImmuneFasta"]
-		write2Log("In total: " + str(nReads["immune"]) + " reads mapped to " +\
-		  "antibody repertoire loci.", LOGFNS["gLogfile"], ARGS.quiet)
+		write2Log("In total: " + str(nReads["immune"]) + " (unique) reads " +\
+		  "mapped to antibody repertoire loci.", LOGFNS["gLogfile"], ARGS.quiet)
 		write2File("done!", ARGS.dir + "/step5_antibodyProfile.done")
+elif ARGS.immune and ARGS.organism == "mouse":
+	write2Log("5. Lymphocyte profiling is skipped (not supported for mouse).", 
+	  LOGFNS["gLogfile"], ARGS.quiet)
 else:
 	write2Log("5. Lymphocyte profiling is skipped.", LOGFNS["gLogfile"], 
 	  ARGS.quiet)
