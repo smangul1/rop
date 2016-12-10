@@ -381,7 +381,7 @@ if ARGS.microbiome:
 		write2Log("In total: " + str(nReads["bacteria"] + nReads["virus"] +\
 		  nReads["ep"]) + " reads mapped to microbial genomes", 
 		  LOGFNS["gLogfile"], ARGS.quiet)
-	write2File("done!", ARGS.dir + "/step6_microbiomeProfile.done")
+		write2File("done!", ARGS.dir + "/step6_microbiomeProfile.done")
 else:
 	write2Log("6.  Microbiome profiling is skipped.", LOGFNS["gLogfile"], 
 	  ARGS.quiet)
