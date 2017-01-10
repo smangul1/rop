@@ -1,0 +1,152 @@
+^SAMPLE = Drosophila_T0-1		
+!Sample_title = embryo at T0, biological rep1
+!Sample_supplementary_file = Drosophila_T0-1.CEL		
+!Sample_source_name_ch1 = Drosophila embryos before nuclear cycle 9 (maternal transcripts)		
+!Sample_organism_ch1 = Drosophila melanogaster		
+!Sample_characteristics_ch1 = Genotype: yellow white and Oregon R parents		
+!Sample_characteristics_ch1 = Age: embryos younger than nuclear cycle 9, i.e. before pole cells budding		
+!Sample_treatment_protocol_ch1 = Embryos were dechorionated with 50% bleach, put on a cover slip and covered with Halocarbon oil 27 (Sigma). Embryos of the appropriate stage were manually selected under the dissecting scope. Selected embryos were transferred to a basket, rinsed with PBS with 0,7% NaCl, 0,04% triton-X100 and placed on ice in the Trizol solution (GibcoBRL).		
+!Sample_growth_protocol_ch1 = 30 min egg collections of OreR and yw flies at 25C were aged at room temperature (RT) according to the different temporal classes T0-T4. 		
+!Sample_molecule_ch1 = total RNA		
+!Sample_extract_protocol_ch1 = Trizol extraction of total RNA was performed according to the manufacturer's instructions.		
+!Sample_label_ch1 = biotin		
+!Sample_label_protocol_ch1 = Biotinylated cRNA were prepared according to the standard Affymetrix protocol from 6 microg total RNA (Expression Analysis Technical Manual, 2001, Affymetrix).		
+!Sample_hyb_protocol = Following fragmentation, 10 microg of cRNA were hybridized for 16 hr at 45C on GeneChip Drosophila Genome Array. GeneChips were washed and stained in the Affymetrix Fluidics Station 400.  		
+!Sample_scan_protocol = GeneChips were scanned using the Hewlett-Packard GeneArray Scanner G2500A. 		
+!Sample_description = Gene expression data from embryos younger than nuclear cycle 9, i.e. before zygotic genome activation.		
+!Sample_data_processing = The data were analyzed with Microarray Suite version 5.0 (MAS 5.0) using Affymetrix default analysis settings and global scaling as normalization method. The trimmed mean target intensity of each array was arbitrarily set to 100.		
+!Sample_platform_id = GPL72		
+#ID_REF = 		
+#VALUE = MAS5-calculated Signal intensity		
+#ABS_CALL = the call in an absolute analysis that indicates if the transcript was present (P), absent (A), marginal (M), or no call (NC)		
+#DETECTION P-VALUE = 'detection p-value', p-value that indicates the significance level of the detection call		
+!Sample_table_begin		
+ID_REF	VALUE	ABS_CALL	DETECTION P-VALUE
+141200_at	36.6	A	0.818657
+141201_at	41.5	A	0.703191
+141202_at	607.3	P	0.000944
+141203_at	1509.1	P	0.000762
+141204_at	837.3	P	0.000613
+141205_at	363.2	P	0.003815
+141206_at	1193.6	P	0.000491
+141207_at	346.6	P	0.001165
+141208_at	257.8	P	0.006575
+141209_at	337.1	P	0.002607
+141210_at	48	A	0.150145
+141211_at	130.7	P	0.005504
+141212_at	1454.3	P	0.000491
+141213_at	21.2	A	0.635055
+142121_at	133.7	A	0.889551
+142122_at	275.3	A	0.611218
+142123_at	307.6	A	0.611218
+142124_at	132.6	A	0.437646
+142125_at	195.8	A	0.110449
+142126_at	174.1	A	0.681117
+142127_at	316.3	A	0.65838
+!Sample_table_end		
+^SAMPLE = Drosophila_T0-2		
+!Sample_title = embryo at T0, biological rep2
+!Sample_supplementary_file = Drosophila_T0-2.CEL		
+!Sample_source_name_ch1 = Drosophila embryos before nuclear cycle 9 (maternal transcripts)		
+!Sample_organism_ch1 = Drosophila melanogaster		
+!Sample_characteristics_ch1 = Genotype: yellow white and Oregon R parents		
+!Sample_characteristics_ch1 = Age: embryos younger than nuclear cycle 9, i.e. before pole cells budding		
+!Sample_treatment_protocol_ch1 = Embryos were dechorionated with 50% bleach, put on a cover slip and covered with Halocarbon oil 27 (Sigma). Embryos of the appropriate stage were manually selected under the dissecting scope. Selected embryos were transferred to a basket, rinsed with PBS with 0,7% NaCl, 0,04% triton-X100 and placed on ice in the Trizol solution (GibcoBRL).		
+!Sample_growth_protocol_ch1 = 30 min egg collections of OreR and yw flies at 25C were aged at room temperature (RT) according to the different temporal classes T0-T4. 		
+!Sample_molecule_ch1 = total RNA		
+!Sample_extract_protocol_ch1 = Trizol extraction of total RNA was performed according to the manufacturer's instructions.		
+!Sample_label_ch1 = biotin		
+!Sample_label_protocol_ch1 = Biotinylated cRNA were prepared according to the standard Affymetrix protocol from 6 microg total RNA (Expression Analysis Technical Manual, 2001, Affymetrix).		
+!Sample_hyb_protocol = Following fragmentation, 10 microg of cRNA were hybridized for 16 hr at 45C on GeneChip Drosophila Genome Array. GeneChips were washed and stained in the Affymetrix Fluidics Station 400.  		
+!Sample_scan_protocol = GeneChips were scanned using the Hewlett-Packard GeneArray Scanner G2500A. 		
+!Sample_description = Gene expression data from embryos younger than nuclear cycle 9, i.e. before zygotic genome activation.		
+!Sample_data_processing = The data were analyzed with Microarray Suite version 5.0 (MAS 5.0) using Affymetrix default analysis settings and global scaling as normalization method. The trimmed mean target intensity of each array was arbitrarily set to 100.		
+!Sample_platform_id = GPL72		
+#ID_REF = 		
+#VALUE = MAS5-calculated Signal intensity		
+#ABS_CALL = the call in an absolute analysis that indicates if the transcript was present (P), absent (A), marginal (M), or no call (NC)		
+#DETECTION P-VALUE = 'detection p-value', p-value that indicates the significance level of the detection call		
+!Sample_table_begin		
+ID_REF	VALUE	ABS_CALL	DETECTION P-VALUE
+141200_at	70.3	A	0.216313
+141201_at	38	A	0.635055
+141202_at	831.8	P	0.000613
+141203_at	2215.5	P	0.000944
+141204_at	965.6	P	0.000491
+141205_at	383.2	P	0.001432
+141206_at	1195	P	0.000491
+141207_at	413.7	P	0.000613
+141208_at	447.3	P	0.000762
+141209_at	294.4	P	0.004591
+141210_at	81.7	M	0.054711
+141211_at	84.9	P	0.005504
+141212_at	1456.4	P	0.000491
+141213_at	37	A	0.122747
+142121_at	133.7	A	0.889551
+142122_at	275.3	A	0.611218
+142123_at	307.6	A	0.611218
+142124_at	132.6	A	0.437646
+142125_at	195.8	A	0.110449
+142126_at	174.1	A	0.681117
+142127_at	316.3	A	0.65838
+!Sample_table_end		
+^SAMPLE = Drosophila_T1-1
+!Sample_supplementary_file = Drosophila_T1-1.CEL	
+!Sample_title = embryo at T1, biological rep1		
+!Sample_source_name_ch1 = Drosophila embryos in slow phase of cellularisation		
+!Sample_organism_ch1 = Drosophila melanogaster		
+!Sample_characteristics_ch1 = Genotype: yellow white and Oregon R parents		
+!Sample_characteristics_ch1 = Age: embryos in slow phase of cellularisation		
+!Sample_treatment_protocol_ch1 = Embryos were dechorionated with 50% bleach, put on a cover slip and covered with Halocarbon oil 27 (Sigma). Embryos of the appropriate stage were manually selected under the dissecting scope. Selected embryos were transferred to a basket, rinsed with PBS with 0,7% NaCl, 0,04% triton-X100 and placed on ice in the Trizol solution (GibcoBRL).		
+!Sample_growth_protocol_ch1 = 30 min egg collections of OreR and yw flies at 25C were aged at room temperature (RT) according to the different temporal classes T0-T4. 		
+!Sample_molecule_ch1 = total RNA		
+!Sample_extract_protocol_ch1 = Trizol extraction of total RNA was performed according to the manufacturer's instructions.		
+!Sample_label_ch1 = biotin		
+!Sample_label_protocol_ch1 = Biotinylated cRNA were prepared according to the standard Affymetrix protocol from 6 microg total RNA (Expression Analysis Technical Manual, 2001, Affymetrix).		
+!Sample_hyb_protocol = Following fragmentation, 10 microg of cRNA were hybridized for 16 hr at 45C on GeneChip Drosophila Genome Array. GeneChips were washed and stained in the Affymetrix Fluidics Station 400.  		
+!Sample_scan_protocol = GeneChips were scanned using the Hewlett-Packard GeneArray Scanner G2500A. 		
+!Sample_description = Gene expression data from embryos in slow phase of cellularisation.		
+!Sample_data_processing = The data were analyzed with Microarray Suite version 5.0 (MAS 5.0) using Affymetrix default analysis settings and global scaling as normalization method. The trimmed mean target intensity of each array was arbitrarily set to 100.		
+!Sample_platform_id = GPL72		
+#ID_REF = 		
+#VALUE = MAS5-calculated Signal intensity		
+#ABS_CALL = the call in an absolute analysis that indicates if the transcript was present (P), absent (A), marginal (M), or no call (NC)		
+#DETECTION P-VALUE = 'detection p-value', p-value that indicates the significance level of the detection call		
+!Sample_table_begin		
+ID_REF	VALUE	ABS_CALL	DETECTION P-VALUE
+141200_at	20.8	A	0.801637
+141201_at	85.8	A	0.48748
+141202_at	704.8	P	0.000613
+141203_at	1036.6	P	0.000944
+141204_at	700.3	P	0.000491
+141205_at	462.4	P	0.003159
+141206_at	1301.9	P	0.000491
+141207_at	454.8	P	0.000944
+141208_at	438.6	P	0.000944
+141209_at	264.4	P	0.004591
+141210_at	65.6	A	0.150145
+141211_at	72.2	A	0.070073
+141212_at	1200	P	0.000491
+141213_at	13.7	A	0.635055
+142121_at	133.7	A	0.889551
+142122_at	275.3	A	0.611218
+142123_at	307.6	A	0.611218
+142124_at	132.6	A	0.437646
+142125_at	195.8	A	0.110449
+142126_at	174.1	A	0.681117
+142127_at	316.3	A	0.65838
+!Sample_table_end		
+^SERIES = Dros_embryo_timecourse
+!Series_title = Expression data from early Drosophila embryo 
+!Series_summary = Morphogenesis of epithelial tissues relies on the precise developmental control of cell polarity and architecture. In the early Drosophila embryo, the primary epithelium forms during cellularisation, following a tightly controlled genetic programme where specific sets of genes are up-regulated. Some of them, for instance, control membrane invagination between the nuclei anchored at the apical surface of the syncytium. 
+!Series_summary = We used microarrays to detail the global programme of gene expression underlying cellularisation and identified distinct classes of up-regulated genes during this process. 
+!Series_overall_design = Drosophila embryos were selected at successive stages of early development for RNA extraction and hybridization on Affymetrix microarrays. We sought to obtain homogeneous populations of embryos at each developmental stage in order to increase the temporal resolution of expression profiles. To that end, we hand-selected embryos according to morphological criteria at five time-points: before pole cell formation, i.e. before zygotic transcription (T0), during the slow phase (T1) and the fast phase (T2) of cellularisation and at the beginning (T3) and the end (T4) of gastrulation. 
+!Series_type = time course
+!Series_contributor = Jane,Doe
+!Series_contributor = John,A,Smith
+!Series_contributor = Hans,van Elton
+!Series_contributor = John,Smithers Jr
+!Series_contributor = Jie,D,Chen
+!Series_sample_id = Drosophila_T0-1
+!Series_sample_id = Drosophila_T0-2
+!Series_sample_id = Drosophila_T1-1

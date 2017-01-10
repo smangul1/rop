@@ -1,0 +1,50 @@
+FASTA TEST DATA FILES
+=====================
+
+This directory contains various data files for testing the
+Fasta-related code in Biopython.
+
+The following are the common sequence file format, originally
+introduced as the input file format for Bill Pearson's FASTA
+tools.  These are for tested in Bio.SeqIO and Bio.AlignIO
+(where the format is called "fasta") as well as other older
+parts of Biopython such as the Bio.Fasta module.
+
+ID     Description
+f001   1 protein sequence
+f002   3 DNA sequences
+f003   2 proteins, with comments
+fa01   fasta alignment
+
+The following are example "machine readable" pairwise alignment
+output files from the FASTA tools when using the -m 10 command
+line option.  These are for testing the Bio.AlignIO and Bio.SearchIO
+code where the format is called "fasta-m10".
+
+output001.m10 - fasta35 protein-protein, 3 query sequences,
+                no histogram, with expectation threshold
+output002.m10 - fasta34 protein-protein, 3 query sequences,
+                with offsets and word size, max 2 hits per query
+output003.m10 - fasta34 protein-protein, 5 query sequences,
+                very strict threshold so not all have hits.
+output004.m10 - fasta35 nucleotide-nucleotide, 3 queries where
+                only the middle one has a single hit.
+output005.m10 - ssearch35 protein-protein, 3 queries where
+                only the middle one has a single hit.
+output006.m10 - fasta35 nucleotide-nucleotide, 1 query, in the
+                alignment the query has been reversed.
+output007.m10 - recreation of output001.m10 using fasta-36.3.4 (note that
+                histogram is now off by default, -H now turns it on, and the
+                -Q quiet flag no longer exists). Get more hits due to revised
+                e-value calculations, also ">>><<<" marks end of a query, not
+                just end of the file!
+output008.m10 - tfastx36 protein-nucleotide, 4 queries, some with no hits,
+                some matches with multiple HSPs (new feature in FASTA v36)
+output009.m10 - fasta36, multiple dna queries
+output010.m10 - fasta36, single dna query, no hit
+output011.m10 - fasta36, single dna query, each hit contains a single hsp
+output012.m10 - fasta36, single dna query, some hits contain multiple hsps
+output013.m10 - fasta36, multiple protein queries
+output014.m10 - fasta36, single protein query, no hit
+output015.m10 - fasta36, single protein query, each hit contains a single hsp
+output016.m10 - fasta36, single protein query, some hits contain multiple hsps

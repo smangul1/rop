@@ -1,0 +1,9 @@
+07/29/2016
+
+#prepare bed files
+python ../../../scripts/prepareBed.py CDS_NCBIM37.bed  ../bedPrepared/CDS_NCBIM37_prepared.bed m
+Number of element initially 397509
+Number of element after removing dublicated elements 212406
+Save to ../bedPrepared/CDS_NCBIM37_prepared.bed
+
+

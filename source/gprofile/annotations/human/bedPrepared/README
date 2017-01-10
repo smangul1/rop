@@ -1,0 +1,9 @@
+Example of preparing the bed file:
+
+python /u/home/s/serghei/code2/DumsterDivingRNASeq/scripts/prepareBed.py ../bedOriginal/UTR3_GRCh37.bed UTR3_GRCh37_prepared.bed h
+
+Example of extracting the gene coordinates:
+
+python extractGeneBoundaries.py ../annotations/human/genes_Ensembl_GRCh37.gtf ../annotations/human/bedPrepared/geneBoundaries.bed h
+
+

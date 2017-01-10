@@ -1,0 +1,2 @@
+sampleName,nTotalMapped,nJunction,nCDS,nUTR3,nUTR5,nUTR_,nIntron,nIntergenic,nDeep,nMT,nMultiMapped
+mappedReads_chr22,397134,129580,101541,96210,7457,22473,19420,3084,649,0,16720
