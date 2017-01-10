@@ -1,3 +1,0 @@
-For a quick start a toy example with 2508 unmapped reads is distributed with the ROP package. Please note that selected reads are randomly selected from a normal skin (SRR1146076) RNA-Seq sample and might not represent the typical reads of RNA-Seq experiment. The reads are provided for demonstration purposes and can be accessed under ROP directory.
-
-RNA-Seq sample of normal skin (SRR1146076) was downloaded from http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE54456 
