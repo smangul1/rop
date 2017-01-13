@@ -48,10 +48,12 @@ def nucleotide2protein2(inString):
     framesTemp.append(translate_frameshifted(reverse_complement(inString)[1:]))  # negative second frame
     framesTemp.append(translate_frameshifted(reverse_complement(inString)[2:]))  # negative third frame
 
-    for f in framesTemp:
+    frs = [1, 2, 3, -1, -2, -3]
+
+    for f, frame in zip(framesTemp, frs):
         if 1 == 1: #if "_" not in f:
             processedRead=f.replace(' ','')
-            frames.append(processedRead)
+            frames.append((processedRead, frame))
     return frames
 
 
