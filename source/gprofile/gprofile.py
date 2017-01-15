@@ -17,6 +17,7 @@ def getOverlap(a, b):
 
 
 def is_junction(read):
+    
     for c in read.cigartuples:
         if c[0]==3:
             return True
@@ -116,7 +117,7 @@ def whichFeature(read,chr):
             
             return ('INTRON',dictGeneNames[x,y])
         elif len(find_list_intergenic)>0:
-            return ('INTERGENIC',("NA,NA"))
+            return ('INTERGENIC',("NA","NA"))
         else:
             return ('DEEP',("NA","NA"))
 
@@ -148,6 +149,8 @@ ap.add_argument('bam', help='sorted bam file with mapped reads')
 ap.add_argument('out', help='file to save the number of reads per genome category')
 ap.add_argument("--perCategory", help="reports the assigment for each read. A separate file per chromosome will be created",action="store_true")
 ap.add_argument("--mouse", help="Use mouse genome annotations (NCBIM37). Default is human",action="store_true")
+ap.add_argument("--multi", help="Categories all copies of multi-mapped reads, they will have a special flag to futher assign according to transcript abundance ",action="store_true")
+
 args = ap.parse_args()
 
 
@@ -171,6 +174,7 @@ chr_list=[]
                 
                 
 if not args.mouse:
+    print "Human annotations are used ..."
     for i in range(1,23):
         chr_list.append(str(i))
     chr_list.append('X')
@@ -182,6 +186,7 @@ if not args.mouse:
     geneCoordinates_file=os.path.dirname(os.path.realpath(__file__))+'/annotations/human/bedPrepared/geneCoordinates_GRCh37.bed'
 
 elif args.mouse:
+    print "Mouse annotations are used ..."
     for i in range(1,20):
         chr_list.append(str(i))
     chr_list.append('X')
@@ -192,27 +197,36 @@ elif args.mouse:
     geneCoordinates_file=os.path.dirname(os.path.realpath(__file__))+'/annotations/mouse/bedPrepared/geneCoordinates_NCBIM37.bed'
 
 
-base=os.path.basename(args.bam)
-prefix=os.path.splitext(base)[0]
 
 dirOutPerCategory=""
 
 
+base=os.path.basename(args.bam)
+prefix=os.path.splitext(base)[0]
+
 #-------perCategory-------
 if args.perCategory:
+    
+    
+    
     dirOutPerCategory=outDir+"/"+prefix+"_perCategory/"
     if not os.path.exists(dirOutPerCategory):
+        print "Create ", dirOutPerCategory
         os.makedirs(dirOutPerCategory)
+    
+    print "Directory to save the results  ", dirOutPerCategory
     
     outFile={}
     for chr in chr_list:
         f_file=dirOutPerCategory+prefix+"."+chr+".genomicFeature"
         outfile = open(f_file, 'w' )
         outFile[chr]=open(f_file, 'w' )
+        outFile[chr].write('readName,chr,category, geneID, geneName, flag_multiMapped\n')
     #MT
     f_file=dirOutPerCategory+prefix+"."+'MT'+".genomicFeature"
     outfile = open(f_file, 'w' )
     outFile['MT']=open(f_file, 'w' )
+    outFile['MT'].write('readName,chr,category, geneID,geneName,flag_multiMapped\n')
 
 
 
@@ -333,6 +347,11 @@ nGenes_rRNA=0
 
 print "Load",geneCoordinates_file
 
+geneNameSet={}
+
+for c in chr_list:
+    geneNameSet[c]=set()
+
 #1,non-rRNA,ENSMUSG00000000544,Gpa33,168060369,168096
 
 dictGeneNames={}
@@ -347,6 +366,7 @@ with open(geneCoordinates_file,'r') as f:
             y=int(line[5])
             geneID=line[2]
             geneName=line[3]
+            geneNameSet[chr].add(geneName)
             
             if line[1]=='non-rRNA':
                 nGenes_non_rRNA+=1
@@ -365,7 +385,8 @@ with open(geneCoordinates_file,'r') as f:
 
 
 
-
+for c in chr_list:
+    print "Number of genes in the annotations for chr %s = %i" %(c,len(geneNameSet[c]))
 
 
 
@@ -373,18 +394,6 @@ with open(geneCoordinates_file,'r') as f:
 #======================================================================
 #BAM
 
-if args.perCategory:
-    outFile={}
-    for chr in chr_list:
-        f_file=dirOutPerCategory+prefix+"."+chr+".genomicFeature"
-        outfile = open(f_file, 'w' )
-        outFile[chr]=open(f_file, 'w' )
-
-
-    #MT
-    f_file=dirOutPerCategory+prefix+"."+'MT'+".genomicFeature"
-    outfile = open(f_file, 'w' )
-    outFile['MT']=open(f_file, 'w' )
 
 
 
@@ -393,7 +402,7 @@ bamfile = pysam.Samfile(args.bam, "rb")
 
 
 #list for read categories
-multiMappedReads=[]
+multiMappedReads=set()
 fusionReads=[]
 
 #counts
@@ -418,62 +427,79 @@ for chr in chr_list:
     print "Process chr",chr
     for read in bamfile.fetch(chr):
         readName=read.query_name
-             
+        
+        
+        
+        
+        flagMulti=0
         if read.mapq!=50:
-            multiMappedReads.append(readName)
-        elif is_junction(read):
+            flagMulti=1
+            multiMappedReads.add(readName)
+        
+        
+        
+        if is_junction(read):
+            feature=whichFeature(read,chr)
+            if flagMulti==0:
+                    if args.perCategory:
+                        outFile[chr].write( readName+','+chr + ',' + 'junction' + ',' + feature[1][0] + ',' + feature[1][1] + ',' + str(flagMulti)+'\n' )
+                    nJunction+=1
+            
+            elif args.multi:
+                    if args.perCategory:
+                        outFile[chr].write( readName+','+chr + ',' + 'junction' + ',' + feature[1][0] + ',' + feature[1][1] + ',' + str(flagMulti)+'\n' )
+
+                
+    
+        else:
             feature=whichFeature(read,chr)
             
             if args.perCategory:
-                outFile[chr].write( readName+','+chr + ',' + 'junction' + ',' + feature[1][0] + ',' + feature[1][1] + '\n' )
-            nJunction+=1
-        else:
-            feature=whichFeature(read,chr)
-            if args.perCategory:
-                outFile[chr].write( readName+','+chr + ',' + feature[0] + ',' + feature[1][0] + ',' + feature[1][1] + '\n' )
-            if feature[0]=='CDS':
-                nCDS+=1
-            elif feature[0]=='INTRON':
-                nIntron+=1
-            elif feature[0]=='UTR3':
-                nUTR3+=1
-            elif feature[0]=='UTR5':
-                nUTR5+=1
-            elif feature[0]=='UTR_':
-                 nUTR_+=1
-            elif feature[0]=='INTERGENIC':
-                nIntergenic+=1
-            elif feature[0]=='DEEP':
-                nDeep+=1
-                    
+                if flagMulti==0:
+                    outFile[chr].write( readName+','+chr + ',' + feature[0] + ',' + feature[1][0] + ',' + feature[1][1] + ',' + str(flagMulti)+'\n' )
+                elif args.multi:
+                    outFile[chr].write( readName+','+chr + ',' + feature[0] + ',' + feature[1][0] + ',' + feature[1][1] + ',' + str(flagMulti)+'\n' )
+        
+            if flagMulti==0: #read is not multi-mapped
+                if feature[0]=='CDS':
+                    nCDS+=1
+                    print "CDS"
+                elif feature[0]=='INTRON':
+                    nIntron+=1
+                elif feature[0]=='UTR3':
+                    nUTR3+=1
+                elif feature[0]=='UTR5':
+                    nUTR5+=1
+                elif feature[0]=='UTR_':
+                     nUTR_+=1
+                elif feature[0]=='INTERGENIC':
+                    nIntergenic+=1
+                elif feature[0]=='DEEP':
+                    nDeep+=1
+
+
+
 
 for read in bamfile.fetch('MT'):
-    flag_multiMapped=0
-    if read.is_read1:
-        readName=read.query_name
-    else:
-        readName=read.query_name
     
+    readName=read.query_name
+
+    flagMulti=0
     if read.mapq!=50:
-            multiMappedReads.append(readName)
-    else:
+        flagMulti=1
+        multiMappedReads.add(readName)
+
+
+
+    if flagMulti==0:
         if args.perCategory:
-            outFile['MT'].write( readName+','+'MT' + ',' + 'MT' + ",NA,NA"+'\n' )
+            outFile['MT'].write( readName+','+'MT' + ',' + 'MT' + ",NA,NA" + ',' + str(flagMulti)+'\n' )
         nMT+=1
-
-multiMappedReads=set(multiMappedReads)
-
-
-
+    elif args.multi:
+        if args.perCategory:
+            outFile['MT'].write( readName+','+'MT' + ',' + 'MT' + ",NA,NA"+','+str(flagMulti)+'\n' )
 
 
-if args.perCategory:
-    #multiMappedReads
-    f_multiMappedReads=outDir+"/"+prefix+'__multiMappedReads.reads'
-    outfile = open(f_multiMappedReads, 'w' )
-    for i in multiMappedReads:
-        outfile.write(i)
-        outfile.write("\n")
 
 
 
@@ -524,8 +550,140 @@ c.writerow(gf)
 
 
 
+print "Total number of multi-mapped reads",len(multiMappedReads)
 
 
+if args.perCategory and args.multi:
+    abundanceGene={}
+    mReadsSet=set()
+    readDict={}
+    
+    
+    #5463462_h_0_TTAAACT_TAGC,1,CDS,ENSMUSG00000051951,Xkr4,0
+
+    for chr in chr_list:
+        f_file=dirOutPerCategory+prefix+"."+chr+".genomicFeature"
+        
+        print "Reading",f_file
+        with open(f_file,'r') as f:
+            reader=csv.reader(f)
+            for line in reader:
+                print line
+                geneID=line[3]
+                flagM=line[5]
+                readName=line[0]
+                
+                if flagM==1:
+                    if readName not in mReadsSet:
+                        mReadsSet.add(readName)
+                        readDict[readName]=[]
+                    if geneID!="NA":
+                        readDict[readName].add(geneID)
+                
+                
+                if geneID!="NA" and flagM==0:
+                    abundanceGene[geneID]+=1
+
+        sum=sum(d.values())
+        
+        print readDict
+
+        from numpy.random import choice
+
+        for key, value in readDict.iteritems():
+            print key, 'corresponds to', d[key]
+            elements = value
+            weights = []
+            
+
+            print choice(elements, p=weights)
+
+
+            sys.exit(1)
+
+
+
+
+
+
+
+
+
+#new stuff added by Sarah request
+#updated before releasing UMI-Reducer 01/11/2017
+if args.perCategory:
+    #readName,chr,category, geneID,geneName
+    
+    
+    
+    for chr in chr_list:
+        
+        if not os.path.exists(dirOutPerCategory+"/perGeneSummary/"):
+            os.makedirs(dirOutPerCategory+"/perGeneSummary/")
+        
+        
+        
+        f_file=dirOutPerCategory+prefix+"."+chr+".genomicFeature"
+        f_fileOut=dirOutPerCategory+"/perGeneSummary/"+prefix+"."+chr+".perGeneSummary"
+        
+        print "Processing ",f_file
+        genes=set()
+
+        with open(f_file,'r') as f:
+            
+            reader=csv.reader(f)
+            for line in reader:
+                if len(line)==5:
+                    genes.add(line[4])
+                else:
+                    print "Warning:",f_file,line
+
+        #nJunction,nCDS,nUTR3,nUTR5,nUTR_,nIntron
+
+        dict={}
+        for g in genes:
+            dict[g]=[0,0,0,0,0,0,]
+
+        geneNameSetCurrent=set()
+        geneNameSetCurrent.clear()
+
+        with open(f_file,'r') as f:
+            
+            reader=csv.reader(f)
+            for line in reader:
+                
+                if len(line)==5:
+                    geneName=line[4]
+                    geneNameSetCurrent.add(geneName)
+                    
+                    category=line[2]
+                    if (category =="junction"):
+                        dict[geneName][0]+=1
+                    elif (category =="CDS"):
+                        dict[geneName][1]+=1
+                    elif (category =="UTR3"):
+                        dict[geneName][2]+=1
+                    elif (category =="UTR5"):
+                        dict[geneName][3]+=1
+                    elif category=="UTR_":
+                        dict[geneName][3]+=1
+                else:
+                    print "Warning:",f_file,line
+
+        outfile = open(f_fileOut, 'w' )
+
+
+        outfile.write("geneName,chr,nJunction,nCDS,nUTR3,nUTR5,nUTR_,nIntron\n")
+        
+        
+        for g in geneNameSet[chr]:
+            if g in geneNameSetCurrent:
+                value=dict[g]
+                outfile.write(g+","+chr+","+str(value[0])+","+str(value[1])+","+str(value[2])+","+str(value[3])+","+str(value[4])+"\n")
+            else:
+                outfile.write(g+","+chr+","+"0,0,0,0,0,0\n")
+
+        outfile.close()
 
 
 
