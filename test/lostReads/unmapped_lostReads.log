@@ -1,0 +1,2 @@
+Unmapped reads mapped to genome and/or transcriptome (using bowtie2) are categorized as lost reads and are excluded from the further analysis. This includes: 1 reads with 0 mismatches, 0 reads with 1 mismatch, and0 reads with 2 mismatches.
+Complete list of lost reads is available from sam files: /u/home/s/serghei/code2/rop/test/lostReads/unmapped_genome.sam, /u/home/s/serghei/code2/rop/test/lostReads/unmapped_transcriptome.sam

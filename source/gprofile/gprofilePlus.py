@@ -32,9 +32,7 @@ dirOutPerCategory=args.dir
 
 
 
-outDir=os.path.dirname(args.out)
-if outDir=="":
-    outDir=os.getcwd()
+
 
 chr_list=[]
 
@@ -134,7 +132,6 @@ readDict={}
 # We use relative frequency of the gene (calculated based on uniqelly mapped reads)
 # 1. read is mapped to multiple location, all those locations are within different genes
 
-out = open(args.out, 'w')
 
 
 for chr in chr_list:

@@ -1,0 +1,10 @@
+/u/home/s/serghei/code2/rop/tools/bamtools convert -in /u/home/s/serghei/code2/rop/example/unmapped.bam -format fastq >/u/home/s/serghei/code2/rop/test/unmapped_unmapped.fastq
+1. Quality Control...
+/u/home/s/serghei/code2/rop/tools/seqclean-x86_64/seqclean /u/home/s/serghei/code2/rop/test/QC/unmapped_lowQ.fa -l 50 -M -o /u/home/s/serghei/code2/rop/test/QC/unmapped_lowQC.fa 2>>/u/home/s/serghei/code2/rop/test/QC/unmapped_QC.log
+/u/home/s/serghei/code2/rop/tools/blastn -task megablast -index_name /u/home/s/serghei/code2/rop//db_human/rRNA/rRNA -use_index true -query /u/home/s/serghei/code2/rop/test/QC/unmapped_lowQC.fa -db /u/home/s/serghei/code2/rop//db_human/rRNA/rRNA -outfmt 6 -evalue 1e-05 >/u/home/s/serghei/code2/rop/test/QC/unmapped_rRNA_blastFormat6.csv
+Number of entries in /u/home/s/serghei/code2/rop/test/QC/unmapped_rRNA_blastFormat6.csv is 27
+2. Remapping to reference...
+/u/home/s/serghei/code2/rop/tools/bowtie2 -k 1 -p 8 -f -x /u/home/s/serghei/code2/rop//db_human/bowtie2Index/genome -U /u/home/s/serghei/code2/rop/test/QC/unmapped_after_rRNA.fasta 2>>/u/home/s/serghei/code2/rop/test/lostReads/unmapped_bowtieWG.log | /u/home/s/serghei/code2/rop/tools/samtools view -SF4 - >/u/home/s/serghei/code2/rop/test/lostReads/unmapped_genome.sam
+/u/home/s/serghei/code2/rop/tools/bowtie2 -k 1 -f -p 8 -x /u/home/s/serghei/code2/rop//db_human/bowtie2Index/hg19KnownGene.exon_polya200 -U /u/home/s/serghei/code2/rop/test/QC/unmapped_after_rRNA.fasta 2>>/u/home/s/serghei/code2/rop/test/lostReads/unmapped_bowtieTR.log | /u/home/s/serghei/code2/rop/tools/samtools view -SF4 -  >/u/home/s/serghei/code2/rop/test/lostReads/unmapped_transcriptome.sam
+5. Lymphocyte profiling
+/u/home/s/serghei/code2/rop/tools/imrep/imrep_wrapper.sh /u/home/s/serghei/code2/rop/test/lostReads/unmapped_after_rRNA_lostReads.fasta

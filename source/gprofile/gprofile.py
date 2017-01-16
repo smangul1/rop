@@ -508,8 +508,10 @@ nMultiMapped=len(multiMappedReads)
 nTotalMapped=nrRNA+nDeep+nIntergenic+nIntron+nCDS+nUTR3+nUTR5+nUTR_+nMultiMapped+nJunction+nMT
 
 
+header0=[]
 header=[]
 
+header0.append('## Number of reads per category reported here are based on uniquely mapped reads (i.e. reads mapped to a single position in the genome). Multi-mapped reads are reported under nMultiMapped category. To assign multi-mapped reads into genomic categories you need to run gprofilePlus.py. It will randomly assign multi-mapped reads into genomic categories considering expression level of the genes')
 
 header.append('sampleName')
 header.append('nTotalMapped')
@@ -544,6 +546,7 @@ gf.append(nMultiMapped)
 
 
 c = csv.writer(open(args.out, "w"))
+c.writerow(header0)
 c.writerow(header)
 c.writerow(gf)
 
@@ -551,147 +554,6 @@ c.writerow(gf)
 
 
 print "Total number of multi-mapped reads",len(multiMappedReads)
-
-
-if args.perCategory and args.multi:
-    abundanceGene={}
-    mReadsSet=set()
-    readDict={}
-    
-    
-    #5463462_h_0_TTAAACT_TAGC,1,CDS,ENSMUSG00000051951,Xkr4,0
-
-    for chr in chr_list:
-        f_file=dirOutPerCategory+prefix+"."+chr+".genomicFeature"
-        
-        print "Reading",f_file
-        with open(f_file,'r') as f:
-            reader=csv.reader(f)
-            for line in reader:
-                print line
-                geneID=line[3]
-                flagM=line[5]
-                readName=line[0]
-                
-                if flagM==1:
-                    if readName not in mReadsSet:
-                        mReadsSet.add(readName)
-                        readDict[readName]=[]
-                    if geneID!="NA":
-                        readDict[readName].add(geneID)
-                
-                
-                if geneID!="NA" and flagM==0:
-                    abundanceGene[geneID]+=1
-
-        sum=sum(d.values())
-        
-        print readDict
-
-        from numpy.random import choice
-
-        for key, value in readDict.iteritems():
-            print key, 'corresponds to', d[key]
-            elements = value
-            weights = []
-            
-
-            print choice(elements, p=weights)
-
-
-            sys.exit(1)
-
-
-
-
-
-
-
-
-
-#new stuff added by Sarah request
-#updated before releasing UMI-Reducer 01/11/2017
-if args.perCategory:
-    #readName,chr,category, geneID,geneName
-    
-    
-    
-    for chr in chr_list:
-        
-        if not os.path.exists(dirOutPerCategory+"/perGeneSummary/"):
-            os.makedirs(dirOutPerCategory+"/perGeneSummary/")
-        
-        
-        
-        f_file=dirOutPerCategory+prefix+"."+chr+".genomicFeature"
-        f_fileOut=dirOutPerCategory+"/perGeneSummary/"+prefix+"."+chr+".perGeneSummary"
-        
-        print "Processing ",f_file
-        genes=set()
-
-        with open(f_file,'r') as f:
-            
-            reader=csv.reader(f)
-            for line in reader:
-                if len(line)==5:
-                    genes.add(line[4])
-                else:
-                    print "Warning:",f_file,line
-
-        #nJunction,nCDS,nUTR3,nUTR5,nUTR_,nIntron
-
-        dict={}
-        for g in genes:
-            dict[g]=[0,0,0,0,0,0,]
-
-        geneNameSetCurrent=set()
-        geneNameSetCurrent.clear()
-
-        with open(f_file,'r') as f:
-            
-            reader=csv.reader(f)
-            for line in reader:
-                
-                if len(line)==5:
-                    geneName=line[4]
-                    geneNameSetCurrent.add(geneName)
-                    
-                    category=line[2]
-                    if (category =="junction"):
-                        dict[geneName][0]+=1
-                    elif (category =="CDS"):
-                        dict[geneName][1]+=1
-                    elif (category =="UTR3"):
-                        dict[geneName][2]+=1
-                    elif (category =="UTR5"):
-                        dict[geneName][3]+=1
-                    elif category=="UTR_":
-                        dict[geneName][3]+=1
-                else:
-                    print "Warning:",f_file,line
-
-        outfile = open(f_fileOut, 'w' )
-
-
-        outfile.write("geneName,chr,nJunction,nCDS,nUTR3,nUTR5,nUTR_,nIntron\n")
-        
-        
-        for g in geneNameSet[chr]:
-            if g in geneNameSetCurrent:
-                value=dict[g]
-                outfile.write(g+","+chr+","+str(value[0])+","+str(value[1])+","+str(value[2])+","+str(value[3])+","+str(value[4])+"\n")
-            else:
-                outfile.write(g+","+chr+","+"0,0,0,0,0,0\n")
-
-        outfile.close()
-
-
-
-
-
-
-
-
 
 
 

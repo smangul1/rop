@@ -1,0 +1,26 @@
+seqclean running options: 
+seqclean /u/home/s/serghei/code2/rop/test/QC/unmapped_lowQ.fa -l 50 -M -o /u/home/s/serghei/code2/rop/test/QC/unmapped_lowQC.fa
+ Standard log file: seqcl_unmapped_lowQ.fa.log
+ Error log file:    err_seqcl_unmapped_lowQ.fa.log
+ Using 1 CPUs for cleaning
+-= Rebuilding unmapped_lowQ.fa cdb index =-
+285 entries from file /u/home/s/serghei/code2/rop/test/QC/unmapped_lowQ.fa were indexed in file unmapped_lowQ.fa.cidx
+ Launching actual cleaning process:
+ psx -p 1  -n 1000  -i /u/home/s/serghei/code2/rop/test/QC/unmapped_lowQ.fa -d cleaning -C '/u/home/s/serghei/code2/rop/test/QC/unmapped_lowQ.fa:ANLS50:::11:0' -c '/u/home/s/serghei/code2/rop/tools/seqclean-x86_64/seqclean.psx'
+WAITING for all children to finish before starting last child!
+WAITING for all children to finish!
+Collecting cleaning reports
+
+**************************************************
+Sequences analyzed:       285
+-----------------------------------
+                   valid:       283  (1 trimmed)
+                 trashed:         2
+**************************************************
+----= Trashing summary =------
+              by 'shortq':        1
+                by 'dust':        1
+------------------------------
+Output file containing only valid and trimmed sequences: /u/home/s/serghei/code2/rop/test/QC/unmapped_lowQC.fa
+For trimming and trashing details see cleaning report  : unmapped_lowQ.fa.cln
+--------------------------------------------------
