@@ -1,2 +1,0 @@
-sample,totalUnmapped,nReads["LowQ"],nReads["LowC"],nReads["rRNA"],nReads["lost"],nReads["repeat"],nReads["NCL"],nReads["immune"],nMicrobialReads
-unmapped,2503,2218,2,20,1,0,0,12,0
