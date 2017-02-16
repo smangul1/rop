@@ -29,7 +29,7 @@ bam=$1
 out=$2
 options=$3
 
-basename=$(echo $bam | awk -F ".bam" '{print $1}')
+basename=$(echo  ${bam##*/} | awk -F ".bam" '{print $1}')
 
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -53,7 +53,6 @@ ${DIR}/tools/samtools view -f 0x4 -bh  $bam | samtools bam2fq - > ${out}/${basen
 
 
 
-mkdir ${out}/rop_mapped/
 ${DIR}/tools/samtools view -bh ${bam} 14:106032614-107288051 | samtools view -bh -F 4 - | samtools bam2fq - >${out}/${basename}_mapped_immune.fastq
 ${DIR}/tools/samtools view -bh ${bam} 2:89156874-89630436 | samtools view -bh -F 4 - | samtools bam2fq -  >>${out}/${basename}_mapped_immune.fastq
 ${DIR}/tools/samtools view -bh ${bam} 22:22380474-23265085 | samtools view -bh -F 4 - | samtools bam2fq -  >>${out}/${basename}_mapped_immune.fastq
@@ -63,12 +62,10 @@ ${DIR}/tools/samtools view -bh ${bam} 7:38279625-38407656 | samtools view -bh -F
 
 cat ${out}/${basename}_mapped_immune.fastq ${out}/${basename}_unmapped.fastq > ${out}/${basename}_unmapped_plus_immune.fastq
 
-echo "Deleting" ${out}/rop/
-rm -fr ${out}/rop/
 
 
 #run ROP-ImReP for unmapped reads plus BCT/TCR reads
-python ${DIR}/rop.py $options --immune --f ${out}/${basename}_unmapped_plus_immune.fastq ${out}/rop/
+python ${DIR}/rop.py $options --f --immune --f ${out}/${basename}_unmapped_plus_immune.fastq ${out}/rop/
 
 
 

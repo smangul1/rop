@@ -9,6 +9,7 @@ echo "For more details see: https://sergheimangul.wordpress.com/rop/"
 echo "ROP Tutorial: https://github.com/smangul1/rop/wiki"
 echo "--------------------------------------------------------------------------------"
 
+pip install pysam
 pip install biopython --user
 pip install intervaltree --user
 pip install jellyfish --user
