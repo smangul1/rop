@@ -2,16 +2,11 @@
 
 
 
-
 echo "********************************************************************************
 rop-imrep.sh is now available under ROP release v1.0.7
 rop-imrep.sh is a script to run ROP-ImReP for bam file with mixture of mapped and unmapped reads.
-
-
 ImReP is written by Igor Mandric and Serghei Mangul.
-
 Released under the terms of the General Public License version 3.0 (GPLv3)
-
 For more details see: https://sergheimangul.wordpress.com/rop/
 ROP Tutorial: https://github.com/smangul1/rop/wiki 
 ********************************************************************************"
@@ -33,11 +28,12 @@ basename=$(echo  ${bam##*/} | awk -F ".bam" '{print $1}')
 
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+SAMTOOLS=${DIR}/tools/samtools
 
 #--------------------------------------------------------------------------------------
 #UNMAPPED READS
 mkdir $out
-${DIR}/tools/samtools view -f 0x4 -bh  $bam | samtools bam2fq - > ${out}/${basename}_unmapped.fastq
+$SAMTOOLS view -f 0x4 -bh  $bam | $SAMTOOLS bam2fq - > ${out}/${basename}_unmapped.fastq
 
 
 #--------------------------------------------------------------------------------------
@@ -52,13 +48,12 @@ ${DIR}/tools/samtools view -f 0x4 -bh  $bam | samtools bam2fq - > ${out}/${basen
 
 
 
-
-${DIR}/tools/samtools view -bh ${bam} 14:106032614-107288051 | samtools view -bh -F 4 - | samtools bam2fq - >${out}/${basename}_mapped_immune.fastq
-${DIR}/tools/samtools view -bh ${bam} 2:89156874-89630436 | samtools view -bh -F 4 - | samtools bam2fq -  >>${out}/${basename}_mapped_immune.fastq
-${DIR}/tools/samtools view -bh ${bam} 22:22380474-23265085 | samtools view -bh -F 4 - | samtools bam2fq -  >>${out}/${basename}_mapped_immune.fastq
-${DIR}/tools/samtools view -bh ${bam} 14:22090057-23021075 | samtools view -bh -F 4 - | samtools bam2fq -  >>${out}/${basename}_mapped_immune.fastq
-${DIR}/tools/samtools view -bh ${bam} 7:141998851-142510972 | samtools view -bh -F 4 - | samtools bam2fq -    >>${out}/${basename}_mapped_immune.fastq
-${DIR}/tools/samtools view -bh ${bam} 7:38279625-38407656 | samtools view -bh -F 4 - | samtools bam2fq - >>${out}/${basename}_mapped_immune.fastq
+$SAMTOOLS view -bh ${bam} 14:106032614-107288051 | $SAMTOOLS view -bh -F 4 - | $SAMTOOLS bam2fq - >${out}/${basename}_mapped_immune.fastq
+$SAMTOOLS view -bh ${bam} 2:89156874-89630436 | $SAMTOOLS view -bh -F 4 - | $SAMTOOLS bam2fq -  >>${out}/${basename}_mapped_immune.fastq
+$SAMTOOLS view -bh ${bam} 22:22380474-23265085 | $SAMTOOLS view -bh -F 4 - | $SAMTOOLS bam2fq -  >>${out}/${basename}_mapped_immune.fastq
+$SAMTOOLS view -bh ${bam} 14:22090057-23021075 | $SAMTOOLS view -bh -F 4 - | $SAMTOOLS bam2fq -  >>${out}/${basename}_mapped_immune.fastq
+$SAMTOOLS view -bh ${bam} 7:141998851-142510972 | $SAMTOOLS view -bh -F 4 - | $SAMTOOLS bam2fq -    >>${out}/${basename}_mapped_immune.fastq
+$SAMTOOLS view -bh ${bam} 7:38279625-38407656 | $SAMTOOLS view -bh -F 4 - | $SAMTOOLS bam2fq - >>${out}/${basename}_mapped_immune.fastq
 
 cat ${out}/${basename}_mapped_immune.fastq ${out}/${basename}_unmapped.fastq > ${out}/${basename}_unmapped_plus_immune.fastq
 
@@ -66,7 +61,4 @@ cat ${out}/${basename}_mapped_immune.fastq ${out}/${basename}_unmapped.fastq > $
 
 #run ROP-ImReP for unmapped reads plus BCT/TCR reads
 python ${DIR}/rop.py $options --f --immune --f ${out}/${basename}_unmapped_plus_immune.fastq ${out}/rop/
-
-
-
 
