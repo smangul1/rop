@@ -1,4 +1,4 @@
-#ROP: Read Origin Protocol
+# ROP: Read Origin Protocol
 
 ROP is a computational protocol aimed to discover the source of all reads, 
 which originate from complex RNA molecules, recombinant antibodies and 
