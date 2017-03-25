@@ -51,10 +51,11 @@ def nucleotide2protein2(inString):
     frs = [1, 2, 3, -1, -2, -3]
 
     for f, frame in zip(framesTemp, frs):
-        if 1 == 1: #if "_" not in f:
+        if "_" not in f and "*" not in f:
             processedRead=f.replace(' ','')
             frames.append((processedRead, frame))
     return frames
+
 
 
 def dumpClones(clones, outFile):
@@ -64,7 +65,9 @@ def dumpClones(clones, outFile):
 
 
 def dumpClones2(clones, outFile):
+    header_line = "CDR3_AA_Seq\tRead_count\tV_chains\tD_chains\tJ_chains\n"
     with open(outFile, "w") as f:
+        f.write(header_line)
         for clone in clones:
             f.write(clone)
 

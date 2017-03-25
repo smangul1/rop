@@ -88,12 +88,15 @@ def excludeReadsFromFastaGzip(inFasta_name, reads, outFasta_name):
 # .bam
 
 def bam2fasta(cd, bam_name, fasta_name):
-	message = "Convert bam to fasta"
-	write2Log(message, LOGFNS["gLogfile"], ARGS.quiet)
-	cmd = cd + "/tools/bamtools convert -in " + bam_name + " -format fasta >" +\
-	  fasta_name
-	write2Log(cmd, LOGFNS["cmdLogfile"], "False")
-	if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
+    
+    
+    import pysam
+    samfile = pysam.AlignmentFile(bam_name, "rb")
+    message = "Convert bam to fasta"
+    write2Log(message, LOGFNS["gLogfile"], ARGS.quiet)
+    cmd = cd + "/tools/bamtools convert -in " + bam_name + " -format fasta >" +fasta_name
+    write2Log(cmd, LOGFNS["cmdLogfile"], "False")
+    if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
 
 def bam2fastq(cd, bam_name, fastq_name):
 	message = "Convert bam to fastq"

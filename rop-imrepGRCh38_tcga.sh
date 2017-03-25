@@ -58,14 +58,18 @@ ${DIR}/tools/samtools view -f 0x4 -bh  $bam | samtools bam2fq - > ${out}/${basen
 
 
 
-${DIR}/tools/samtools view -bh ${bam} 14:105586437-106879844 | samtools view -bh -F 4 - | samtools bam2fq - >${out}/${basename}_mapped_immune.fastq
-${DIR}/tools/samtools view -bh ${bam} 2:88857361-90235368 | samtools view -bh -F 4 - | samtools bam2fq -  >>${out}/${basename}_mapped_immune.fastq
-${DIR}/tools/samtools view -bh ${bam} 22:22026076-22922913 | samtools view -bh -F 4 - | samtools bam2fq -  >>${out}/${basename}_mapped_immune.fastq
-${DIR}/tools/samtools view -bh ${bam} 14:21621904-22552132 | samtools view -bh -F 4 - | samtools bam2fq -  >>${out}/${basename}_mapped_immune.fastq
-${DIR}/tools/samtools view -bh ${bam} 7:142299011-1428132872 | samtools view -bh -F 4 - | samtools bam2fq -    >>${out}/${basename}_mapped_immune.fastq
-${DIR}/tools/samtools view -bh ${bam} 7:38240024-38368055 | samtools view -bh -F 4 - | samtools bam2fq - >>${out}/${basename}_mapped_immune.fastq
+${DIR}/tools/samtools view -bh ${bam} chr14:105586437-106879844 | samtools view -bh -F 4 - | samtools bam2fq - >${out}/${basename}_mapped_immune.fastq
+${DIR}/tools/samtools view -bh ${bam} chr2:88857361-90235368 | samtools view -bh -F 4 - | samtools bam2fq -  >>${out}/${basename}_mapped_immune.fastq
+${DIR}/tools/samtools view -bh ${bam} chr22:22026076-22922913 | samtools view -bh -F 4 - | samtools bam2fq -  >>${out}/${basename}_mapped_immune.fastq
+${DIR}/tools/samtools view -bh ${bam} chr14:21621904-22552132 | samtools view -bh -F 4 - | samtools bam2fq -  >>${out}/${basename}_mapped_immune.fastq
+${DIR}/tools/samtools view -bh ${bam} chr7:142299011-1428132872 | samtools view -bh -F 4 - | samtools bam2fq -    >>${out}/${basename}_mapped_immune.fastq
+${DIR}/tools/samtools view -bh ${bam} chr7:38240024-38368055 | samtools view -bh -F 4 - | samtools bam2fq - >>${out}/${basename}_mapped_immune.fastq
+
+rm $bam 
 
 cat ${out}/${basename}_mapped_immune.fastq ${out}/${basename}_unmapped.fastq > ${out}/${basename}_unmapped_plus_immune.fastq
+
+ls ${out}/${basename}_unmapped_plus_immune.fastq
 
 rm ${out}/${basename}_mapped_immune.fastq ${out}/${basename}_unmapped.fastq
 

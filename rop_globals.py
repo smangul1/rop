@@ -20,13 +20,14 @@ ROP Tutorial: https://github.com/smangul1/rop/wiki
 import sys, os  # system
 import argparse, subprocess  # utilities
 import csv, gzip  # file I/O
+import pysam
+
 
 CD = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(CD + "/tools/biopython/biopython-1.66/")
 from Bio import SeqIO  # module needed for sequence input
 # for future use:
 # sys.path.append(CD + "/tools/pysam-master/")
-# import pysam
 
 
 ################################################################################
