@@ -1,7 +1,7 @@
 # ROP: Read Origin Protocol
 
 ROP is a computational protocol aimed to discover the source of all reads, 
-which originate from complex RNA molecules, recombinant antibodies and 
+which originate from complex RNA molecules, recombinant B and T cell receptors and 
 microbial communities. The ROP accounts for 98.8% of all reads across poly(A) 
 and ribo-depletion protocols, compared to 83.8% by conventional reference-based 
 protocols. ROP profiles repeats, circRNAs, gene fusions, trans-splicing events, 
