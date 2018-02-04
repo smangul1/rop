@@ -369,11 +369,10 @@ def step_6b(unmapped_file, readLength, cmd):
 	return len(bacteriaReads)
 
 def step_6c(unmapped_file, readLength, cmd):
-	if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
-	virusReads = nMicrobialReads(LOGFNS["virusFile"], readLength,
-	  LOGFNS["virusFileFiltered"])
-	excludeReadsFromFasta(unmapped_file, virusReads, INTFNS["afterVirusFasta"])
-	return len(virusReads)
+    if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
+    virusReads = nMicrobialReads(LOGFNS["virusFile"], readLength,LOGFNS["virusFileFiltered"])
+    excludeReadsFromFasta(unmapped_file, virusReads, INTFNS["afterVirusFasta"])
+    return len(virusReads)
 
 def step_6d(unmapped_file, readLength, cmd, eupathdbFile, eupathdbFileFiltered,\
   afterFasta):
