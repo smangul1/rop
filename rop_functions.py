@@ -20,12 +20,12 @@ from rop_globals import *
 ################################################################################
 
 class InputError(Exception):
-    def __init__(self, message=""):
-        print "ERROR: Invalid input. " + message
+	def __init__(self, message=""):
+		print "ERROR: Invalid input. " + message
 
 class SubprocessError(Exception):
-    def __init__(self, message=""):
-        print "ERROR: Subprocess crashed. " + message
+	def __init__(self, message=""):
+		print "ERROR: Subprocess crashed. " + message
 
 # deletes a file except under specified conditions
 def clean(unmapped_file):
@@ -71,11 +71,12 @@ def write2File(content, file_name):
 # Exclude reads
 
 def excludeReadsFromFasta(inFasta_name, reads, outFasta_name):
-	fasta_seqs = SeqIO.parse(open(inFasta_name), "fasta")
-	with open(outFasta_name, "w") as outFasta:
-		for seq in fasta_seqs:
-			if seq.name not in reads:
-				SeqIO.write([seq], outFasta, "fasta")
+
+    fasta_seqs = SeqIO.parse(open(inFasta_name), "fasta")
+    with open(outFasta_name, "w") as outFasta:
+        for seq in fasta_seqs:
+            if seq.name not in reads:
+                SeqIO.write([seq], outFasta, "fasta")
 
 def excludeReadsFromFastaGzip(inFasta_name, reads, outFasta_name):
 	fasta_seqs = SeqIO.parse(open(inFasta_name), "fasta")
@@ -84,19 +85,43 @@ def excludeReadsFromFastaGzip(inFasta_name, reads, outFasta_name):
 			if seq.name not in reads:
 				SeqIO.write([seq], outFasta, "fasta")
 
+
+
+
+def set2file(set,fileName):
+    file=open(fileName,"a")
+    
+    
+    set=sorted(set)
+    for s in set:
+        file.write(str(s))
+        file.write("\n")
+
+def pe2se(lostReads,fileName):
+    file=open(fileName,"w")
+    lostReads_se=set()
+    for s in lostReads:
+        lostReads_se.add(s.split("---")[0])
+
+    for s in lostReads_se:
+        file.write(s)
+        file.write("\n")
+        
+    file.close()
+
 ################################################################################
 # .bam
 
 def bam2fasta(cd, bam_name, fasta_name):
-    
-    
-    import pysam
-    samfile = pysam.AlignmentFile(bam_name, "rb")
-    message = "Convert bam to fasta"
-    write2Log(message, LOGFNS["gLogfile"], ARGS.quiet)
-    cmd = cd + "/tools/bamtools convert -in " + bam_name + " -format fasta >" +fasta_name
-    write2Log(cmd, LOGFNS["cmdLogfile"], "False")
-    if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
+	
+	
+	import pysam
+	samfile = pysam.AlignmentFile(bam_name, "rb")
+	message = "Convert bam to fasta"
+	write2Log(message, LOGFNS["gLogfile"], ARGS.quiet)
+	cmd = cd + "/tools/bamtools convert -in " + bam_name + " -format fasta >" +fasta_name
+	write2Log(cmd, LOGFNS["cmdLogfile"], "False")
+	if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
 
 def bam2fastq(cd, bam_name, fastq_name):
 	message = "Convert bam to fastq"
@@ -105,6 +130,22 @@ def bam2fastq(cd, bam_name, fastq_name):
 	  fastq_name
 	write2Log(cmd, LOGFNS["cmdLogfile"], "False")
 	if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
+
+
+
+#Customize the tools used by ROP
+
+def read_commands():
+    f=open(CD+'/rop_commands.txt')
+    command=[]
+    reader=csv.reader(f)
+    for line in reader:
+        command.append(line[0])
+
+    return command
+
+
+
 
 ################################################################################
 # .gz
@@ -126,21 +167,77 @@ def write_gzip(inFasta_name, outFasta_name):
 ### RESULT COUNTING
 ################################################################################
 
-def nMicrobialReads(inFile_name, readLength, outFile_name):
-	readsMicrobiome = set()
-	with open(inFile_name, "r") as inFile:
-		with open(outFile_name, "w") as outFile:
-			for line in csv.reader(inFile, delimiter='\t'):
-				read = line[0]
-				identity = float(line[2])
-				alignmentLength = float(line[3])
-				eValue = float(line[10])
-				if (eValue < 1e-05 
-				  and alignmentLength >= 0.8*readLength 
-				  and identity >= 0.9*readLength):
-					readsMicrobiome.add(read)
-					outFile.write("\t".join(line) + "\n")
-	return readsMicrobiome
+
+
+def extract_from_read(line,readLength):
+
+    alignment=line[12].split(':')[2]  #MD:Z:53T22
+    ed=int(line[11].split(':')[2])  #NM:i:0
+    countA=alignment.count('A')
+    countC=alignment.count('C')
+    countT=alignment.count('T')
+    countG=alignment.count('G')
+    alignment2=alignment.replace('A',',').replace('C',',').replace('T',',').replace('G',',').replace('^',',').split(',')
+    alignment3=[]
+            
+    for a in alignment2:
+        if a!="":
+            alignment3.append(int(a))
+        
+    alignmentLength=sum(alignment3)+countA+countC+countG+countT
+
+    clipped=readLength-alignmentLength
+    ed=readLength-alignmentLength+int(line[11].split(':')[2])  #NM:i:0
+
+    return (ed,alignmentLength,clipped)
+
+def nMicrobialReads(inFile_name, readLength, outFile_name,flag):
+    readsMicrobiome = set()
+    with open(inFile_name, "r") as inFile:
+        with open(outFile_name, "w") as outFile:
+            for line in csv.reader(inFile, delimiter='\t'):
+                read = line[0]
+                
+                
+                
+                alignment=line[12].split(':')[2]  #MD:Z:53T22
+
+                ed=int(line[11].split(':')[2])  #NM:i:0
+                
+                
+                
+                
+                countA=alignment.count('A')
+                countC=alignment.count('C')
+                countT=alignment.count('T')
+                countG=alignment.count('G')
+                
+                alignment2=alignment.replace('A',',').replace('C',',').replace('T',',').replace('G',',').replace('^',',').split(',')
+                
+                
+                alignment3=[]
+                
+                for a in alignment2:
+                    if a!="":
+                        alignment3.append(int(a))
+            
+                alignmentLength=sum(alignment3)+countA+countC+countG+countT
+                
+                
+                identity=readLength-ed
+                
+                
+                
+                if flag!=True:
+                    
+                    if  alignmentLength >= 0.8*readLength and identity >= 0.9*readLength:
+                        readsMicrobiome.add(read)
+                        outFile.write("\t".join(line) + "\n")
+                else:
+                        readsMicrobiome.add(read)
+                        outFile.write("\t".join(line) + "\n")
+
+    return readsMicrobiome
 
 def nReadsMetaphlan(inFile_name):
 	readsMetaphlan = set()
@@ -151,14 +248,11 @@ def nReadsMetaphlan(inFile_name):
 	return readsMetaphlan
 
 def nCircularReads(inFile_name):
-	reads=set()
-	with open(inFile_name, "r") as inFile:
-		inFile.next()
-		for line in csv.reader(inFile, delimiter='\t'):
-			for kv in line[10].split(","):
-				if kv:
-					reads.add(kv)
-	return reads
+    reads=set()
+    fasta_sequences = SeqIO.parse(open(inFile_name),'fastq')
+    for seq in fasta_sequences:
+        reads.add(seq.id)
+    return reads
 
 	
 ################################################################################
@@ -213,172 +307,253 @@ def prepare_for_analysis(unmapped_file):
 	return n, readLength, unmapped_file
 	
 def step_1a(unmapped_file, n):
-	valid = "ACTG"
-	nAfterLowQReads = 0
-	with open(INTFNS["lowQFileFasta"], "w") as lowQFileFasta:
-		for record in SeqIO.parse(unmapped_file, "fastq"):
-			  # assumes the same length, will not work for Ion Torrent or Pac Bio
-			j = record.letter_annotations["phred_quality"]
-			prc = len([i for i in j if i >= 20])/float(len(j))
-			if prc > 0.75 and all(i in valid for i in record.seq):
-				lowQFileFasta.write(str(">" + record.name) + "\n")
-				lowQFileFasta.write(str(record.seq) + "\n")
-				nAfterLowQReads += 1
-	return n - nAfterLowQReads
+    valid = "ACTGN"
+    nLowQReads = 0
+    with open(INTFNS["lowQFileFasta"], "w") as lowQFileFasta:
+        for record in SeqIO.parse(unmapped_file, "fastq"):
+            # assumes the same length, will not work for Ion Torrent or Pac Bio
+            j = record.letter_annotations["phred_quality"]
+            prc = len([i for i in j if i >= 20])/float(len(j))
+            if prc > 0.75 and all(i in valid for i in record.seq):
+                lowQFileFasta.write(str(">" + record.name.replace("/","---")) + "\n")
+                lowQFileFasta.write(str(record.seq) + "\n")
+                
+            else:
+                lowQFileFasta.write(str(">llowQuality_" + record.name.replace("/","---")) + "\n")
+                lowQFileFasta.write(str(record.seq) + "\n")
+                nLowQReads += 1
+				
+	return nLowQReads
 
-def step_1b(unmapped_file):
-	cmd = "export PATH=$PATH:" + CD + "/tools/seqclean-x86_64/bin"
-	if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
-	cmd = CD + "/tools/seqclean-x86_64/seqclean " + unmapped_file +\
-	  " -l 50 -M -o " + INTFNS["lowQCFile"] + " 2>>" + LOGFNS["logQC"]
-	write2Log(cmd, LOGFNS["cmdLogfile"], True)
-	if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
-	cmd = "rm -rf " + DIRS["QC"] + "/cleaning_1/ >temp 2>temp; " +\
-	  "rm -f " + DIRS["QC"] + "/*.cln >temp 2>temp; " +\
-	  "rm -f " + DIRS["QC"] + "/*.cidx >temp 2>temp; " +\
-	  "rm -f " + DIRS["QC"] + "/*.sort >temp 2>temp" 
-	if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
-	cmd = "grep trashed " + LOGFNS["logQC"] + " | awk -F \":\" '{print $2}'"
-	proc = subprocess.Popen([cmd], shell=True, stdout=subprocess.PIPE)
-	(nLowCReadsTemp, err) = proc.communicate()
-	if proc.wait(): raise SubprocessError()
-	return int(nLowCReadsTemp.strip())
+
 
 def step_1c(unmapped_file, readLength):
-	cmd = CD + "/tools/blastn -task megablast -index_name " + CD + "/" +\
+    cmd = CD + "/tools/blastn -task megablast -index_name " + CD + "/" +\
 	  DB_FOLDER + "/rRNA/rRNA -use_index true -query " + unmapped_file +\
 	  " -db " + CD + "/" + DB_FOLDER + "/rRNA/rRNA -outfmt 6 -evalue 1e-05 >" +\
-	  INTFNS["rRNAFile"]
-	write2Log(cmd, LOGFNS["cmdLogfile"], True)
-	if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
-	n_rRNATotal = 0
-	rRNAReads = set()
-	with open(INTFNS["rRNAFile"], "r") as f:
-		reader = csv.reader(f, delimiter='\t')
-		for line in reader:
-			n_rRNATotal += 1
-			element = line[0]
-			identity = float(line[2])
-			alignmentLength = float(line[3])
-			eValue = float(line[10])
-			if (eValue < 1e-05 and alignmentLength == readLength and 
-			  identity >= 0.94 * readLength):
-				rRNAReads.add(element)
-	excludeReadsFromFasta(unmapped_file, rRNAReads, INTFNS["afterrRNAFasta"])
-	return len(rRNAReads), n_rRNATotal
+	  INTFNS["rRNAFile"] + " 2>log_megablast_rRNA.log"
+    
 
-def step_2(unmapped_file):
-	cmdGenome = CD + "/tools/bowtie2 -k 1 -p 8 -f -x " + CD + "/" + DB_FOLDER +\
-	  "/bowtie2Index/genome -U " + unmapped_file + " 2>>" +\
-	  LOGFNS["log_bowtieWG"] + " | " + CD + "/tools/samtools view -SF4 - >" +\
-	  INTFNS["gBamFile"]
-	cmdTranscriptome = CD + "/tools/bowtie2 -k 1 -f -p 8 -x " + CD + "/" +\
-	  DB_FOLDER + "/bowtie2Index/hg19KnownGene.exon_polya200 -U " +\
-	  unmapped_file + " 2>>" + LOGFNS["log_bowtieTR"] + " | " + CD +\
-	  "/tools/samtools view -SF4 -  >" + INTFNS["tBamFile"]
-	write2Log(cmdGenome, LOGFNS["cmdLogfile"], True)
-	write2Log(cmdTranscriptome, LOGFNS["cmdLogfile"], True)
-	proc1 = subprocess.Popen([cmdTranscriptome], shell=True)
-	proc2 = subprocess.Popen([cmdGenome], shell=True)
-	if proc1.wait() or proc2.wait(): raise SubprocessError()
-	lostReads = set()
-	lostReads0 = set()
-	lostReads1 = set()
-	lostReads2 = set()
-	with open(INTFNS["tBamFile"], "r") as f:
-		for line in csv.reader(f, delimiter='\t'):
-			mismatch = int(line[16].split(':')[2])
-			if mismatch < 3:
-				lostReads.add(line[0])
-			if mismatch == 0:
-				lostReads0.add(line[0])
-			elif mismatch == 1:
-				lostReads1.add(line[0])
-			elif mismatch == 2:
-				lostReads2.add(line[0])
-	with open(INTFNS["gBamFile"], "r") as f:
-		for line in csv.reader(f,delimiter='\t'):
-				mismatch=int(line[16].split(':')[2])
-				if mismatch < 3:
-					lostReads.add(line[0])
-				if mismatch == 0:
-					lostReads0.add(line[0])
-				elif mismatch == 1:
-					lostReads1.add(line[0])
-				elif mismatch == 2:
-					lostReads2.add(line[0])
-	write2Log("Unmapped reads mapped to genome and/or transcriptome (using " +\
-	  "bowtie2) are categorized as lost reads and are excluded from the " +\
-	  "further analysis. This includes: " +\
-	  str(len(lostReads0)) + " reads with 0 mismatches, " +\
-	  str(len(lostReads1)) + " reads with 1 mismatch, and" +\
-	  str(len(lostReads2)) + " reads with 2 mismatches.", LOGFNS["logHuman"], 
-	    True)
-	write2Log("Complete list of lost reads is available from sam files: " +\
-	  INTFNS["gBamFile"] + ", " + INTFNS["tBamFile"], LOGFNS["logHuman"], True)
-	excludeReadsFromFasta(unmapped_file, lostReads, 
-	  INTFNS["afterlostReadsFasta"])
-	return len(lostReads), len(lostReads0), len(lostReads1), len(lostReads2)
-	
-def step_3(unmapped_file, readLength, cmd):
-	if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
-	write2Log(cmd, LOGFNS["cmdLogfile"], True)
-	lostRepeatReads = set()
-	with open(INTFNS["repeatFile"], "r") as f:
-		reader = csv.reader(f, delimiter='\t')
-		for line in reader:
-			element = line[0]
-			identity = float(line[2])
-			alignmentLength = float(line[3])
-			eValue = float(line[10])
-			if (eValue < 1e-05 and alignmentLength >= 0.8*readLength and 
-			  identity >= 0.9*readLength):
-				lostRepeatReads.add(element)
-	write2Log("Lost repeat reads are mapped to the repeat sequences " +\
-	  "(using megablast)", LOGFNS["logLostRepeat"], True)
-	write2Log("Complete list of lost repeat reads is available from tsv " +\
-	  "file: " + INTFNS["repeatFile"], LOGFNS["logLostRepeat"], True)
-	excludeReadsFromFasta(unmapped_file, lostRepeatReads, 
-	  INTFNS["afterlostRepeatFasta"])
-	return len(lostRepeatReads)
 
-def step_4(unmapped_file, cmd):
-	NCL_reads = set()
-	if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
-	NCL_reads = nCircularReads(INTFNS["after_NCL_CIRI_file_prefix"])
-	excludeReadsFromFasta(unmapped_file, NCL_reads, INTFNS["afterNCLFasta"])
-	return len(NCL_reads)
 
-def step_5(unmapped_file, cmd):
-	proc = subprocess.Popen([cmd], shell=True, stdout=subprocess.PIPE)
-	(output, err) = proc.communicate()
-	if proc.wait(): raise SubprocessError()
-	write2Log(output.strip(), LOGFNS["gLogfile"], ARGS.quiet)
-	with open("immune_read_names.txt", "r") as immune_read_names:
-		immuneReads = set([line.strip() for line in immune_read_names])
-	excludeReadsFromFasta(unmapped_file, immuneReads, 
-	  INTFNS["afterImmuneFasta"])
-	return len(immuneReads)
-	
-def step_6b(unmapped_file, readLength, cmd):
-	if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
-	bacteriaReads = nMicrobialReads(LOGFNS["bacteriaFile"], readLength, 
-	  LOGFNS["bacteriaFileFiltered"])
-	excludeReadsFromFasta(unmapped_file, bacteriaReads, 
-	  INTFNS["afterBacteriaFasta"])
-	return len(bacteriaReads)
-
-def step_6c(unmapped_file, readLength, cmd):
+    write2Log(cmd, LOGFNS["cmdLogfile"], True)
     if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
-    virusReads = nMicrobialReads(LOGFNS["virusFile"], readLength,LOGFNS["virusFileFiltered"])
+    n_rRNATotal = 0
+    rRNAReads = set()
+    with open(INTFNS["rRNAFile"], "r") as f:
+        reader = csv.reader(f, delimiter='\t')
+        for line in reader:
+            n_rRNATotal += 1
+            element = line[0]
+            identity = float(line[2])
+            alignmentLength = float(line[3])
+            eValue = float(line[10])
+            if (eValue < 1e-05 and alignmentLength == readLength and
+                identity >= 0.94 * readLength):
+                rRNAReads.add(element)
+    excludeReadsFromFasta(unmapped_file, rRNAReads, INTFNS["afterrRNAFasta"])
+    return len(rRNAReads), n_rRNATotal
+
+
+
+def step_2(unmapped_file,flag,flag_PE,readLength):
+
+    if flag:
+        ed_human=10
+    else:
+        ed_human=6
+
+
+
+
+
+    command=read_commands()
+    bwa_WG=command[0]
+    bwa_TR=command[1]
+
+
+    cmdGenome = bwa_WG + " "+unmapped_file + " 2>>" + LOGFNS["log_bowtieWG"] + " | " + CD + "/tools/samtools view -SF4 - >" +INTFNS["gBamFile"]
+    cmdTranscriptome = bwa_TR + " "+unmapped_file + " 2>>" + LOGFNS["log_bowtieTR"] + " | " + CD + "/tools/samtools view -SF4 -  >" + INTFNS["tBamFile"]
+
+
+
+
+
+    write2Log(cmdGenome, LOGFNS["cmdLogfile"], True)
+    write2Log(cmdTranscriptome, LOGFNS["cmdLogfile"], True)
+    proc1 = subprocess.Popen([cmdTranscriptome], shell=True)
+    proc2 = subprocess.Popen([cmdGenome], shell=True)
+    if proc1.wait() or proc2.wait(): raise SubprocessError()
+    lostReads = set()
+    lostReads0 = set()
+    lostReads1 = set()
+    lostReads2 = set()
+    with open(INTFNS["tBamFile"], "r") as f:
+        for line in csv.reader(f, delimiter='\t'):
+            flag_OK=True # flag: 0 consider read; 1 don't consider
+            cigar=line[5]
+            
+            (ed,alignmentLength,clipped)=extract_from_read(line,readLength)
+            
+         
+
+
+            if  ed<=ed_human:
+
+
+                lostReads.add(line[0])
+                if ed == 0:
+                    lostReads0.add(line[0])
+                elif ed == 1:
+                    lostReads1.add(line[0])
+                elif ed == 2:
+                    lostReads2.add(line[0])
+                        
+                        
+    with open(INTFNS["gBamFile"], "r") as f:
+        for line in csv.reader(f,delimiter='\t'):
+            
+            (ed,alignmentLength,clipped)=extract_from_read(line,readLength)
+            identity=readLength-ed
+            
+            
+            
+            
+            
+            if  ed<=ed_human:
+
+                lostReads.add(line[0])
+                if ed == 0:
+                    lostReads0.add(line[0])
+                elif ed == 1:
+                    lostReads1.add(line[0])
+                elif ed == 2:
+                    lostReads2.add(line[0])
+    
+    
+	write2Log("Unmapped reads mapped to genome and/or transcriptome (using " + "BWA, edit distance<6) are categorized as lost reads and are excluded from the further analysis. This includes : " + str(len(lostReads0)) + " reads with 0 mismatches, " + str(len(lostReads1)) + " reads with 1 mismatch, and" + str(len(lostReads2)) + " reads with 2 mismatches.", LOGFNS["logHuman"],True)
+	write2Log("Complete list of lost reads is available from sam files: " + INTFNS["gBamFile"] + ", " + INTFNS["tBamFile"], LOGFNS["logHuman"], True)
+	excludeReadsFromFasta(unmapped_file, lostReads,INTFNS["afterlostReadsFasta"])
+
+    if flag_PE:
+        pe2se(lostReads,"lost_human_reads_SE.txt")
+    set2file(lostReads,"lost_human_reads.txt")
+
+
+
+
+
+
+
+    return len(lostReads), len(lostReads0), len(lostReads1), len(lostReads2)
+
+#-----------------------------------------------------------------------------------------------------------------------
+def step_3(unmapped_file, readLength, cmd,flag,flag_PE):
+    if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
+    write2Log(cmd, LOGFNS["cmdLogfile"], True)
+    lostRepeatReads = set()
+    with open(INTFNS["repeatFile"], "r") as f:
+        reader = csv.reader(f, delimiter='\t')
+        for line in reader:
+            element = line[0]
+            identity = float(line[2])
+            alignmentLength = float(line[3])
+            eValue = float(line[10])
+            
+
+
+            if (eValue < 1e-05 and alignmentLength >= 0.8*readLength and identity >= 0.9*readLength):
+                lostRepeatReads.add(element)
+                
+                
+	write2Log("Lost repeat reads are mapped to the repeat sequences " +"(using megablast)", LOGFNS["logLostRepeat"], True)
+	write2Log("Complete list of lost repeat reads is available from tsv " +"file: " + INTFNS["repeatFile"], LOGFNS["logLostRepeat"], True)
+	excludeReadsFromFasta(unmapped_file, lostRepeatReads, INTFNS["afterlostRepeatFasta"])
+      
+      
+    if flag_PE:
+        pe2se(lostRepeatReads,"lost_repeat_reads_SE.txt")
+    set2file(lostRepeatReads,"lost_repeat_reads.txt")
+      
+    return len(lostRepeatReads)
+
+
+
+
+#-----------------------------------------------------------------------------------------------------------------------
+def step_4(unmapped_file, cmd,flag_PE):
+    NCL_reads = set()
+    if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
+    NCL_reads = nCircularReads("accepted_hits.fastq")
+    excludeReadsFromFasta(unmapped_file, NCL_reads, INTFNS["afterNCLFasta"])
+    
+    
+    if flag_PE:
+        pe2se(NCL_reads,"NLC_reads_SE.txt")
+    set2file(NCL_reads,"NCL_reads.txt")
+    
+    return len(NCL_reads)
+
+def step_5(unmapped_file, cmd,flag_PE):
+    proc = subprocess.Popen([cmd], shell=True, stdout=subprocess.PIPE)
+    (output, err) = proc.communicate()
+    if proc.wait(): raise SubprocessError()
+    write2Log(output.strip(), LOGFNS["gLogfile"], ARGS.quiet)
+    
+    immuneReads=set()
+    
+    
+    
+    imrep_filename="full_cdr3_"+os.path.basename(unmapped_file).replace(".fasta","")+".txt"
+    
+    print imrep_filename
+    
+    file=open(imrep_filename)
+    reader=csv.reader(file, delimiter='\t')
+    next(reader, None)
+    for line in reader:
+        immuneReads.add(line[0])
+    
+    
+    
+    excludeReadsFromFasta(unmapped_file, immuneReads,INTFNS["afterImmuneFasta"])
+
+    if flag_PE:
+        pe2se(immuneReads,"immune_reads_SE.txt")
+    set2file(immuneReads,"immune_reads.txt")
+
+
+    return len(immuneReads)
+
+
+def step_6b(unmapped_file, readLength, cmd,flag,flag_PE):
+    if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
+    bacteriaReads =nMicrobialReads("bacteria.sam", readLength,LOGFNS["bacteriaFileFiltered"],flag)
+    excludeReadsFromFasta(unmapped_file, bacteriaReads, INTFNS["afterBacteriaFasta"])
+    if flag_PE:
+        pe2se(bacteriaReads,"bacteria_reads_SE.txt")
+    set2file(bacteriaReads,"immune_reads.txt")
+
+    return len(bacteriaReads)
+
+def step_6c(unmapped_file, readLength, cmd,flag,flag_PE):
+    if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
+    virusReads = nMicrobialReads("virus.sam", readLength,LOGFNS["virusFileFiltered"],flag)
     excludeReadsFromFasta(unmapped_file, virusReads, INTFNS["afterVirusFasta"])
+    if flag_PE:
+        pe2se(virusReads,"viral_reads_SE.txt")
+    set2file(virusReads,"immune_reads.txt")
     return len(virusReads)
 
-def step_6d(unmapped_file, readLength, cmd, eupathdbFile, eupathdbFileFiltered,\
-  afterFasta):
-	if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
-	eupathdbReads = set()
-	eupathdbReads = nMicrobialReads(eupathdbFile, readLength, 
-	  eupathdbFileFiltered)
-	excludeReadsFromFasta(unmapped_file, eupathdbReads, afterFasta)
-	return len(eupathdbReads)
+def step_6d(unmapped_file, readLength, cmd, eupathdbFile, eupathdbFileFiltered,afterFasta,db,flag,flag_PE):
+    
+ 
+    
+    if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
+    eupathdbReads = set()
+    eupathdbReads = nMicrobialReads(db+".sam", readLength, eupathdbFileFiltered,flag)
+    excludeReadsFromFasta(unmapped_file, eupathdbReads, afterFasta)
+    if flag_PE:
+        pe2se(eupathdbReads,"eukaryotic_reads_SE.txt")
+    set2file(eupathdbReads,"eukaryotic_reads.txt")
+    return len(eupathdbReads)

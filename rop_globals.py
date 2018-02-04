@@ -83,6 +83,9 @@ input_option_arguments.add_argument("--skipPreliminary", "-s",
 	  "references (lost reads). The input reads need to be in .fasta or " +\
 	  ".fasta.gz format", 
 	action="store_true")
+input_option_arguments.add_argument("--max", "-m",help=" account for maximum number of unmapped reads. We use liberal threshold to account for maximum number of reads",action="store_true")
+input_option_arguments.add_argument("--pe", "-pe",help="report number of discordant read pairs, with the reads from the same pair classified into tdifferent classes",action="store_true")
+
 
 run_only_options = ap.add_argument_group("Run Options - select analysis " +\
   "(runs all if none selected)")
@@ -214,7 +217,7 @@ INTFNS["afterlostRepeatFasta"] = DIRS["lostRepeat"] + BASENAME + "_after_lostRep
 INTFNS["NCL_CIRI_file"] = DIRS["NCL"] + BASENAME +  "_NCL_CIRI_after_bwa.sam"
 INTFNS["after_NCL_CIRI_file_prefix"] = BASENAME + "_circRNA.tsv"
 INTFNS["afterNCLFasta"] = DIRS["NCL"] + BASENAME + "_after_NCL.fasta"  # after step 4
-#INTFNS["ighFile"] = DIRS["igh"] + BASENAME + "_IGH_igblast.tsv"
+INTFNS["imrep"] = DIRS["antibody"] + "full_cdr3_" + BASENAME + ".txt"
 #INTFNS["igkFile"] = DIRS["igk"] + BASENAME + "_IGK_igblast.tsv"
 #INTFNS["iglFile"] = DIRS["igl"] + BASENAME + "_IGL_igblast.tsv"
 #INTFNS["tcraFile"] = DIRS["tcra"] + BASENAME + "_TCRA_igblast.tsv"
