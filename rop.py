@@ -1,5 +1,5 @@
-print """********************************************************************************
-ROP (v1.0.6) is a computational protocol aimed to discover the source of all reads, 
+print ("""********************************************************************************
+ROP (v1.0.8) is a computational protocol aimed to discover the source of all reads,
 originated from complex RNA molecules, recombinant B and T cell receptors and microbial
 communities. 
 
@@ -10,7 +10,7 @@ Written by Serghei Mangul (smangul@ucla.edu), Harry Taegyun Yang
 Released under the terms of the General Public License version 3.0 (GPLv3)
 
 For more details see: https://github.com/smangul1/rop/wiki
-********************************************************************************"""
+********************************************************************************""")
 
 
 
@@ -55,7 +55,6 @@ nReads = {	"LowQ": 0,
 
 if not ARGS.skipPreliminary and not ARGS.skipQC:
     write2Log("1. Quality Control...", LOGFNS["gLogfile"], ARGS.quiet)
-    write2Log("1. Quality Control...", LOGFNS["cmdLogfile"], True)
     os.chdir(DIRS["QC"])
 	
     # 1a. lowQ
@@ -99,7 +98,7 @@ if not ARGS.skipPreliminary:
     write2Log("2. Remapping to reference...", LOGFNS["cmdLogfile"], True)
     write2Log("2. Remapping to reference...", LOGFNS["gLogfile"], ARGS.quiet)
     os.chdir(DIRS["lostReads"])
-    print ARGS.max,ARGS.pe
+    print (ARGS.max,ARGS.pe)
     
     nReads["lost"], lostReads0_len, lostReads1_len, lostReads2_len =step_2(unmapped_file,ARGS.max,ARGS.pe,readLength)
     write2Log("--identified " + str(nReads["lost"]) + " lost reads from " + "unmapped reads. Among those: " +str(lostReads0_len) + " reads with 0 mismatches, " +str(lostReads1_len) + " reads with 1 mismatch, and " +str(lostReads2_len) + " reads with 2 mismatches", LOGFNS["gLogfile"],ARGS.quiet)
@@ -109,10 +108,9 @@ if not ARGS.skipPreliminary:
     write2File("done!", ARGS.dir + "/step2_lostReads.done")
 	
     if ARGS.clean:
-		write2Log("Clean mode selected - removing analysis sam files.", 
-		  LOGFNS["gLogfile"], ARGS.quiet)
-		os.remove(INTFNS["gBamFile"])
-		os.remove(INTFNS["tBamFile"])
+	    write2Log("Clean mode selected - removing analysis sam files.", LOGFNS["gLogfile"], ARGS.quiet)
+	    os.remove(INTFNS["gBamFile"])
+	    os.remove(INTFNS["tBamFile"])
 else:
 	write2Log("2. Remapping to reference is skipped.", LOGFNS["gLogfile"], 
 	  ARGS.quiet)
@@ -182,7 +180,7 @@ if ARGS.circRNA:
     command=read_commands()
     cmdNCL=command[2]
     
-    print RUNFNS["runNCL_CIRIfile"]
+    print (RUNFNS["runNCL_CIRIfile"])
     
     cmd = cmdNCL +" "+ unmapped_file +" 2>" + LOGFNS["logNCL"] + " \n"
     cmd+=CD+"/tools/samtools bam2fq accepted_hits.bam >accepted_hits.fastq"
@@ -190,31 +188,30 @@ if ARGS.circRNA:
     
     
     
-    print cmd
+    print (cmd)
 
     if ARGS.qsub or ARGS.qsubArray:
-		write2Log(cmd, RUNFNS["runNCL_CIRIfile"], True)
-		write2Log("echo \"done!\" >" + DIRS["NCL"] + "/" + BASENAME +"_NCL_CIRI.done", RUNFNS["runNCL_CIRIfile"], True)
-		if ARGS.qsub:
-			qsub("4", RUNFNS["runNCL_CIRIfile"])
+	    write2Log(cmd, RUNFNS["runNCL_CIRIfile"], True)
+	    write2Log("echo \"done!\" >" + DIRS["NCL"] + "/" + BASENAME +"_NCL_CIRI.done", RUNFNS["runNCL_CIRIfile"], True)
+	    if ARGS.qsub:
+		    qsub("4", RUNFNS["runNCL_CIRIfile"])
     else:
-		nReads["NCL"] = step_4(unmapped_file, cmd,ARGS.pe)
-		write2Log("--identified " + str(nReads["NCL"]) + " reads from NCLs.", LOGFNS["gLogfile"], ARGS.quiet)
-		write2Log("***Note: circRNAs detected by CIRI are available here: " +INTFNS["after_NCL_CIRI_file_prefix"], LOGFNS["gLogfile"], ARGS.quiet)
-		if not ARGS.nonReductive:
-			clean(unmapped_file)
-			unmapped_file = INTFNS["afterNCLFasta"]
-		write2File("done!", ARGS.dir + "/step4_NCL.done")
+	    nReads["NCL"] = step_4(unmapped_file, cmd,ARGS.pe)
+	    write2Log("--identified " + str(nReads["NCL"]) + " reads from NCLs.", LOGFNS["gLogfile"], ARGS.quiet)
+	    write2Log("***Note: circRNAs detected by CIRI are available here: " +INTFNS["after_NCL_CIRI_file_prefix"], LOGFNS["gLogfile"], ARGS.quiet)
+	    if not ARGS.nonReductive:
+		    clean(unmapped_file)
+		    unmapped_file = INTFNS["afterNCLFasta"]
+	    write2File("done!", ARGS.dir + "/step4_NCL.done")
 else:
-	write2Log("4. Non-co-linear RNA profiling is skipped.", LOGFNS["gLogfile"], 
-	  ARGS.quiet)
+    write2Log("4. Non-co-linear RNA profiling is skipped.", LOGFNS["gLogfile"], ARGS.quiet)
 
 	
 ################################################################################
 # 5.BCR/TCR
 
 if not readsPresent("5", unmapped_file):
-	ARGS.immune = False
+    ARGS.immune = False
 	
 if ARGS.immune and ARGS.organism == "human":
     write2Log("5. T and B cell repetoires profiling", LOGFNS["cmdLogfile"], True)
@@ -222,8 +219,8 @@ if ARGS.immune and ARGS.organism == "human":
     os.chdir(DIRS["antibody"])
     cmd = " python "+ CD + "/prerequisite_software/imrep/imrep.py  -f 0 --extendedOutput " + unmapped_file +" imrep.cdr3 >imrep.log 2>>imrep.log"
     
-    print "******"
-    print unmapped_file
+    print ("******")
+    print (unmapped_file)
     
     if ARGS.qsub or ARGS.qsubArray:
         write2Log(cmd, RUNFNS["runAntibodyFile"], True)
@@ -270,7 +267,7 @@ if ARGS.microbiome:
     
     cmd = cmd_bacteria + " " + unmapped_file + "|"+ CD + "/tools/samtools view -SF4 - > bacteria.sam 2>>" +LOGFNS["logBacteria"]
 
-    print cmd
+    print (cmd)
 
 
     write2Log(cmd, LOGFNS["cmdLogfile"], True)
@@ -326,7 +323,7 @@ if ARGS.microbiome:
 
 
     for db in dbList:
-        print db
+        print (db)
         afterFasta = DIRS["eupathdb"] + BASENAME + "_after_" + db + ".fasta"
         eupathdbFile = DIRS["eupathdb"] + "/" + db +".sam"
         
@@ -338,7 +335,7 @@ if ARGS.microbiome:
         write2Log("Reads with 0.9 identity and more than 0.8 of nucleotides " +"aligned are considered microbial reads and are saved into " +afterFasta, LOGFNS["logEukaryotes"], True)
         write2Log("-------------", LOGFNS["logEukaryotes"], True)
         cmd = CD + "/prerequisite_software/bwa/bwa mem  " + CD + "/" + DB_FOLDER +"/single_cell_eukaryotes/EuPathDB_Merged_" +db + "_ConcatContigs.fasta "+ unmapped_file + "|"+ CD + "/tools/samtools view -SF4 - > "+db+".sam 2>>" +LOGFNS["logEukaryotes"]
-        print cmd
+        print (cmd)
 
         write2Log(cmd, LOGFNS["cmdLogfile"], True)
         if ARGS.qsub or ARGS.qsubArray:
@@ -353,7 +350,7 @@ if ARGS.microbiome:
             nEupathdbReads = step_6d(unmapped_file, readLength, cmd, eupathdbFile, eupathdbFileFiltered, afterFasta,db,ARGS.max,ARGS.pe)
             
             
-            print db,nEupathdbReads
+            print (db,nEupathdbReads)
             
             write2Log("--identified " + str(nEupathdbReads) + " reads " +"mapped to " + db + " genomes", LOGFNS["gLogfile"], ARGS.quiet)
             nReads["ep"] += nEupathdbReads
@@ -419,27 +416,25 @@ if os.path.isfile(DIRS["lostReads"]+'bacteria_reads_SE.txt'):
 
 
 
-print len(set_lost_human),len(set_lost_repeat),len(set_NCL),len(set_immune),len(set_bacteria),len(set_virus),len(set_eupathdb)
-print nReads["lost"]-len(set_lost_human)
-print nReads["repeat"]-len(set_lost_repeat)
-print nReads["NCL"]-len(set_NCL)
-print nReads["immune"]-len(set_immune)
-print nReads["bacteria"]-len(set_bacteria)
-print nReads["virus"]-len(set_virus)
-print nReads["ep"]-len(set_eupathdb)
+print (len(set_lost_human),len(set_lost_repeat),len(set_NCL),len(set_immune),len(set_bacteria),len(set_virus),len(set_eupathdb))
+print (nReads["lost"]-len(set_lost_human))
+print (nReads["repeat"]-len(set_lost_repeat))
+print (nReads["NCL"]-len(set_NCL))
+print (nReads["immune"]-len(set_immune))
+print (nReads["bacteria"]-len(set_bacteria))
+print (nReads["virus"]-len(set_virus))
+print (nReads["ep"]-len(set_eupathdb))
 
 
 write2Log("""The list of the tools used by ROP is provided below.
 ************
 **We have used in-house script to filter out low quality reads"
-**We have used SEQLEAN (seqclean-x86_64, with the default parameters) downloaded from https://sourceforge.net/projects/seqclean/ to filter out low complexity reads
 **We have used Megablast (BLAST+ version 2.2.30, with the following parameters: task = megablast, use_index = true; -outfmt 6 ;-evalue 1e-05; perc_identity = 100) downloaded from ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ to filter out reads mapped to rRNA repeat sequence
 **We have used Bowtie2 (version 2.0.5, with the following parameters: -k 1; -p 8; -f) downloaded from http://bowtie-bio.sourceforge.net/bowtie2/index.shtml to identify lost reads mapped to reference transcriptome and genome
 **We have used Megablast (BLAST+ version 2.2.30, with the following options: task=megablast, use_index=true, -outfmt 6 -evalue 1e-05, perc_identity	= 90) downloaded from ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ to identify lost repeat reads mapped to database of repeat sequences (RepBase 20.07)
 **We have used CIRI (version 1.2 with the following parameters: -S -I ) downloaded from https://sourceforge.net/projects/ciri/ to identify reads from circRNAs
 **We have used ImReP (version 0.3) to identify immune reads spanning BCR/TCR receptor gene rearrangement in the variable domain (V(D)J recombinations)
 **We have used Megablast (BLAST+ version 2.2.30, with the following parameters: task=megablast, use_index=true; -outfmt 6 ;-evalue 1e-05) downloaded from ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ to identify microbial reads mapped onto the microbial genomes (bacteria, viruses, and eukaryotic pathogens)
-**We have used Metaphlan2 (version 2.2.0, with the following parameters: --mpa_pkl; --bowtie2_exe; --input_type multifasta; --bowtie2db ; -t reads_map/rel_ab ; --nproc 8) downloaded from https://bitbucket.org/biobakery/metaphlan2 to obtain taxonomic profile of microbial communities
 ************
 For more information about the paramemers and databases used by ROP, please see the preprint: Dumpster diving in RNA-sequencing to find the source of every last read http://biorxiv.org/content/early/2016/05/13/053041"
 ********************""", LOGFNS["toolsLogfile"], True)

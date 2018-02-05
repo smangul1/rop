@@ -21,11 +21,11 @@ from rop_globals import *
 
 class InputError(Exception):
 	def __init__(self, message=""):
-		print "ERROR: Invalid input. " + message
+		print ("ERROR: Invalid input. " + message)
 
 class SubprocessError(Exception):
 	def __init__(self, message=""):
-		print "ERROR: Subprocess crashed. " + message
+		print ("ERROR: Subprocess crashed. " + message)
 
 # deletes a file except under specified conditions
 def clean(unmapped_file):
@@ -61,7 +61,7 @@ def write2Log(message, logFile_name, quiet):
 	with open(logFile_name, "a") as logFile:
 		logFile.write(message + '\n')
 	if not quiet:
-		print message
+		print (message)
 
 def write2File(content, file_name):
 	with open(file_name, "w") as file:
@@ -323,19 +323,12 @@ def step_1a(unmapped_file, n):
                 lowQFileFasta.write(str(record.seq) + "\n")
                 nLowQReads += 1
 				
-	return nLowQReads
+    return nLowQReads
 
 
 
 def step_1c(unmapped_file, readLength):
-    cmd = CD + "/tools/blastn -task megablast -index_name " + CD + "/" +\
-	  DB_FOLDER + "/rRNA/rRNA -use_index true -query " + unmapped_file +\
-	  " -db " + CD + "/" + DB_FOLDER + "/rRNA/rRNA -outfmt 6 -evalue 1e-05 >" +\
-	  INTFNS["rRNAFile"] + " 2>log_megablast_rRNA.log"
-    
-
-
-
+    cmd = CD + "/tools/blastn -task megablast -index_name " + CD + "/" +DB_FOLDER + "/rRNA/rRNA -use_index true -query " + unmapped_file +" -db " + CD + "/" + DB_FOLDER + "/rRNA/rRNA -outfmt 6 -evalue 1e-05 >" +INTFNS["rRNAFile"] + " 2>log_megablast_rRNA.log"
     write2Log(cmd, LOGFNS["cmdLogfile"], True)
     if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
     n_rRNATotal = 0
@@ -431,9 +424,9 @@ def step_2(unmapped_file,flag,flag_PE,readLength):
                     lostReads2.add(line[0])
     
     
-	write2Log("Unmapped reads mapped to genome and/or transcriptome (using " + "BWA, edit distance<6) are categorized as lost reads and are excluded from the further analysis. This includes : " + str(len(lostReads0)) + " reads with 0 mismatches, " + str(len(lostReads1)) + " reads with 1 mismatch, and" + str(len(lostReads2)) + " reads with 2 mismatches.", LOGFNS["logHuman"],True)
-	write2Log("Complete list of lost reads is available from sam files: " + INTFNS["gBamFile"] + ", " + INTFNS["tBamFile"], LOGFNS["logHuman"], True)
-	excludeReadsFromFasta(unmapped_file, lostReads,INTFNS["afterlostReadsFasta"])
+    write2Log("Unmapped reads mapped to genome and/or transcriptome (using " + "BWA, edit distance<6) are categorized as lost reads and are excluded from the further analysis. This includes : " + str(len(lostReads0)) + " reads with 0 mismatches, " + str(len(lostReads1)) + " reads with 1 mismatch, and" + str(len(lostReads2)) + " reads with 2 mismatches.", LOGFNS["logHuman"],True)
+    write2Log("Complete list of lost reads is available from sam files: " + INTFNS["gBamFile"] + ", " + INTFNS["tBamFile"], LOGFNS["logHuman"], True)
+    excludeReadsFromFasta(unmapped_file, lostReads,INTFNS["afterlostReadsFasta"])
 
     if flag_PE:
         pe2se(lostReads,"lost_human_reads_SE.txt")
@@ -466,9 +459,9 @@ def step_3(unmapped_file, readLength, cmd,flag,flag_PE):
                 lostRepeatReads.add(element)
                 
                 
-	write2Log("Lost repeat reads are mapped to the repeat sequences " +"(using megablast)", LOGFNS["logLostRepeat"], True)
-	write2Log("Complete list of lost repeat reads is available from tsv " +"file: " + INTFNS["repeatFile"], LOGFNS["logLostRepeat"], True)
-	excludeReadsFromFasta(unmapped_file, lostRepeatReads, INTFNS["afterlostRepeatFasta"])
+    write2Log("Lost repeat reads are mapped to the repeat sequences " +"(using megablast)", LOGFNS["logLostRepeat"], True)
+    write2Log("Complete list of lost repeat reads is available from tsv " +"file: " + INTFNS["repeatFile"], LOGFNS["logLostRepeat"], True)
+    excludeReadsFromFasta(unmapped_file, lostRepeatReads, INTFNS["afterlostRepeatFasta"])
       
       
     if flag_PE:
@@ -506,7 +499,7 @@ def step_5(unmapped_file, cmd,flag_PE):
     
     imrep_filename="full_cdr3_"+os.path.basename(unmapped_file).replace(".fasta","")+".txt"
     
-    print imrep_filename
+    print (imrep_filename)
     
     file=open(imrep_filename)
     reader=csv.reader(file, delimiter='\t')

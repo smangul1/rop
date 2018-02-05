@@ -1,0 +1,1 @@
+ln -s example/db.toy.human/ db_human

@@ -147,20 +147,15 @@ ARGS.dir = os.path.abspath(ARGS.dir)
 # check input file type
 filename, file_extension = os.path.splitext(ARGS.unmappedReads)
 if file_extension == ".bam" and not ARGS.b:
-	print "WARNING: Detected bam input, but --b option is not selected. " +\
-	  "Processing as .bam"
+	print ("WARNING: Detected bam input, but --b option is not selected. Processing as .bam")
 	ARGS.b = True
 elif file_extension == ".gz" and not ARGS.gzip:
-	print "WARNING: Detected gzip input, but --gzip option is not " +\
-	  "selected. Processing as .gzip"
+	print ("WARNING: Detected gzip input, but --gzip option is not selected. Processing as .gzip")
 	ARGS.gzip = True
 
 # check if ARGS.dir exists
 if os.path.exists(ARGS.dir) and not ARGS.f:
-	print "ERROR: The directory " + ARGS.dir + " exists. Please choose a " +\
-	  "different directory in which to save results of the analysis. " +\
-	  "Alternatively, use the --f option to overwrite the results into " +\
-	  ARGS.dir + "."
+	print ("ERROR: The directory " + ARGS.dir + " exists. Please choose a different directory in which to save results of the analysis. Alternatively, use the --f option to overwrite the results into " + ARGS.dir + ".")
 	sys.exit(1)
 if os.path.exists(ARGS.dir) and ARGS.f:
 	cmd = "rm -fr " + ARGS.dir + " &>/dev/null"
@@ -240,7 +235,7 @@ INTFNS["unaccountedReadsFasta"] = ARGS.dir + "/" + BASENAME + "_unaccountedReads
 
 LOGFNS = {}
 LOGFNS["gLogfile"] = ARGS.dir + "/" + BASENAME + ".log"
-LOGFNS["cmdLogfile"] = ARGS.dir + "/" + "dev.log"
+LOGFNS["cmdLogfile"] = ARGS.dir + "/" + "rop.commands.sh"
 LOGFNS["toolsLogfile"] = ARGS.dir + "/"+"tools.log"
 LOGFNS["logQC"] = DIRS["QC"] + BASENAME + "_QC.log"  # step 1b
 LOGFNS["logrRNA"] = DIRS["QC"] + BASENAME + "_rRNA.log"  # step 1c
