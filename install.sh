@@ -9,6 +9,20 @@ echo "For more details see: https://sergheimangul.wordpress.com/rop/"
 echo "ROP Tutorial: https://github.com/smangul1/rop/wiki"
 echo "--------------------------------------------------------------------------------"
 
+echo "Commands are saved in rop.commands.txt"
+./rop.commands.sh
+
+cd tools
+rm -fr imrep
+git clone https://github.com/mandricigor/imrep.git
+cd imrep
+./install.sh
+cd ..
+
+hg clone https://bitbucket.org/biobakery/metaphlan2
+
+
+
 pip install pysam
 pip install biopython --user
 pip install intervaltree --user
@@ -21,3 +35,7 @@ cd suffix_tree-2.1
 python setup.py install --user
 cd ..
 rm -rf suffix_tree-2.1
+
+echo "Done!"
+
+

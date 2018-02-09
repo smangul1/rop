@@ -1,5 +1,0 @@
-/u/home/s/serghei/collab/code/rop-fork1/prerequisite_software/bwa/bwa mem  /u/home/s/serghei/collab/code/rop-fork1/db_human/BWA_version0.6.0/genome.fa
-/u/home/s/serghei/collab/code/rop-fork1/prerequisite_software/bwa/bwa mem  /u/home/s/serghei/collab/code/rop-fork1/db_human/BWA_version0.6.0/isoforms_GRCh38_Ensembl.fasta
-/u/home/s/serghei/collab/code/rop-fork1/prerequisite_software/tophat-2.1.0.Linux_x86_64/tophat2 -o ./ --fusion-search --keep-fasta-order --no-coverage-search /u/home/s/serghei/collab/code/rop-fork1/db_human/Bowtie2Index/genome
-/u/home/s/serghei/collab/code/rop-fork1/prerequisite_software/bwa/bwa mem /u/home/s/serghei/collab/code/rop-fork1/db_human/bacteria/bacteria.fa
-/u/home/s/serghei/collab/code/rop-fork1/prerequisite_software/bwa/bwa mem /u/home/s/serghei/collab/code/rop-fork1/db_human/virus/NCBI-RefSeq-viral_ConcatContigs.fasta

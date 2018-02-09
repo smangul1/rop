@@ -101,6 +101,12 @@ run_only_options.add_argument("--immune",
 run_only_options.add_argument("--microbiome", 
 	help="Run microbime profiling", 
 	action="store_true")
+run_only_options.add_argument("--bacteria",help="Run bacteria profiling",action="store_true")
+run_only_options.add_argument("--viral",help="Run viral profiling",action="store_true")
+run_only_options.add_argument("--fungi",help="Run fungi profiling",action="store_true")
+run_only_options.add_argument("--protozoa",help="Run protozoa profiling",action="store_true")
+
+
 
 misc_option_arguments = ap.add_argument_group('Miscellenous Options')
 misc_option_arguments.add_argument("--outGz", 
@@ -129,12 +135,16 @@ misc_option_arguments.add_argument("--f", "-f",
 ARGS = ap.parse_args()
 
 # if no analysis mode is selected, select everything
-if (not ARGS.repeat and not ARGS.immune and not ARGS.circRNA 
-  and not ARGS.microbiome):
-	ARGS.repeat = True
-	ARGS.immune = True
-	ARGS.circRNA = True
-	ARGS.microbiome = True
+if (not ARGS.repeat and not ARGS.immune and not ARGS.circRNA and not ARGS.microbiome):
+    ARGS.repeat = True
+    ARGS.immune = True
+    ARGS.circRNA = False # startin from release v1.0.8 circRNA is no longer dafault, as this is too slow
+    ARGS.metaphlan = False
+    ARGS.microbiome = True
+    ARGS.bacteria = False
+    ARGS.viral = True
+    ARGS.fungi = True
+    ARGS.protozoa = True
 
 # necessary for parallelization
 if ARGS.qsub or ARGS.qsubArray:
@@ -158,8 +168,10 @@ if os.path.exists(ARGS.dir) and not ARGS.f:
 	print ("ERROR: The directory " + ARGS.dir + " exists. Please choose a different directory in which to save results of the analysis. Alternatively, use the --f option to overwrite the results into " + ARGS.dir + ".")
 	sys.exit(1)
 if os.path.exists(ARGS.dir) and ARGS.f:
-	cmd = "rm -fr " + ARGS.dir + " &>/dev/null"
-	if subprocess.Popen([cmd], shell=True).wait(): sys.exit(2)
+    cmd = "rm -fr " + ARGS.dir + " &>/dev/null"
+    os.system(cmd)
+    print (ARGS.dir,"was deleted")
+
 
 # database folder path, BASENAME (name of unmapped reads file without extension)
 DB_FOLDER = "/db_" + ARGS.organism
@@ -173,24 +185,17 @@ BASENAME = os.path.splitext(os.path.basename(ARGS.unmappedReads))[0]
 
 DIRS = {}
 DIRS["QC"] = ARGS.dir + "/QC/"  # step 1
-DIRS["lostReads"] = ARGS.dir + "/lostReads/"  # step 2
-DIRS["lostRepeat"] = ARGS.dir + "/lostRepeatSequences/"  # step 3
-DIRS["antibody"] = ARGS.dir + "/antibodyProfile/"  # step 4
-#DIRS["bcr"] = DIRS["antibody"] + "BCR/"
-#DIRS["igh"] = DIRS["bcr"] + "IGH/"
-#DIRS["igk"] = DIRS["bcr"] + "IGK/"
-#DIRS["igl"] = DIRS["bcr"] + "IGL/"
-#DIRS["tcr"] = DIRS["antibody"] + "TCR/"
-#DIRS["tcra"] = DIRS["tcr"] + "TCRA/"
-#DIRS["tcrb"] = DIRS["tcr"] + "TCRB/"
-#DIRS["tcrd"] = DIRS["tcr"] + "TCRD/"
-#DIRS["tcrg"] = DIRS["tcr"] + "TCRG/"
+DIRS["lostReads"] = ARGS.dir + "/lost.human.reads/"  # step 2
+DIRS["lostRepeat"] = ARGS.dir + "/lost.repeats/"  # step 3
+DIRS["antibody"] = ARGS.dir + "/immune.repertoire/"  # step 4
 DIRS["NCL"] = ARGS.dir + "/NCL/"  # step 5
-DIRS["microbiome"] = ARGS.dir + "/microbiomeProfile/"  # step 6
+DIRS["microbiome"] = ARGS.dir + "/microbiome/"  # step 6
 DIRS["metaphlan"] =  DIRS["microbiome"] + "metaphlan/"
-DIRS["bacteria"] = DIRS["microbiome"] + "bacteriaProfile/"
-DIRS["virus"] = DIRS["microbiome"] + "viralProfile/"
-DIRS["eupathdb"] = DIRS["microbiome"] + "eukaryoticPathogenProfile/"
+DIRS["bacteria"] = DIRS["microbiome"] + "bacteria/"
+DIRS["virus"] = DIRS["microbiome"] + "viral/"
+DIRS["fungi"] = DIRS["microbiome"] + "fungi/"
+DIRS["protozoa"] = DIRS["microbiome"] + "protozoa/"
+
 for dir in DIRS:
 	if not os.path.exists(DIRS[dir]):
 		os.makedirs(DIRS[dir])
@@ -228,6 +233,11 @@ INTFNS["metaphlan_intermediate_bowtie2out"] =  DIRS["metaphlan"] + BASENAME + "_
 INTFNS["metaphlan_output"] =  DIRS["metaphlan"]  +  BASENAME  +  "_metaphlan_output.tsv"
 INTFNS["afterBacteriaFasta"] = DIRS["bacteria"] + BASENAME + "_afterBacteria.fasta"
 INTFNS["afterVirusFasta"] = DIRS["virus"] + BASENAME + "_afterVirus.fasta"
+INTFNS["afterFungiFasta"] = DIRS["fungi"] + BASENAME + "_afterFungi.fasta"
+INTFNS["afterProtozoaFasta"] = DIRS["protozoa"] + BASENAME + "_afterProtozoa.fasta"
+
+
+
 INTFNS["unaccountedReadsFasta"] = ARGS.dir + "/" + BASENAME + "_unaccountedReads.fasta"  # after step 6
 
 ################################################################################
@@ -235,7 +245,7 @@ INTFNS["unaccountedReadsFasta"] = ARGS.dir + "/" + BASENAME + "_unaccountedReads
 
 LOGFNS = {}
 LOGFNS["gLogfile"] = ARGS.dir + "/" + BASENAME + ".log"
-LOGFNS["cmdLogfile"] = ARGS.dir + "/" + "rop.commands.sh"
+LOGFNS["cmdLogfile"] = ARGS.dir + "/" + "dev.log"
 LOGFNS["toolsLogfile"] = ARGS.dir + "/"+"tools.log"
 LOGFNS["logQC"] = DIRS["QC"] + BASENAME + "_QC.log"  # step 1b
 LOGFNS["logrRNA"] = DIRS["QC"] + BASENAME + "_rRNA.log"  # step 1c
@@ -254,11 +264,15 @@ LOGFNS["logNCL"] = DIRS["NCL"] + BASENAME + "_NCL.log"  # step 4
 LOGFNS["logMetaphlan"] = DIRS["metaphlan"] + BASENAME + "_metaphlan.log"  # step 6
 LOGFNS["logBacteria"] = DIRS["bacteria"] + BASENAME + "_bacteria.log"
 LOGFNS["logVirus"] = DIRS["virus"] + BASENAME + "_virus.log"
-LOGFNS["logEukaryotes"] = DIRS["eupathdb"] + BASENAME + "_eukaryotes.log"
+LOGFNS["logFungi"] = DIRS["fungi"] + BASENAME + "_fungi.log"
+LOGFNS["logProtozoa"] = DIRS["protozoa"] + BASENAME + "_protozoa.log"
 LOGFNS["bacteriaFile"] = DIRS["bacteria"] + BASENAME + "_bacteria_blastFormat6.csv"
 LOGFNS["virusFile"] = DIRS["virus"] + BASENAME + "_virus_blastFormat6.csv"
-LOGFNS["bacteriaFileFiltered"] = DIRS["bacteria"] + BASENAME + "_bacteriaFiltered_blastFormat6.csv"
-LOGFNS["virusFileFiltered"] = DIRS["virus"] + BASENAME + "_virusFiltered_blastFormat6.csv"
+LOGFNS["bacteriaFileFiltered"] = DIRS["bacteria"] + BASENAME + "_bacteriaFiltered.csv"
+LOGFNS["virusFileFiltered"] = DIRS["virus"] + BASENAME + "_virusFiltered.csv"
+LOGFNS["fungiFileFiltered"] = DIRS["fungi"] + BASENAME + "_fungiFiltered.csv"
+LOGFNS["protozoaFileFiltered"] = DIRS["protozoa"] + BASENAME + "_protozoaFiltered.csv"
+
 
 ################################################################################
 # Run file names
@@ -277,4 +291,7 @@ RUNFNS["runNCL_CIRIfile"] = DIRS["NCL"] + "/run_NCL_CIRI" + BASENAME + ".sh"
 RUNFNS["runAntibodyFile"] = DIRS["antibody"] + "/runAntibody_" + BASENAME + ".sh"
 RUNFNS["runBacteriaFile"] = DIRS["bacteria"] +"/runBacteria_" + BASENAME + ".sh"
 RUNFNS["runVirusFile"] = DIRS["virus"] + "/runVirus_" + BASENAME + ".sh"
+RUNFNS["runFungiFile"] = DIRS["fungi"] + "/runFungi_" + BASENAME + ".sh"
+RUNFNS["runProtozoaFile"] = DIRS["protozoa"] + "/runProtozoa_" + BASENAME + ".sh"
+
 RUNFNS["run_metaphlan_file"] = DIRS["metaphlan"] + "/run_metaphlan_" + BASENAME + ".sh"

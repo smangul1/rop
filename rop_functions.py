@@ -136,7 +136,7 @@ def bam2fastq(cd, bam_name, fastq_name):
 #Customize the tools used by ROP
 
 def read_commands():
-    f=open(CD+'/rop_commands.txt')
+    f=open(CD+'/rop.commands.txt')
     command=[]
     reader=csv.reader(f)
     for line in reader:
@@ -371,7 +371,6 @@ def step_2(unmapped_file,flag,flag_PE,readLength):
 
 
 
-
     write2Log(cmdGenome, LOGFNS["cmdLogfile"], True)
     write2Log(cmdTranscriptome, LOGFNS["cmdLogfile"], True)
     proc1 = subprocess.Popen([cmdTranscriptome], shell=True)
@@ -442,8 +441,8 @@ def step_2(unmapped_file,flag,flag_PE,readLength):
 
 #-----------------------------------------------------------------------------------------------------------------------
 def step_3(unmapped_file, readLength, cmd,flag,flag_PE):
-    if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
     write2Log(cmd, LOGFNS["cmdLogfile"], True)
+    if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
     lostRepeatReads = set()
     with open(INTFNS["repeatFile"], "r") as f:
         reader = csv.reader(f, delimiter='\t')
@@ -499,7 +498,6 @@ def step_5(unmapped_file, cmd,flag_PE):
     
     imrep_filename="full_cdr3_"+os.path.basename(unmapped_file).replace(".fasta","")+".txt"
     
-    print (imrep_filename)
     
     file=open(imrep_filename)
     reader=csv.reader(file, delimiter='\t')
@@ -531,22 +529,35 @@ def step_6b(unmapped_file, readLength, cmd,flag,flag_PE):
 
 def step_6c(unmapped_file, readLength, cmd,flag,flag_PE):
     if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
-    virusReads = nMicrobialReads("virus.sam", readLength,LOGFNS["virusFileFiltered"],flag)
+    virusReads_NCBI = nMicrobialReads("virus.NCBI.sam", readLength,LOGFNS["virusFileFiltered"],flag)
+    virusReads_VIPR = nMicrobialReads("virus.VIPR.sam", readLength,LOGFNS["virusFileFiltered"],flag)
+    virusReads=virusReads_NCBI | virusReads_VIPR
     excludeReadsFromFasta(unmapped_file, virusReads, INTFNS["afterVirusFasta"])
     if flag_PE:
         pe2se(virusReads,"viral_reads_SE.txt")
-    set2file(virusReads,"immune_reads.txt")
+    set2file(virusReads,"viral_reads.txt")
     return len(virusReads)
 
-def step_6d(unmapped_file, readLength, cmd, eupathdbFile, eupathdbFileFiltered,afterFasta,db,flag,flag_PE):
-    
- 
-    
+def step_6d(unmapped_file, readLength, cmd,flag,flag_PE):
     if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
-    eupathdbReads = set()
-    eupathdbReads = nMicrobialReads(db+".sam", readLength, eupathdbFileFiltered,flag)
-    excludeReadsFromFasta(unmapped_file, eupathdbReads, afterFasta)
+    virusReads = nMicrobialReads("fungi.sam", readLength,LOGFNS["fungiFileFiltered"],flag)
+    excludeReadsFromFasta(unmapped_file, virusReads, INTFNS["afterFungiFasta"])
     if flag_PE:
-        pe2se(eupathdbReads,"eukaryotic_reads_SE.txt")
-    set2file(eupathdbReads,"eukaryotic_reads.txt")
-    return len(eupathdbReads)
+        pe2se(virusReads,"fungi_reads_SE.txt")
+    set2file(virusReads,"fungi_reads.txt")
+    return len(virusReads)
+
+
+def step_6_protozoa(unmapped_file, readLength, cmd,flag,flag_PE):
+    if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
+    virusReads = nMicrobialReads("protozoa.sam", readLength,LOGFNS["protozoaFileFiltered"],flag)
+    excludeReadsFromFasta(unmapped_file, virusReads, INTFNS["afterProtozoaFasta"])
+    if flag_PE:
+        pe2se(virusReads,"protozoa_reads_SE.txt")
+    set2file(virusReads,"protozoa_reads.txt")
+    return len(virusReads)
+
+
+
+
+
