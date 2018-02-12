@@ -371,11 +371,7 @@ def step_2(unmapped_file,flag,flag_PE,readLength):
     cmdTranscriptome = bwa_TR + " "+unmapped_file + " 2>>" + LOGFNS["log_bowtieTR"] + " | " + CD + "/tools/samtools view -SF4 -bh -  >" + INTFNS["tBamFile"]
 
 
-    cmd=CD+"/tools/samtools view " + INTFNS["gBamFile"] + ">" + INTFNS["gSamFile"]
-    if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
 
-    cmd=CD+"/tools/samtools view " + INTFNS["tBamFile"] + ">" + INTFNS["tSamFile"]
-    if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
 
 
     write2Log(cmdGenome, LOGFNS["cmdLogfile"], True)
@@ -383,6 +379,14 @@ def step_2(unmapped_file,flag,flag_PE,readLength):
     proc1 = subprocess.Popen([cmdTranscriptome], shell=True)
     proc2 = subprocess.Popen([cmdGenome], shell=True)
     if proc1.wait() or proc2.wait(): raise SubprocessError()
+
+    cmd=CD+"/tools/samtools view " + INTFNS["gBamFile"] + ">" + INTFNS["gSamFile"]
+    if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
+    
+    cmd=CD+"/tools/samtools view " + INTFNS["tBamFile"] + ">" + INTFNS["tSamFile"]
+    if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
+
+
     lostReads = set()
     lostReads0 = set()
     lostReads1 = set()

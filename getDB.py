@@ -14,7 +14,7 @@ humandict['protozoa']='23e12115a5e9d526553c901e772731f5'
 humandict['metaphlan_db']='83e0be082014811189bcb57856d3213d'  
 humandict['repeats']='109a97423f505b73a7e55995b827e2fd'
 humandict['rRNA']='37dbf8409c644e1a7914381e2dc55960'
-humandict['viral']='7ce95144827603a64dc5996aa0112cc0'
+humandict['viral']='7e64436203d4cc0564d5b4c844a18e79'
 
 
 dict={}
