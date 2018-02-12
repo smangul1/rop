@@ -39,9 +39,9 @@ nReads = {	"LowQ": 0,
 			"repeat": 0,
 			"NCL": 0,
 			"immune": 0,
-			"bacteria": 0,
+			"fungi": 0,
 			"virus": 0,
-			"ep": 0 }
+            "protozoa" : 0}
 
 ################################################################################
 # 1. Quality Control
@@ -208,7 +208,7 @@ if ARGS.immune and ARGS.organism == "human":
     write2Log("5. T and B cell repetoires profiling", LOGFNS["gLogfile"], ARGS.quiet)
     os.chdir(DIRS["antibody"])
     # -f -1 to report CDR3s supported by a single read. This is a bug in imrep. Needs to be 0.
-    cmd = " python "+ CD + "/tools/imrep/imrep.py --extendedOutput " + unmapped_file +" imrep.cdr3 >imrep.log 2>>imrep.log"
+    cmd = " python "+ CD + "/tools/imrep/imrep.py -f -1 --extendedOutput " + unmapped_file +" imrep.cdr3 >imrep.log 2>>imrep.log"
     
 
     
@@ -331,11 +331,10 @@ if ARGS.viral:
     
   
 
-    cmd1 =   cmd_virus1  + " "+ unmapped_file +" 2>>"+LOGFNS["logVirus"]+"|"+ CD + "/tools/samtools view -SF4 - > virus.NCBI.sam 2>>" +LOGFNS["logVirus"]
-    cmd2 =   cmd_virus2  + " "+ unmapped_file +" 2>>"+LOGFNS["logVirus"]+"|"+ CD + "/tools/samtools view -SF4 - > virus.VIPR.sam 2>>" +LOGFNS["logVirus"]
+    cmd1 =   cmd_virus1  + " "+ unmapped_file +" 2>>"+LOGFNS["logVirus"]+"|"+ CD + "/tools/samtools view -SF4 -bh  - > "+INTFNS["bam_viral"]+" 2>>" +LOGFNS["logVirus"]
+    cmd2 =   cmd_virus2  + " "+ unmapped_file +" 2>>"+LOGFNS["logVirus"]+"|"+ CD + "/tools/samtools view -SF4 -bh - > "+INTFNS["bam_viral_vipr"]+" 2>>" +LOGFNS["logVirus"]
     cmd = cmd1+"\n"+cmd2
     
-    print cmd2
 
     
     write2Log(cmd, LOGFNS["cmdLogfile"], True)
@@ -358,7 +357,7 @@ if ARGS.viral:
 
 
 # 6d. fungi -----
-if ARGS.protozoa:
+if ARGS.fungi:
     os.chdir(DIRS["fungi"])
     
     os.chdir(DIRS["fungi"])
@@ -373,7 +372,7 @@ if ARGS.protozoa:
     
     
     
-    cmd =   cmd_fungi  + " "+ unmapped_file + " 2>>"+LOGFNS["logFungi"]+"|"+ CD + "/tools/samtools view -SF4 - > fungi.sam 2>>" +LOGFNS["logFungi"]
+    cmd =   cmd_fungi  + " "+ unmapped_file + " 2>>"+LOGFNS["logFungi"]+"|"+ CD + "/tools/samtools view -SF4 -bh - > "+INTFNS["bam_fungi"]+" 2>>" +LOGFNS["logFungi"]
     
     
     
@@ -408,7 +407,7 @@ if ARGS.protozoa:
     
     
     
-    cmd =   cmd_protozoa  + " "+ unmapped_file + " 2>>"+LOGFNS["logProtozoa"]+"|"+ CD + "/tools/samtools view -SF4 - > protozoa.sam 2>>" +LOGFNS["logProtozoa"]
+    cmd =   cmd_protozoa  + " "+ unmapped_file + " 2>>"+LOGFNS["logProtozoa"]+"|"+ CD + "/tools/samtools view -SF4 -bh - > "+INTFNS["bam_protozoa"]+" 2>>" +LOGFNS["logProtozoa"]
 
 
     
@@ -429,23 +428,43 @@ if ARGS.protozoa:
 
 if not (ARGS.qsub or ARGS.qsubArray):
         os.rename(unmapped_file,INTFNS["unaccountedReadsFasta"])
-        write2Log("In total: " + str(nReads["bacteria"] + nReads["virus"] +nReads["fungi"]+nReads["protozoa"]) + " reads mapped to microbial genomes",LOGFNS["gLogfile"], ARGS.quiet)
+        write2Log("In total: " + str(nReads["virus"] +nReads["fungi"]+nReads["protozoa"]) + " reads mapped to microbial genomes",LOGFNS["gLogfile"], ARGS.quiet)
         write2File("done!", ARGS.dir + "/step6_microbiomeProfile.done")
 
+
+
+#number of lowQulaity reads in INTFNS["unaccountedReadsFasta"].
+
+n_lowQuality=0
+file=open(INTFNS["unaccountedReadsFasta"])
+reader=csv.reader(file)
+for line in reader:
+    if line[0][0]==">":
+        if "lowQuality_" in line[0]:
+            n_lowQuality+=1
+
+#Adjust number of LowQ in nReads["LowQ"]
+n_lowQuality_initial=nReads["LowQ"]
+nReads["LowQ"]=n_lowQuality
+n_lowQuality_categorized=n_lowQuality_initial-nReads["LowQ"]
 
 ################################################################################
 # Wrap-up
 
 if not ARGS.qsubArray and not ARGS.qsub:
     
+
+    
+    
     prc_accounted=100*sum(nReads.values())/float(n)
     
-    write2Log("Summary: The ROP protocol is able to account for " + str(sum(nReads.values())) + "("+str(prc_accounted)+"%) of unmapped reads.  This includes low quality reads which are marked as LowQuality and saved  among the unaccounted reads.",LOGFNS["gLogfile"], ARGS.quiet)
+    write2Log("Summary: The ROP protocol is able to account for " + str(sum(nReads.values())) + " reads ("+str(prc_accounted)+"%) of unmapped reads.",LOGFNS["gLogfile"], ARGS.quiet)
+    write2Log("Initially we detected " + str(n_lowQuality_initial) + " low quality reads. Among those " + str (n_lowQuality_categorized) + " reads were categoried as various ROP classes" , LOGFNS["gLogfile"], ARGS.quiet)
     write2Log("***Unaccounted reads (not explained by ROP) are saved to " + INTFNS["unaccountedReadsFasta"], LOGFNS["gLogfile"], ARGS.quiet)
     write2Log("***Log file with all the commands used is available here: " + LOGFNS["cmdLogfile"], LOGFNS["gLogfile"], ARGS.quiet)
     tLog = ARGS.dir + "/" + "numberReads_" + BASENAME + ".log"
     write2Log("sample,nReads.unmapped,nReads.low.Quality,nReads.rRNA,nReads.lost.human,nReads.repeats,nReads.NCL,nReads.immune,nRead.microbiome", tLog, True)
-    write2Log(BASENAME + "," + str(n) + "," + str(nReads["LowQ"]) + "," + str(nReads["rRNA"]) + "," + str(nReads["lost"]) + "," + str(nReads["repeat"]) + "," + str(nReads["NCL"]) +"," + str(nReads["immune"]) + ","+ str(nReads["bacteria"] + nReads["virus"] + nReads["fungi"]+nReads["protozoa"]), tLog, True)
+    write2Log(BASENAME + "," + str(n) + "," + str(nReads["LowQ"]) + "," + str(nReads["rRNA"]) + "," + str(nReads["lost"]) + "," + str(nReads["repeat"]) + "," + str(nReads["NCL"]) +"," + str(nReads["immune"]) + ","+ str(nReads["virus"] + nReads["fungi"]+nReads["protozoa"]), tLog, True)
 
 
 
@@ -457,7 +476,7 @@ write2Log("""The list of the tools used by ROP is provided below (to be updated 
 **We have used Bowtie2 (version 2.0.5, with the following parameters: -k 1; -p 8; -f) downloaded from http://bowtie-bio.sourceforge.net/bowtie2/index.shtml to identify lost reads mapped to reference transcriptome and genome
 **We have used Megablast (BLAST+ version 2.2.30, with the following options: task=megablast, use_index=true, -outfmt 6 -evalue 1e-05, perc_identity	= 90) downloaded from ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ to identify lost repeat reads mapped to database of repeat sequences (RepBase 20.07)
 **We have used ImReP (version 0.3) to identify immune reads spanning BCR/TCR receptor gene rearrangement in the variable domain (V(D)J recombinations)
-**We have used Megablast (BLAST+ version 2.2.30, with the following parameters: task=megablast, use_index=true; -outfmt 6 ;-evalue 1e-05) downloaded from ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ to identify microbial reads mapped onto the microbial genomes (bacteria, viruses, and eukaryotic pathogens)
+**We have used Megablast (BLAST+ version 2.2.30, with the following parameters: task=megablast, use_index=true; -outfmt 6 ;-evalue 1e-05) downloaded from ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ to identify microbial reads mapped onto the microbial genomes (viruses, and eukaryotic pathogens)
 ************
 For more information about the paramemers and databases used by ROP, please see the preprint: Dumpster diving in RNA-sequencing to find the source of every last read http://biorxiv.org/content/early/2016/05/13/053041"
 ********************""", LOGFNS["toolsLogfile"], True)

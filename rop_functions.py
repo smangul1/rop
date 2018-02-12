@@ -124,12 +124,13 @@ def bam2fasta(cd, bam_name, fasta_name):
 	if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
 
 def bam2fastq(cd, bam_name, fastq_name):
-	message = "Convert bam to fastq"
-	write2Log(message, LOGFNS["gLogfile"], ARGS.quiet)
-	cmd = cd + "/tools/bamtools convert -in " + bam_name + " -format fastq >" +\
-	  fastq_name
-	write2Log(cmd, LOGFNS["cmdLogfile"], "False")
-	if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
+    message = "Extract unmapped reads and convert to fastq"
+    write2Log(message, LOGFNS["gLogfile"], ARGS.quiet)
+    
+    cmd=cd + "/tools/samtools view -f 0x4 -bh " + bam_name + " | " + cd+ "/tools/samtools bam2fq ->"+fastq_name
+    print cmd
+    write2Log(cmd, LOGFNS["cmdLogfile"], "False")
+    if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
 
 
 
@@ -192,6 +193,7 @@ def extract_from_read(line,readLength):
     return (ed,alignmentLength,clipped)
 
 def nMicrobialReads(inFile_name, readLength, outFile_name,flag):
+    
     readsMicrobiome = set()
     with open(inFile_name, "r") as inFile:
         with open(outFile_name, "w") as outFile:
@@ -319,7 +321,7 @@ def step_1a(unmapped_file, n):
                 lowQFileFasta.write(str(record.seq) + "\n")
                 
             else:
-                lowQFileFasta.write(str(">llowQuality_" + record.name.replace("/","---")) + "\n")
+                lowQFileFasta.write(str(">lowQuality_" + record.name.replace("/","---")) + "\n")
                 lowQFileFasta.write(str(record.seq) + "\n")
                 nLowQReads += 1
 				
@@ -365,10 +367,15 @@ def step_2(unmapped_file,flag,flag_PE,readLength):
     bwa_TR=command[1]
 
 
-    cmdGenome = bwa_WG + " "+unmapped_file + " 2>>" + LOGFNS["log_bowtieWG"] + " | " + CD + "/tools/samtools view -SF4 - >" +INTFNS["gBamFile"]
-    cmdTranscriptome = bwa_TR + " "+unmapped_file + " 2>>" + LOGFNS["log_bowtieTR"] + " | " + CD + "/tools/samtools view -SF4 -  >" + INTFNS["tBamFile"]
+    cmdGenome = bwa_WG + " "+unmapped_file + " 2>>" + LOGFNS["log_bowtieWG"] + " | " + CD + "/tools/samtools view -SF4 -bh - >" +INTFNS["gBamFile"]
+    cmdTranscriptome = bwa_TR + " "+unmapped_file + " 2>>" + LOGFNS["log_bowtieTR"] + " | " + CD + "/tools/samtools view -SF4 -bh -  >" + INTFNS["tBamFile"]
 
 
+    cmd=CD+"/tools/samtools view " + INTFNS["gBamFile"] + ">" + INTFNS["gSamFile"]
+    if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
+
+    cmd=CD+"/tools/samtools view " + INTFNS["tBamFile"] + ">" + INTFNS["tSamFile"]
+    if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
 
 
     write2Log(cmdGenome, LOGFNS["cmdLogfile"], True)
@@ -380,7 +387,7 @@ def step_2(unmapped_file,flag,flag_PE,readLength):
     lostReads0 = set()
     lostReads1 = set()
     lostReads2 = set()
-    with open(INTFNS["tBamFile"], "r") as f:
+    with open(INTFNS["tSamFile"], "r") as f:
         for line in csv.reader(f, delimiter='\t'):
             flag_OK=True # flag: 0 consider read; 1 don't consider
             cigar=line[5]
@@ -402,7 +409,7 @@ def step_2(unmapped_file,flag,flag_PE,readLength):
                     lostReads2.add(line[0])
                         
                         
-    with open(INTFNS["gBamFile"], "r") as f:
+    with open(INTFNS["gSamFile"], "r") as f:
         for line in csv.reader(f,delimiter='\t'):
             
             (ed,alignmentLength,clipped)=extract_from_read(line,readLength)
@@ -431,7 +438,8 @@ def step_2(unmapped_file,flag,flag_PE,readLength):
         pe2se(lostReads,"lost_human_reads_SE.txt")
     set2file(lostReads,"lost_human_reads.txt")
 
-
+    os.remove(INTFNS["gSamFile"])
+    os.remove(INTFNS["tSamFile"])
 
 
 
@@ -527,35 +535,61 @@ def step_6b(unmapped_file, readLength, cmd,flag,flag_PE):
 
     return len(bacteriaReads)
 
+
+#virus
 def step_6c(unmapped_file, readLength, cmd,flag,flag_PE):
     if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
-    virusReads_NCBI = nMicrobialReads("virus.NCBI.sam", readLength,LOGFNS["virusFileFiltered"],flag)
-    virusReads_VIPR = nMicrobialReads("virus.VIPR.sam", readLength,LOGFNS["virusFileFiltered"],flag)
+    
+    
+    cmd=CD+"/tools/samtools view " + INTFNS["bam_viral"] + ">" + INTFNS["sam_viral"]
+    if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
+    cmd=CD+"/tools/samtools view " + INTFNS["bam_viral_vipr"] + ">" + INTFNS["sam_viral_vipr"]
+    if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
+    
+    virusReads_NCBI = nMicrobialReads(INTFNS["sam_viral"], readLength,LOGFNS["virusFileFiltered"],flag)
+    virusReads_VIPR = nMicrobialReads(INTFNS["sam_viral_vipr"], readLength,LOGFNS["virusFileFiltered"],flag)
     virusReads=virusReads_NCBI | virusReads_VIPR
     excludeReadsFromFasta(unmapped_file, virusReads, INTFNS["afterVirusFasta"])
     if flag_PE:
         pe2se(virusReads,"viral_reads_SE.txt")
     set2file(virusReads,"viral_reads.txt")
+
+    os.remove(INTFNS["sam_viral"])
+    os.remove(INTFNS["sam_viral_vipr"])
+
     return len(virusReads)
 
 def step_6d(unmapped_file, readLength, cmd,flag,flag_PE):
     if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
-    virusReads = nMicrobialReads("fungi.sam", readLength,LOGFNS["fungiFileFiltered"],flag)
-    excludeReadsFromFasta(unmapped_file, virusReads, INTFNS["afterFungiFasta"])
+    
+    cmd=CD+"/tools/samtools view " + INTFNS["bam_fungi"] + ">" + INTFNS["sam_fungi"]
+    if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
+    
+    fungiReads = nMicrobialReads(INTFNS["sam_fungi"], readLength,LOGFNS["fungiFileFiltered"],flag)
+    excludeReadsFromFasta(unmapped_file, fungiReads, INTFNS["afterFungiFasta"])
     if flag_PE:
-        pe2se(virusReads,"fungi_reads_SE.txt")
-    set2file(virusReads,"fungi_reads.txt")
-    return len(virusReads)
+        pe2se(fungiReads,"fungi_reads_SE.txt")
+    set2file(fungiReads,"fungi_reads.txt")
+
+    os.remove(INTFNS["sam_fungi"])
+
+    return len(fungiReads)
 
 
 def step_6_protozoa(unmapped_file, readLength, cmd,flag,flag_PE):
     if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
-    virusReads = nMicrobialReads("protozoa.sam", readLength,LOGFNS["protozoaFileFiltered"],flag)
-    excludeReadsFromFasta(unmapped_file, virusReads, INTFNS["afterProtozoaFasta"])
+    
+    cmd=CD+"/tools/samtools view " + INTFNS["bam_protozoa"] + ">" + INTFNS["sam_protozoa"]
+    if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
+    
+    protozoaReads = nMicrobialReads(INTFNS["sam_protozoa"], readLength,LOGFNS["protozoaFileFiltered"],flag)
+    excludeReadsFromFasta(unmapped_file, protozoaReads, INTFNS["afterProtozoaFasta"])
     if flag_PE:
-        pe2se(virusReads,"protozoa_reads_SE.txt")
-    set2file(virusReads,"protozoa_reads.txt")
-    return len(virusReads)
+        pe2se(protozoaReads,"protozoa_reads_SE.txt")
+    set2file(protozoaReads,"protozoa_reads.txt")
+
+    os.remove(INTFNS["sam_protozoa"])
+    return len(protozoaReads)
 
 
 

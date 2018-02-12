@@ -209,8 +209,13 @@ INTFNS["lowQFileFasta"] = DIRS["QC"] + BASENAME + "_lowQ.fa"  # after step 1a
 INTFNS["lowQCFile"] = DIRS["QC"] + BASENAME + "_lowQC.fa"  # after step 1b
 INTFNS["rRNAFile"] = DIRS["QC"] + BASENAME + "_rRNA_blastFormat6.csv"
 INTFNS["afterrRNAFasta"] = DIRS["QC"] + BASENAME + "_after_rRNA.fasta"  # after step 1c
-INTFNS["gBamFile"] = DIRS["lostReads"] + BASENAME + "_genome.sam"
-INTFNS["tBamFile"] = DIRS["lostReads"] + BASENAME + "_transcriptome.sam"
+
+INTFNS["gBamFile"] = DIRS["lostReads"] + BASENAME + "_genome.bam"
+INTFNS["tBamFile"] = DIRS["lostReads"] + BASENAME + "_transcriptome.bam"
+
+INTFNS["gSamFile"] = DIRS["lostReads"] + BASENAME + "_genome.sam"
+INTFNS["tSamFile"] = DIRS["lostReads"] + BASENAME + "_transcriptome.sam"
+
 INTFNS["afterlostReadsFasta"] = DIRS["lostReads"] + BASENAME + "_after_rRNA_lostReads.fasta"  # after step 2
 INTFNS["repeatFile"] = DIRS["lostRepeat"] + BASENAME + "_lostRepeats_blastFormat6.tsv"
 INTFNS["afterlostRepeatFasta"] = DIRS["lostRepeat"] + BASENAME + "_after_lostRepeat.fasta"  # after step 3
@@ -236,6 +241,16 @@ INTFNS["afterVirusFasta"] = DIRS["virus"] + BASENAME + "_afterVirus.fasta"
 INTFNS["afterFungiFasta"] = DIRS["fungi"] + BASENAME + "_afterFungi.fasta"
 INTFNS["afterProtozoaFasta"] = DIRS["protozoa"] + BASENAME + "_afterProtozoa.fasta"
 
+
+INTFNS["sam_viral"] = DIRS["virus"] + BASENAME + ".viral.sam"
+INTFNS["sam_viral_vipr"] = DIRS["virus"] + BASENAME + ".viral.vipr.sam"
+INTFNS["sam_fungi"] = DIRS["fungi"] + BASENAME + ".fungi.sam"
+INTFNS["sam_protozoa"] = DIRS["protozoa"] + BASENAME + ".protozoa.sam"
+
+INTFNS["bam_viral"] = DIRS["virus"] + BASENAME + ".viral.bam"
+INTFNS["bam_viral_vipr"] = DIRS["virus"] + BASENAME + ".viral.vipr.bam"
+INTFNS["bam_fungi"] = DIRS["fungi"] + BASENAME + ".fungi.bam"
+INTFNS["bam_protozoa"] = DIRS["protozoa"] + BASENAME + ".protozoa.bam"
 
 
 INTFNS["unaccountedReadsFasta"] = ARGS.dir + "/" + BASENAME + "_unaccountedReads.fasta"  # after step 6
