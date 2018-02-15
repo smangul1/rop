@@ -257,7 +257,7 @@ if ARGS.viral or ARGS.fungi or ARGS.protozoa or ARGS.metaphlan:
 
 
 # -- metaphlan option currenly is not available. We will make it available in next release
-if ARGS.metaphlan and 0==1:
+if ARGS.metaphlan:
     
     
     write2Log("***Taxonomic profile by Metaphlan2 ...",LOGFNS["cmdLogfile"],True)
@@ -265,8 +265,10 @@ if ARGS.metaphlan and 0==1:
     
     # 6a. metaphlan
     os.chdir(DIRS["metaphlan"])
-    cmd = "python " + CD + "/tools/metaphlan2/metaphlan2.py " + unmapped_file + " " + INTFNS["metaphlan_intermediate_map"] + " --mpa_pkl " + CD + "/" + DB_FOLDER + "/metaphlan.db_v20/mpa_v20_m200.pkl --bowtie2_exe " + CD + "/tools/bowtie2 --input_type multifasta --bowtie2db " + CD + "/" + DB_FOLDER + "/metaphlan.db_v20/mpa_v20_m200 -t reads_map --nproc 8 " + "--bowtie2out " + INTFNS["metaphlan_intermediate_bowtie2out"] + " >>" + LOGFNS["logMetaphlan"] + " 2>>" + LOGFNS["logMetaphlan"]
-    cmd = cmd + "\n" + "python " + CD + "/tools/metaphlan2/metaphlan2.py --mpa_pkl " + CD + "/" + DB_FOLDER + "/metaphlan.db_v20/mpa_v20_m200.pkl --bowtie2_exe " + CD + "/tools/bowtie2 --input_type bowtie2out " + INTFNS["metaphlan_intermediate_bowtie2out"] + " -t rel_ab >" + INTFNS["metaphlan_output"] + " 2>>" + LOGFNS["logMetaphlan"]
+    cmd = "python " + CD + "/tools/metaphlan2/metaphlan2.py " + unmapped_file + " " + INTFNS["metaphlan_intermediate_map"] +  " --bowtie2_exe " + CD + "/tools/bowtie2 --input_type multifasta -t reads_map --nproc 8 " + "--bowtie2out " + INTFNS["metaphlan_intermediate_bowtie2out"] + " >" + INTFNS["metaphlan_output"] + " 2>>" + LOGFNS["logMetaphlan"]
+    
+    print cmd
+    
     write2Log(cmd, LOGFNS["cmdLogfile"], True)
     if ARGS.qsub or ARGS.qsubArray:
         write2Log(cmd, RUNFNS["run_metaphlan_file"], True)

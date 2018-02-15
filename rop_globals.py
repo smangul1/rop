@@ -138,10 +138,10 @@ ARGS = ap.parse_args()
 if (not ARGS.repeat and not ARGS.immune and not ARGS.circRNA and not ARGS.microbiome):
     ARGS.repeat = True
     ARGS.immune = True
-    ARGS.circRNA = False # startin from release v1.0.8 circRNA is no longer dafault, as this is too slow
-    ARGS.metaphlan = False
+    ARGS.circRNA = False # starting from release v1.0.8 circRNA is no longer dafault, as this is too slow
+    ARGS.metaphlan = True
     ARGS.microbiome = True
-    ARGS.bacteria = False
+    ARGS.bacteria = False # starting from release v1.0.8 mapping to bacteria is no longer dafault, as this is too slow
     ARGS.viral = True
     ARGS.fungi = True
     ARGS.protozoa = True

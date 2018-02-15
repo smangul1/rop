@@ -1,0 +1,21 @@
+Warning! Biom python library not detected!
+ Exporting to biom format will not work!
+usage: metaphlan2.py --input_type
+                     {fastq,fasta,multifasta,multifastq,bowtie2out,sam}
+                     [--mpa_pkl MPA_PKL] [--bowtie2db METAPHLAN_BOWTIE2_DB]
+                     [-x INDEX] [--bt2_ps BowTie2 presets]
+                     [--bowtie2_exe BOWTIE2_EXE]
+                     [--bowtie2_build BOWTIE2_BUILD] [--bowtie2out FILE_NAME]
+                     [--no_map] [--tmp_dir] [--tax_lev TAXONOMIC_LEVEL]
+                     [--min_cu_len] [--min_alignment_len] [--ignore_viruses]
+                     [--ignore_eukaryotes] [--ignore_bacteria]
+                     [--ignore_archaea] [--stat_q]
+                     [--ignore_markers IGNORE_MARKERS] [--avoid_disqm]
+                     [--stat] [-t ANALYSIS TYPE] [--nreads NUMBER_OF_READS]
+                     [--pres_th PRESENCE_THRESHOLD] [--clade] [--min_ab]
+                     [-o output file] [--sample_id_key name]
+                     [--sample_id value] [-s sam_output_file]
+                     [--biom biom_output] [--mdelim mdelim] [--nproc N]
+                     [--install] [--read_min_len READ_MIN_LEN] [-v] [-h]
+                     [INPUT_FILE] [OUTPUT_FILE]
+metaphlan2.py: error: unrecognized arguments: /u/home/galaxy/collaboratory/serghei/code/rop/tools/bowtie2

@@ -20,6 +20,9 @@ cd imrep
 cd ..
 
 hg clone https://bitbucket.org/biobakery/metaphlan2
+cd  metaphlan2
+ln -s ../../db_human/databases/
+cd ../../
 
 
 
