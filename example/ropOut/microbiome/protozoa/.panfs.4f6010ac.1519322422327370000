@@ -1,0 +1,4 @@
+Reads with 0.9 identity and more than 0.8 of nucleotides aligned are considered microbial reads and are saved into /u/home/galaxy/collaboratory/serghei/code/rop/example/ropOut/microbiome/protozoa/unmappedExample_protozoaFiltered.csv
+---------------
+[M::bwa_idx_load_from_disk] read 0 ALT contigs
+[M::process] read 22485 sequences (2044613 bp)...

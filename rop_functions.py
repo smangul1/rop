@@ -115,8 +115,6 @@ def pe2se(lostReads,fileName):
 def bam2fasta(cd, bam_name, fasta_name):
 	
 	
-	import pysam
-	samfile = pysam.AlignmentFile(bam_name, "rb")
 	message = "Convert bam to fasta"
 	write2Log(message, LOGFNS["gLogfile"], ARGS.quiet)
 	cmd = cd + "/tools/bamtools convert -in " + bam_name + " -format fasta >" +fasta_name

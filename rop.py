@@ -31,7 +31,9 @@ n, readLength, unmapped_file = prepare_for_analysis(ARGS.unmappedReads)
 
 os.chdir(ARGS.dir)
 write2Log("Processing " + str(n) + " unmapped reads of length " +\
-  str(readLength) + ".", LOGFNS["gLogfile"], ARGS.quiet)
+  str(readLength) + ". Read length is calculated based on the first read of the sample. In case reads are of different length, this information is not accurate, but this will not affect the performance of ROP.", LOGFNS["gLogfile"], ARGS.quiet)
+
+
 nReads = {	"LowQ": 0,
 			"LowC": 0,
 			"rRNA": 0,
@@ -265,9 +267,14 @@ if ARGS.metaphlan:
     
     # 6a. metaphlan
     os.chdir(DIRS["metaphlan"])
-    cmd = "python " + CD + "/tools/metaphlan2/metaphlan2.py " + unmapped_file + " " + INTFNS["metaphlan_intermediate_map"] +  " --bowtie2_exe " + CD + "/tools/bowtie2 --input_type multifasta -t reads_map --nproc 8 " + "--bowtie2out " + INTFNS["metaphlan_intermediate_bowtie2out"] + " >" + INTFNS["metaphlan_output"] + " 2>>" + LOGFNS["logMetaphlan"]
     
-    print cmd
+    
+    
+    
+    
+    cmd = "python " + CD + "/tools/metaphlan2/metaphlan2.py " + unmapped_file +  " --bowtie2_exe " + CD + "/tools/bowtie2 --input_type multifasta --nproc 8 " + "--bowtie2out " + INTFNS["metaphlan_intermediate_bowtie2out"] + " >" + INTFNS["metaphlan_output"] + " 2>>" + LOGFNS["logMetaphlan"]
+    
+
     
     write2Log(cmd, LOGFNS["cmdLogfile"], True)
     if ARGS.qsub or ARGS.qsubArray:
@@ -276,9 +283,9 @@ if ARGS.metaphlan:
         if ARGS.qsub:
             qsub("6a_metaphlan", RUNFNS["run_metaphlan_file"])
     else:
-        print cmd
         if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
-        write2Log("***Microbiome profiling by Metaphlan2: taxonomic profile of microbial communities detected by Metaphlan2 is available here: " + DIRS["metaphlan"],LOGFNS["gLogfile"], ARGS.quiet)
+        num_lines_metaphlan = sum(1 for line in open(INTFNS["metaphlan_intermediate_bowtie2out"]))
+        write2Log("***Microbiome profiling by Metaphlan2: taxonomic profile of microbial communities detected by Metaphlan2 is available here: " + INTFNS["metaphlan_output"] +" Metaphlan2 was able to detect " + str(num_lines_metaphlan) + " microbial reads",LOGFNS["gLogfile"], ARGS.quiet)
 
 
 
@@ -430,7 +437,7 @@ if ARGS.protozoa:
 
 if not (ARGS.qsub or ARGS.qsubArray):
         os.rename(unmapped_file,INTFNS["unaccountedReadsFasta"])
-        write2Log("In total: " + str(nReads["virus"] +nReads["fungi"]+nReads["protozoa"]) + " reads mapped to microbial genomes",LOGFNS["gLogfile"], ARGS.quiet)
+        write2Log("In total: " + str(nReads["virus"] +nReads["fungi"]+nReads["protozoa"]) + " reads mapped to microbial genomes. This doesn't include reads identified by MetaPhlAn. ",LOGFNS["gLogfile"], ARGS.quiet)
         write2File("done!", ARGS.dir + "/step6_microbiomeProfile.done")
 
 
