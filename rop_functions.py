@@ -51,7 +51,13 @@ def readsPresent(step_no, unmapped_file):
 	else:
 		return True
 
-	  
+def fastq2fasta(inFastq_name, outFasta_name):
+    fastq_seqs = SeqIO.parse(open(inFastq_name), "fastq")
+    with open(outFasta_name, "w") as outFasta:
+        for seq in fastq_seqs:
+            SeqIO.write([seq], outFasta, "fasta")
+
+
 ################################################################################
 ### I/O 
 ################################################################################
@@ -272,18 +278,28 @@ def prepare_for_analysis(unmapped_file):
 			bam2fastq(CD, unmapped_file, INTFNS["unmappedFastq"])
 			unmapped_file = INTFNS["unmappedFastq"]
 	elif ARGS.gzip:  # gz input
+		from_type = unmapped_file.split('.')[-2].lower()
 		if to_fasta:  # convert to fasta
-			INTFNS["lowQFileFasta"] = ARGS.dir + "/" + BASENAME + ".fasta"
-			write_gzip_into_readable(unmapped_file, INTFNS["lowQFileFasta"])
-			unmapped_file = INTFNS["lowQFileFasta"]
+			if from_type == "fasta" or from_type == "fa":
+				INTFNS["lowQFileFasta"] = ARGS.dir + "/" + BASENAME + ".fasta"
+				write_gzip_into_readable(unmapped_file, INTFNS["lowQFileFasta"])
+				unmapped_file = INTFNS["lowQFileFasta"]
+			else:  # convert to fastq then fasta
+				INTFNS["unmappedFastq"] = ARGS.dir + "/" + BASENAME + ".fastq"
+				write_gzip_into_readable(unmapped_file, INTFNS["unmappedFastq"])
+				fastq2fasta(INTFNS["unmappedFastq"], INTFNS["lowQFileFasta"])
+				unmapped_file = INTFNS["lowQFileFasta"]
 		else:  # convert to fastq
+			if from_type == "fasta" or from_type == "fa":
+				raise InputError(".fastq file required.")
 			INTFNS["unmappedFastq"] = ARGS.dir + "/" + BASENAME + ".fastq"
 			write_gzip_into_readable(unmapped_file, INTFNS["unmappedFastq"])
 			unmapped_file = INTFNS["unmappedFastq"]
 	elif to_fasta:  # fasta input
 		filename, file_extension = os.path.splitext(unmapped_file)
 		if not (file_extension == ".fa" or file_extension == ".fasta"):
-			raise InputError(".fasta file required.")
+			fastq2fasta(unmapped_file, INTFNS["unmappedFastq"])
+			unmapped_file = INTFNS["unmappedFastq"]
 	else:  # fastq input
 		filename, file_extension = os.path.splitext(unmapped_file)
 		if not (file_extension == ".fq" or file_extension == ".fastq"):
