@@ -24,6 +24,10 @@ dict["human"]=humandict
 #codeDir: the directory which contains this file
 codeDir=os.path.dirname(os.path.realpath(__file__))
 
+class SubprocessError(Exception):
+	def __init__(self, message=""):
+		print ("ERROR: Subprocess crashed. " + message)
+
 def download(dbName,dbType,dirDB):
     """change directory to dirDB, and download dbName to it. Check that the  md5sum matches. dbName must be found on the server as a .tar.gz, but this command will extract and then delete the tar."""
     tarName=dirDB+"/"+"%s" %(dbName)
