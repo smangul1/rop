@@ -1,0 +1,11 @@
+The list of the tools used by ROP is provided below (to be updated ...).
+************
+**We have used in-house script to filter out low quality reads"
+**We have used Megablast (BLAST+ version 2.2.30, with the following parameters: task = megablast, use_index = true; -outfmt 6 ;-evalue 1e-05; perc_identity = 100) downloaded from ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ to filter out reads mapped to rRNA repeat sequence
+**We have used Bowtie2 (version 2.0.5, with the following parameters: -k 1; -p 8; -f) downloaded from http://bowtie-bio.sourceforge.net/bowtie2/index.shtml to identify lost reads mapped to reference transcriptome and genome
+**We have used Megablast (BLAST+ version 2.2.30, with the following options: task=megablast, use_index=true, -outfmt 6 -evalue 1e-05, perc_identity	= 90) downloaded from ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ to identify lost repeat reads mapped to database of repeat sequences (RepBase 20.07)
+**We have used ImReP (version 0.3) to identify immune reads spanning BCR/TCR receptor gene rearrangement in the variable domain (V(D)J recombinations)
+**We have used Megablast (BLAST+ version 2.2.30, with the following parameters: task=megablast, use_index=true; -outfmt 6 ;-evalue 1e-05) downloaded from ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ to identify microbial reads mapped onto the microbial genomes (viruses, and eukaryotic pathogens)
+************
+For more information about the paramemers and databases used by ROP, please see the preprint: Dumpster diving in RNA-sequencing to find the source of every last read http://biorxiv.org/content/early/2016/05/13/053041"
+********************

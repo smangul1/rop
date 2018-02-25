@@ -12,6 +12,15 @@ echo "--------------------------------------------------------------------------
 echo "Commands are saved in rop.commands.txt"
 ./rop.commands.sh
 
+
+cd tools
+rm -fr Miniconda-Install
+git clone https://github.com/deto/Miniconda-Install.git
+cd Miniconda-Install
+bash Linux_Install.sh
+cd ..
+
+
 cd tools
 rm -fr imrep
 git clone https://github.com/mandricigor/imrep.git

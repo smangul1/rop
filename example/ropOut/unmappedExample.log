@@ -1,0 +1,30 @@
+Processing 2578 unmapped reads of length 100. Read length is calculated based on the first read of the sample. In case reads are of different length, this information is not accurate, but this will not affect the performance of ROP.
+1. Quality Control...
+--identified 2194 low quality reads. Those reads are marked as lowQuality in the read name and are used in the donwstream analyis
+--filtered 0 rRNA reads
+2. Remapping to reference...
+--identified 0 lost reads from unmapped reads. Among those: 0 reads with 0 mismatches, 0 reads with 1 mismatch, and 0 reads with 2 mismatches
+***Read names of lost human reads are stored in /u/home/galaxy/collaboratory/serghei/code/rop/example/ropOut/lost.human.reads//lost_human_reads.txt
+***Coordinates and other details of lost human reads are available from sam files: /u/home/galaxy/collaboratory/serghei/code/rop/example/ropOut/lost.human.reads/unmappedExample_genome.bam, /u/home/galaxy/collaboratory/serghei/code/rop/example/ropOut/lost.human.reads/unmappedExample_transcriptome.bam
+3. Mapping repeat sequences...
+--identified 0 lost repeat sequences from unmapped reads.
+Read names of lost repeat reads are stored in /u/home/galaxy/collaboratory/serghei/code/rop/example/ropOut/lost.repeats//lost_repeat_reads.txt
+***Note: Repeat sequences classification into classes (e.g. LINE) and families (e.g. Alu) will be available in next release
+4. Non-co-linear RNA profiling is skipped.
+5. T and B cell repetoires profiling
+
+In total: 2 reads mapped to recombined TCRs rand BCRs,
+** We summarized diversity of the immune repetoire and infiltration levels of T and B cells in /u/home/galaxy/collaboratory/serghei/code/rop/example/ropOut/immune.repertoire/immune.clonality.summary/summary.cdr3.txt
+** Relative frequencies and counts of assembled CDR3s are available in /u/home/galaxy/collaboratory/serghei/code/rop/example/ropOut/immune.repertoire/immune.clonality.summary
+6. Microbiome profiling...
+***Taxonomic profile by Metaphlan2 ...
+***Microbiome profiling by Metaphlan2: taxonomic profile of microbial communities detected by Metaphlan2 is available here: /u/home/galaxy/collaboratory/serghei/code/rop/example/ropOut/microbiome/metaphlan/unmappedExample_metaphlan_output.tsv Metaphlan2 was able to detect 0 microbial reads
+--identified 1 reads mapped to viral genomes
+--identified 0 reads mapped to fungal genomes
+--identified 0 reads mapped to protozoan genomes
+In total: 1 reads mapped to microbial genomes. This doesn't include reads identified by MetaPhlAn. 
+Summary: The ROP protocol is able to account for 2197 reads (85.2211016292%) of unmapped reads.
+Initially we detected 2194 low quality reads. Among those 0 reads were categoried as various ROP classes
+***Unaccounted reads (not explained by ROP) are saved to /u/home/galaxy/collaboratory/serghei/code/rop/example/ropOut/unmappedExample_unaccountedReads.fasta
+***Log file with all the commands used is available here: /u/home/galaxy/collaboratory/serghei/code/rop/example/ropOut/dev.log
+Important: ROP relies on several open source tools that were developed by other groups. These components are (c) their respective developers and are redistributed with ROP to provide ease-of-use. The list of the tools used by ROP and the parameters/reference databases are provided here: /u/home/galaxy/collaboratory/serghei/code/rop/example/ropOut/tools.log
