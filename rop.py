@@ -210,7 +210,7 @@ if ARGS.immune and ARGS.organism == "human":
     write2Log("5. T and B cell repetoires profiling", LOGFNS["gLogfile"], ARGS.quiet)
     os.chdir(DIRS["antibody"])
     # -f -1 to report CDR3s supported by a single read. This is a bug in imrep. Needs to be 0.
-    cmd = " python "+ CD + "/tools/imrep/imrep.py -f -1 --extendedOutput " + unmapped_file +" imrep.cdr3 >imrep.log 2>>imrep.log"
+    cmd = CD+"/tools/Miniconda-Install/YourApplicationFolder/bin/python " + CD + "/tools/imrep/imrep.py -f -1 --extendedOutput " + unmapped_file +" imrep.cdr3 >imrep.log 2>>imrep.log"
     
 
     
@@ -228,7 +228,7 @@ if ARGS.immune and ARGS.organism == "human":
         
         
         
-        cmd="python "+CD+"/tools/imrep/clonality.py " + DIRS["antibody"] +"imrep.cdr3 "+ DIRS["antibody"] + "immune.clonality.summary/ >imrep.log 2>>imrep.log"
+        cmd=CD+"/tools/Miniconda-Install/YourApplicationFolder/bin/python " +CD+"/tools/imrep/clonality.py " + DIRS["antibody"] +"imrep.cdr3 "+ DIRS["antibody"] + "immune.clonality.summary/ >imrep.log 2>>imrep.log"
         if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
 
 
@@ -272,7 +272,7 @@ if ARGS.metaphlan:
     
     
     
-    cmd = "python " + CD + "/tools/metaphlan2/metaphlan2.py " + unmapped_file +  " --bowtie2_exe " + CD + "/tools/bowtie2 --input_type multifasta --nproc 8 " + "--bowtie2out " + INTFNS["metaphlan_intermediate_bowtie2out"] + " >" + INTFNS["metaphlan_output"] + " 2>>" + LOGFNS["logMetaphlan"]
+    cmd = CD+"/tools/Miniconda-Install/YourApplicationFolder/bin/python "  + CD + "/tools/metaphlan2/metaphlan2.py " + unmapped_file +  " --bowtie2_exe " + CD + "/tools/bowtie2 --input_type multifasta --nproc 8 " + "--bowtie2out " + INTFNS["metaphlan_intermediate_bowtie2out"] + " >" + INTFNS["metaphlan_output"] + " 2>>" + LOGFNS["logMetaphlan"]
     
 
     
