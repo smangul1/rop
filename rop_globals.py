@@ -175,7 +175,7 @@ if os.path.exists(ARGS.dir) and ARGS.f:
 
 # database folder path, BASENAME (name of unmapped reads file without extension)
 DB_FOLDER = "/db_" + ARGS.organism
-BASENAME = os.path.splitext(os.path.basename(ARGS.unmappedReads))[0]
+BASENAME = os.path.basename(ARGS.unmappedReads).split('.')[0]
 
 
 ################################################################################
