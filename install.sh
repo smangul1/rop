@@ -35,12 +35,12 @@ cd ../../
 
 
 
-pip install pysam
-pip install biopython --user
-pip install intervaltree --user
-pip install jellyfish --user
-pip install numpy --user
-pip install networkx --user
+./tools/Miniconda-Install/YourApplicationFolder/bin/pip install pysam --user
+./tools/Miniconda-Install/YourApplicationFolder/bin/pip install biopython --user
+./tools/Miniconda-Install/YourApplicationFolder/bin/pip install intervaltree --user
+./tools/Miniconda-Install/YourApplicationFolder/bin/pip install jellyfish --user
+./tools/Miniconda-Install/YourApplicationFolder/bin/pip install numpy --user
+./tools/Miniconda-Install/YourApplicationFolder/bin/pip install networkx --user
 cd tools
 tar -xf suffix_tree-2.1.tar.gz
 cd suffix_tree-2.1
