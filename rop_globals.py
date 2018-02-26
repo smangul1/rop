@@ -20,7 +20,6 @@ ROP Tutorial: https://github.com/smangul1/rop/wiki
 import sys, os  # system
 import argparse, subprocess  # utilities
 import csv, gzip  # file I/O
-import pysam
 
 
 CD = os.path.dirname(os.path.abspath(__file__))
