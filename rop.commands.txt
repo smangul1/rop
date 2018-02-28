@@ -6,3 +6,4 @@
 /u/home/s/serghei/collab/code/rop/tools/bwa mem -a /u/home/s/serghei/collab/code/rop/db_human/viral.vipr/NONFLU_All.fastq
 /u/home/s/serghei/collab/code/rop/tools/bwa mem -a /u/home/s/serghei/collab/code/rop/db_human/fungi/fungi.ncbi.february.3.2018.fasta
 /u/home/s/serghei/collab/code/rop/tools/bwa mem -a /u/home/s/serghei/collab/code/rop/db_human/protozoa/protozoa.ncbi.february.3.2018.fasta
+/u/home/s/serghei/collab/code/rop/tools/bowtie2 -f -x /u/home/s/serghei/collab/code/rop/db_human//ribosomal.DNA/ribosomal.DNA --end-to-end -D 15 -R 2 -L 22 -i S,1,1.15

@@ -1,2 +1,0 @@
-Unmapped reads mapped to genome and/or transcriptome (using BWA, edit distance<6) are categorized as lost reads and are excluded from the further analysis. This includes : 0 reads with 0 mismatches, 0 reads with 1 mismatch, and0 reads with 2 mismatches.
-Complete list of lost reads is available from sam files: /u/home/galaxy/collaboratory/serghei/code/rop/example/ropOut/lost.human.reads/unmappedExample_genome.bam, /u/home/galaxy/collaboratory/serghei/code/rop/example/ropOut/lost.human.reads/unmappedExample_transcriptome.bam

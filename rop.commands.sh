@@ -6,3 +6,4 @@ echo "$PWD/tools/bwa mem -a $PWD/db_human/viral/viral.ncbi.february.3.2018.fasta
 echo "$PWD/tools/bwa mem -a $PWD/db_human/viral.vipr/NONFLU_All.fastq">>rop.commands.txt
 echo "$PWD/tools/bwa mem -a $PWD/db_human/fungi/fungi.ncbi.february.3.2018.fasta">>rop.commands.txt
 echo "$PWD/tools/bwa mem -a $PWD/db_human/protozoa/protozoa.ncbi.february.3.2018.fasta">>rop.commands.txt
+echo "$PWD/tools/bowtie2 -f -x $PWD/db_human//ribosomal.DNA/ribosomal.DNA --end-to-end -D 15 -R 2 -L 22 -i S,1,1.15" >>rop.commands.txt

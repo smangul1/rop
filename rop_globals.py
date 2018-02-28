@@ -44,21 +44,21 @@ necessary_arguments.add_argument("dir",
 
 job_option_arguments = ap.add_argument_group('Job Options')
 job_option_arguments.add_argument("--qsub", 
-	help="submit qsub jobs on Hoffman2 (UCLA) cluster. If planning to use " +\
+	help="This option is under development. submit qsub jobs on Hoffman2 (UCLA) cluster. If planning to use " +\
 	  "on your cluster, contact smangul@ucla.edu", 
 	action="store_true")
 job_option_arguments.add_argument("--qsubArray", 
-	help="prepare qsub scripts to be run later using job array. Working on " +\
+	help="This option is under development. prepare qsub scripts to be run later using job array. Working on " +\
 	  "Hoffman2 (UCLA) cluster. If planning to use on your cluster, contact " +\
 	  "smangul@ucla.edu", 
 	action="store_true")
 job_option_arguments.add_argument("--maui", 
-	help="use this option together with --qsub to submit jobs via Maui " +\
+	help="This option is under development. use this option together with --qsub to submit jobs via Maui " +\
 	  "scheduler. Maui is a job scheduler developped by Adaptive Computing. " +\
 	  "More details are here: https://wiki.calculquebec.ca/w/Maui/en", 
 	action="store_true")
-job_option_arguments.add_argument("--organism", 
-	help="run ROP for a specified organism (mouse) instead of human", 
+job_option_arguments.add_argument("--organism",
+	help="This option is under development. run ROP for a specified organism (mouse) instead of human",
 	action="store", default="human")
 
 input_option_arguments = ap.add_argument_group("Input Options")
@@ -70,15 +70,15 @@ input_option_arguments.add_argument("--gzip", "-z",
 	help="unmapped reads in .gz format. Do not use with --b", 
 	action="store_true")
 input_option_arguments.add_argument("--skipLowq", 
-	help="skip filtering low quality reads. The input reads need to be in " +\
+	help="This option is under development. skip filtering low quality reads. The input reads need to be in " +\
 	  ".fasta or .fasta.gz format", 
 	action="store_true")
 input_option_arguments.add_argument("--skipQC", 
-	help="skip entire QC step (filtering low-quality, low-complexity and " +\
+	help="This option is under development. skip entire QC step (filtering low-quality, low-complexity and " +\
 	  "rRNA reads). The input reads need to be in .fasta or .fasta.gz format", 
 	action="store_true")
 input_option_arguments.add_argument("--skipPreliminary", "-s", 
-	help="skip the preliminary steps including (1) QC and (2) remapping to " +\
+	help="This option is under development. skip the preliminary steps including (1) QC and (2) remapping to " +\
 	  "references (lost reads). The input reads need to be in .fasta or " +\
 	  ".fasta.gz format", 
 	action="store_true")
@@ -206,7 +206,9 @@ INTFNS = {}
 INTFNS["unmappedFastq"] = ARGS.dir + "/unmapped_" + BASENAME + ".fastq"  # begin
 INTFNS["lowQFileFasta"] = DIRS["QC"] + BASENAME + "_lowQ.fa"  # after step 1a
 INTFNS["lowQCFile"] = DIRS["QC"] + BASENAME + "_lowQC.fa"  # after step 1b
-INTFNS["rRNAFile"] = DIRS["QC"] + BASENAME + "_rRNA_blastFormat6.csv"
+INTFNS["rDNAFile_bam"] = DIRS["QC"] + BASENAME + "_rDNA.bam"
+INTFNS["rDNAFile_sam"] = DIRS["QC"] + BASENAME + "_rDNA.sam"
+
 INTFNS["afterrRNAFasta"] = DIRS["QC"] + BASENAME + "_after_rRNA.fasta"  # after step 1c
 
 INTFNS["gBamFile"] = DIRS["lostReads"] + BASENAME + "_genome.bam"
@@ -262,7 +264,7 @@ LOGFNS["gLogfile"] = ARGS.dir + "/" + BASENAME + ".log"
 LOGFNS["cmdLogfile"] = ARGS.dir + "/" + "dev.log"
 LOGFNS["toolsLogfile"] = ARGS.dir + "/"+"tools.log"
 LOGFNS["logQC"] = DIRS["QC"] + BASENAME + "_QC.log"  # step 1b
-LOGFNS["logrRNA"] = DIRS["QC"] + BASENAME + "_rRNA.log"  # step 1c
+LOGFNS["logrDNA"] = DIRS["QC"] + BASENAME + "_rDNA.log"  # step 1c
 LOGFNS["logHuman"] = DIRS["lostReads"] + BASENAME + "_lostReads.log"  # step 2
 LOGFNS["log_bowtieWG"] = DIRS["lostReads"] + BASENAME + "_bowtieWG.log"
 LOGFNS["log_bowtieTR"] = DIRS["lostReads"] + BASENAME + "_bowtieTR.log"

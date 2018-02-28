@@ -21,18 +21,19 @@ echo "Commands are saved in rop.commands.txt"
 #cd ..
 
 
-#cd tools
-#rm -fr imrep
-#git clone https://github.com/mandricigor/imrep.git
-#cd imrep
-#./install.sh
-#cd ..
+cd tools
+rm -fr imrep
+git clone https://github.com/mandricigor/imrep.git
+cd imrep
+./install.sh
+cd ..
 
 #hg clone https://bitbucket.org/biobakery/metaphlan2
 #cd  metaphlan2
 #ln -s ../../db_human/databases/
 #cd ../../
 
+#configure metaphlan2
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 echo "#!${DIR}/tools/Miniconda-Install/YourApplicationFolder/bin/python" >python.header.txt
 

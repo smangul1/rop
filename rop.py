@@ -51,6 +51,7 @@ nReads = {	"LowQ": 0,
 
 
 
+
 if not ARGS.skipPreliminary and not ARGS.skipQC:
     write2Log("1. Quality Control...", LOGFNS["gLogfile"], ARGS.quiet)
     os.chdir(DIRS["QC"])
@@ -65,13 +66,15 @@ if not ARGS.skipPreliminary and not ARGS.skipQC:
         write2Log("--identified " + str(nReads["LowQ"]) + " low quality reads. Those reads are marked as lowQuality in the read name and are used in the donwstream analyis",LOGFNS["gLogfile"], ARGS.quiet)
 
 		
-    # 1c. rRNA
+    # 1c. rDNA
     if readsPresent("1c", unmapped_file):
-        nReads["rRNA"], n_rRNATotal = step_1c(unmapped_file, readLength)
-        clean(INTFNS["rRNAFile"])
+        
+        
+        nReads["rRNA"] = step_1c(unmapped_file)
+        clean(INTFNS["rDNAFile_sam"])
         clean(unmapped_file)
         unmapped_file = INTFNS["afterrRNAFasta"]
-        write2Log("--filtered " + str(nReads["rRNA"]) + " rRNA reads", LOGFNS["gLogfile"], ARGS.quiet)
+        write2Log("--filtered " + str(nReads["rRNA"]) + " reads from ribosomal DNA. Coordinates and other details of rDNA reads are available in " + INTFNS["rDNAFile_bam"] , LOGFNS["gLogfile"], ARGS.quiet)
     else:
         n_rRNATotal = 0
 	
@@ -97,7 +100,7 @@ if not ARGS.skipPreliminary:
     write2Log("2. Remapping to reference...", LOGFNS["gLogfile"], ARGS.quiet)
     os.chdir(DIRS["lostReads"])
     
-    nReads["lost"], lostReads0_len, lostReads1_len, lostReads2_len =step_2(unmapped_file,ARGS.max,ARGS.pe,readLength)
+    nReads["lost"], lostReads0_len, lostReads1_len, lostReads2_len =step_2(unmapped_file,ARGS.max,ARGS.pe)
     write2Log("--identified " + str(nReads["lost"]) + " lost reads from " + "unmapped reads. Among those: " +str(lostReads0_len) + " reads with 0 mismatches, " +str(lostReads1_len) + " reads with 1 mismatch, and " +str(lostReads2_len) + " reads with 2 mismatches", LOGFNS["gLogfile"],ARGS.quiet)
 
     write2Log ("***Read names of lost human reads are stored in "+DIRS["lostReads"]+"/lost_human_reads.txt",LOGFNS["gLogfile"], ARGS.quiet)
@@ -143,7 +146,7 @@ if ARGS.repeat:
         if ARGS.qsub:
             qsub("3", RUNFNS["runLostRepeatFile"])
     else:
-        nReads["repeat"] = step_3(unmapped_file, readLength, cmd,ARGS.max,ARGS.pe)
+        nReads["repeat"] = step_3(unmapped_file, cmd,ARGS.max,ARGS.pe)
         write2Log("--identified " + str(nReads["repeat"]) + " lost repeat " + "sequences from unmapped reads.", LOGFNS["gLogfile"], ARGS.quiet)
         write2Log ("Read names of lost repeat reads are stored in "+DIRS["lostRepeat"]+"/lost_repeat_reads.txt",LOGFNS["gLogfile"], ARGS.quiet)
         write2Log("***Note: Repeat sequences classification into classes " + "(e.g. LINE) and families (e.g. Alu) will be available in next release", LOGFNS["gLogfile"], ARGS.quiet)
@@ -318,7 +321,7 @@ if ARGS.bacteria and 0==1:
         if ARGS.qsub:
             qsub("6b_bacteria", RUNFNS["runBacteriaFile"])
     else:
-        nReads["bacteria"] = step_6b(unmapped_file, readLength, cmd,ARGS.max,ARGS.pe)
+        nReads["bacteria"] = step_6b(unmapped_file, cmd,ARGS.max,ARGS.pe)
         write2Log("--identified " + str(nReads["bacteria"]) + " reads " + "mapped to bacterial genomes", LOGFNS["gLogfile"], ARGS.quiet)
         if not ARGS.nonReductive:
             clean(unmapped_file)
@@ -354,7 +357,7 @@ if ARGS.viral:
         if ARGS.qsub:
             qsub("6b_virus", RUNFNS["runVirusFile"])
     else:
-        nReads["virus"] = step_6c(unmapped_file, readLength, cmd,ARGS.max,ARGS.pe)
+        nReads["virus"] = step_6c(unmapped_file, cmd,ARGS.max,ARGS.pe)
         write2Log("--identified " + str(nReads["virus"]) + " reads " + "mapped to viral genomes", LOGFNS["gLogfile"], ARGS.quiet)
         if not ARGS.nonReductive:
             clean(unmapped_file)
@@ -394,7 +397,7 @@ if ARGS.fungi:
         if ARGS.qsub:
             qsub("6c_fungi", RUNFNS["runFungiFile"])
     else:
-        nReads["fungi"] = step_6d(unmapped_file, readLength, cmd,ARGS.max,ARGS.pe)
+        nReads["fungi"] = step_6d(unmapped_file, cmd,ARGS.max,ARGS.pe)
         write2Log("--identified " + str(nReads["fungi"]) + " reads " + "mapped to fungal genomes", LOGFNS["gLogfile"], ARGS.quiet)
         if not ARGS.nonReductive:
             clean(unmapped_file)
@@ -428,7 +431,7 @@ if ARGS.protozoa:
         if ARGS.qsub:
             qsub("6c_protozoa", RUNFNS["runProtozoaFile"])
     else:
-        nReads["protozoa"] = step_6_protozoa(unmapped_file, readLength, cmd,ARGS.max,ARGS.pe)
+        nReads["protozoa"] = step_6_protozoa(unmapped_file, cmd,ARGS.max,ARGS.pe)
         write2Log("--identified " + str(nReads["protozoa"]) + " reads " + "mapped to protozoan genomes", LOGFNS["gLogfile"], ARGS.quiet)
         if not ARGS.nonReductive:
             clean(unmapped_file)
