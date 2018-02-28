@@ -41,6 +41,8 @@ cat python.header.txt tools/metaphlan2/metaphlan2.new.py >tools/metaphlan2/metap
 sed '1d' tools/metaphlan2/strainphlan.py >tools/metaphlan2/strainphlan.new.py
 cat python.header.txt tools/metaphlan2/strainphlan.new.py >tools/metaphlan2/strainphlan.py
 
+sed '1d' tools/metaphlan2/utils/read_fastx.py >tools/metaphlan2/utils/read_fastx.new.py
+cat python.header.txt tools/metaphlan2/utils/read_fastx.new.py >tools/metaphlan2/utils/read_fastx.py
 
 
 exit 1
