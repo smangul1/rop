@@ -13,26 +13,37 @@ echo "Commands are saved in rop.commands.txt"
 ./rop.commands.sh
 
 
-cd tools
-rm -fr Miniconda-Install
-git clone https://github.com/deto/Miniconda-Install.git
-cd Miniconda-Install
-bash Linux_Install.sh
-cd ..
+#cd tools
+#rm -fr Miniconda-Install
+#git clone https://github.com/deto/Miniconda-Install.git
+#cd Miniconda-Install
+#bash Linux_Install.sh
+#cd ..
 
 
-cd tools
-rm -fr imrep
-git clone https://github.com/mandricigor/imrep.git
-cd imrep
-./install.sh
-cd ..
+#cd tools
+#rm -fr imrep
+#git clone https://github.com/mandricigor/imrep.git
+#cd imrep
+#./install.sh
+#cd ..
 
-hg clone https://bitbucket.org/biobakery/metaphlan2
-cd  metaphlan2
-ln -s ../../db_human/databases/
-cd ../../
+#hg clone https://bitbucket.org/biobakery/metaphlan2
+#cd  metaphlan2
+#ln -s ../../db_human/databases/
+#cd ../../
 
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+echo "#!${DIR}/tools/Miniconda-Install/YourApplicationFolder/bin/python" >python.header.txt
+
+sed '1d' tools/metaphlan2/metaphlan2.py >tools/metaphlan2/metaphlan2.new.py
+cat python.header.txt tools/metaphlan2/metaphlan2.new.py >tools/metaphlan2/metaphlan2.py 
+sed '1d' tools/metaphlan2/strainphlan.py >tools/metaphlan2/strainphlan.new.py
+cat python.header.txt tools/metaphlan2/strainphlan.new.py >tools/metaphlan2/strainphlan.py
+
+
+
+exit 1
 
 
 ./tools/Miniconda-Install/YourApplicationFolder/bin/pip install pysam --user

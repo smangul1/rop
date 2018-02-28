@@ -1,3 +1,4 @@
+#!/u/home/t/taylorsh/code/rop/tools/Miniconda-Install/YourApplicationFolder/bin/python
 print ("""********************************************************************************
 ROP (v1.0.8) is a computational protocol aimed to discover the source of all reads,
 originated from complex RNA molecules, recombinant B and T cell receptors and microbial
@@ -272,7 +273,7 @@ if ARGS.metaphlan:
     
     
     
-    cmd = CD+"/tools/Miniconda-Install/YourApplicationFolder/bin/python "  + CD + "/tools/metaphlan2/metaphlan2.py " + unmapped_file +  " --bowtie2_exe " + CD + "/tools/bowtie2 --input_type multifasta --nproc 8 " + "--bowtie2out " + INTFNS["metaphlan_intermediate_bowtie2out"] + " >" + INTFNS["metaphlan_output"] + " 2>>" + LOGFNS["logMetaphlan"]
+    cmd = CD + "/tools/metaphlan2/metaphlan2.py " + unmapped_file +  " --bowtie2_exe " + CD + "/tools/bowtie2 --input_type multifasta --nproc 8 " + "--bowtie2out " + INTFNS["metaphlan_intermediate_bowtie2out"] + " >" + INTFNS["metaphlan_output"] + " 2>>" + LOGFNS["logMetaphlan"]
     
 
     

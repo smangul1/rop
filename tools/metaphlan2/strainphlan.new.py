@@ -1,4 +1,3 @@
-#!/u/home/s/serghei/collab/code/rop/tools/Miniconda-Install/YourApplicationFolder/bin/python
 # Author: Duy Tin Truong (duytin.truong@unitn.it)
 #		at CIBIO, University of Trento, Italy
 
