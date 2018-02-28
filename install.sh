@@ -13,12 +13,12 @@ echo "Commands are saved in rop.commands.txt"
 ./rop.commands.sh
 
 
-#cd tools
-#rm -fr Miniconda-Install
-#git clone https://github.com/deto/Miniconda-Install.git
-#cd Miniconda-Install
-#bash Linux_Install.sh
-#cd ..
+cd tools
+rm -fr Miniconda-Install
+git clone https://github.com/deto/Miniconda-Install.git
+cd Miniconda-Install
+bash Linux_Install.sh
+cd ..
 
 
 cd tools
@@ -28,10 +28,10 @@ cd imrep
 ./install.sh
 cd ..
 
-#hg clone https://bitbucket.org/biobakery/metaphlan2
-#cd  metaphlan2
-#ln -s ../../db_human/databases/
-#cd ../../
+hg clone https://bitbucket.org/biobakery/metaphlan2
+cd  metaphlan2
+ln -s ../../db_human/databases/
+cd ../../
 
 #configure metaphlan2
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -46,7 +46,6 @@ sed '1d' tools/metaphlan2/utils/read_fastx.py >tools/metaphlan2/utils/read_fastx
 cat python.header.txt tools/metaphlan2/utils/read_fastx.new.py >tools/metaphlan2/utils/read_fastx.py
 
 
-exit 1
 
 
 ./tools/Miniconda-Install/YourApplicationFolder/bin/pip install pysam --user
@@ -58,7 +57,7 @@ exit 1
 cd tools
 tar -xf suffix_tree-2.1.tar.gz
 cd suffix_tree-2.1
-python setup.py install --user
+./tools/Miniconda-Install/YourApplicationFolder/bin/python setup.py install --user
 cd ..
 rm -rf suffix_tree-2.1
 
