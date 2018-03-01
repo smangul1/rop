@@ -41,16 +41,19 @@ sed '1d' tools/metaphlan2/metaphlan2.py >tools/metaphlan2/metaphlan2.new.py
 cat python.header.txt tools/metaphlan2/metaphlan2.new.py >tools/metaphlan2/metaphlan2.py 
 sed '1d' tools/metaphlan2/strainphlan.py >tools/metaphlan2/strainphlan.new.py
 cat python.header.txt tools/metaphlan2/strainphlan.new.py >tools/metaphlan2/strainphlan.py
-
 sed '1d' tools/metaphlan2/utils/read_fastx.py >tools/metaphlan2/utils/read_fastx.new.py
 cat python.header.txt tools/metaphlan2/utils/read_fastx.new.py >tools/metaphlan2/utils/read_fastx.py
+chmod 755 tools/metaphlan2/metaphlan2.py
+chmod 755 tools/metaphlan2/strainphlan.py
+chmod 755 tools/metaphlan2/utils/read_fastx.py
 
 #configure rop and getDB
 cat python.header.txt rop.py >rop.new.py
 mv -f rop.new.py rop.py
 cat python.header.txt getDB.py >getDB.new.py
 mv -f getDB.new.py getDB.py
-
+chmod 755 rop.py
+chmod 755 getDB.py
 
 
 ./tools/Miniconda-Install/YourApplicationFolder/bin/pip install pysam --user
