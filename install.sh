@@ -45,6 +45,11 @@ cat python.header.txt tools/metaphlan2/strainphlan.new.py >tools/metaphlan2/stra
 sed '1d' tools/metaphlan2/utils/read_fastx.py >tools/metaphlan2/utils/read_fastx.new.py
 cat python.header.txt tools/metaphlan2/utils/read_fastx.new.py >tools/metaphlan2/utils/read_fastx.py
 
+#configure rop and getDB
+cat python.header.txt rop.py >rop.new.py
+mv -f rop.new.py rop.py
+cat python.header.txt getDB.py >getDB.new.py
+mv -f getDB.new.py getDB.py
 
 
 
