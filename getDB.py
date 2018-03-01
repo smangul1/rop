@@ -13,7 +13,7 @@ humandict['BWAindex']='4f009e3732d9f513e7b19b58edc41c13'
 humandict['protozoa']='23e12115a5e9d526553c901e772731f5'
 humandict['metaphlan']='3c9b9d6414d86a0c3d5018aefa5aaec4'
 humandict['repeats']='109a97423f505b73a7e55995b827e2fd'
-humandict['rRNA']='37dbf8409c644e1a7914381e2dc55960'
+humandict['ribosomal.DNA']='9663a0e1121a0b122c8e23f41c558083'
 humandict['viral']='7ce95144827603a64dc5996aa0112cc0'
 
 
@@ -201,7 +201,7 @@ if not targeted:
 	print ("Please wait until the downloading is completed.")
 
 
-	for dbName in ['metaphlan','rRNA','repeats','viral_vipr','viral','fungi','protozoa','BWAindex']:
+	for dbName in ['metaphlan','ribosomal.DNA','repeats','viral_vipr','viral','fungi','protozoa','BWAindex']:
 		print ("Downloading %s database files ..." %(dbName))
 		download(dbName,dbType,dirDB)
 
@@ -213,21 +213,21 @@ else:
 
     if args.repeat:
         print "repeat"
-        for dbName in ['rRNA','BWAindex','repeats']:
+        for dbName in ['ribosomal.DNA','BWAindex','repeats']:
 			print ("Downloading %s database files ..." %(dbName))
 			download(dbName,dbType,dirDB)
         symlink(dirDB)
         print ("Reference databases are ready. Please use rop.py")
 
     if args.immune:
-		for dbName in ['rRNA','BWAindex']:
+		for dbName in ['ribosomal.DNA','BWAindex']:
 			print ("Downloading %s database files ..." %(dbName))
 			download(dbName,dbType,dirDB)
 		symlink(dirDB)
 		print ("Reference databases are ready. Please use rop.py")
 		
     if args.metaphlan:
-		for dbName in ['metaphlan','rRNA','BWAindex']:
+		for dbName in ['metaphlan','ribosomal.DNA','BWAindex']:
 			print ("Downloading %s database files ..." %(dbName))
 			download(dbName,dbType,dirDB)
 		symlink(dirDB)
@@ -235,14 +235,14 @@ else:
 
     if args.microbiome:
 		print ("--microbiome options was selected. Refrence database for microbiome will be downloaded")
-		for dbName in ['rRNA','BWAindex','viral','viral_vipr','fungi','protozoa','metaphlan']:
+		for dbName in ['ribosomal.DNA','BWAindex','viral','viral_vipr','fungi','protozoa','metaphlan']:
 			print ("Downloading %s database files ..." %(dbName))
 			download(dbName,dbType,dirDB)
 		symlink(dirDB)
 		print ("Reference databases are ready. Please use rop.py")
     if args.viral:
 		print ("--viral options was selected. Refrence database for microbiome will be downloaded")
-		for dbName in ['rRNA','BWAindex','viral','viral_vipr']:
+		for dbName in ['ribosomal.DNA','BWAindex','viral','viral_vipr']:
 			print ("Downloading %s database files ..." %(dbName))
 			download(dbName,dbType,dirDB)
 		symlink(dirDB)
@@ -250,14 +250,14 @@ else:
 
     if args.fungi:
 		print ("--fungi options was selected. Refrence database for microbiome will be downloaded")
-		for dbName in ['rRNA','BWAindex','fungi']:
+		for dbName in ['ribosomal.DNA','BWAindex','fungi']:
 			print ("Downloading %s database files ..." %(dbName))
 			download(dbName,dbType,dirDB)
 		symlink(dirDB)
 		print ("Reference databases are ready. Please use rop.py")
     if args.protozoa:
 		print ("--protozoa options was selected. Refrence database for microbiome will be downloaded")
-		for dbName in ['rRNA','BWAindex','protozoa']:
+		for dbName in ['ribosomal.DNA','BWAindex','protozoa']:
 			print ("Downloading %s database files ..." %(dbName))
 			download(dbName,dbType,dirDB)
 		symlink(dirDB)
