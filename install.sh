@@ -65,7 +65,7 @@ chmod 755 getDB.py
 cd tools
 tar -xf suffix_tree-2.1.tar.gz
 cd suffix_tree-2.1
-./tools/Miniconda-Install/YourApplicationFolder/bin/python setup.py install --user
+../Miniconda-Install/YourApplicationFolder/bin/python setup.py install --user
 cd ..
 rm -rf suffix_tree-2.1
 
