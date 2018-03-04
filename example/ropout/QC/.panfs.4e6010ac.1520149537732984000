@@ -1,0 +1,3 @@
+Error: reads file does not look like a FASTA file
+terminate called after throwing an instance of 'int'
+(ERR): bowtie2-align died with signal 6 (ABRT) 

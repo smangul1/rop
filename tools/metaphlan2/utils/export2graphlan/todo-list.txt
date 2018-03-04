@@ -1,0 +1,4 @@
+* make a user's preferences file for associate colors with clades. PROBLEM: how do we know in advance which clades will be selected?
+* better error handling in the get_biomarkers() function
+* galaxy integration (George)
+* define a tree-structure for the taxonomy in order to: (1) optimized the variables managements; (2) write as output tree only the path fron root to leaf since GraPhlAn can derived the tree from a composite path;

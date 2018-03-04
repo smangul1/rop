@@ -1,6 +1,6 @@
 """********************************************************************************
 ROP is a computational protocol aimed to discover the source of all reads, 
-originated from complex RNA molecules, recombinant antibodies and microbial 
+originated from complex RNA molecules, recombinant T and B cell receptors and microbial
 communities. 
 
 Written by Serghei Mangul (smangul@ucla.edu), Harry Taegyun Yang 
@@ -178,7 +178,6 @@ def write_gzip(inFasta_name, outFasta_name):
 def extract_from_read(line):
     
     readName=line[0]
-    readLength=int(readName.split("read.length_")[1]) #assumes the read length is written in fasta file
     #read.length_
 
     alignment=line[12].split(':')[2]  #MD:Z:53T22
@@ -198,6 +197,7 @@ def extract_from_read(line):
             alignment3.append(int(a))
         
     alignmentLength=sum(alignment3)+countA+countC+countG+countT
+    readLength=alignmentLength
 
     clipped=readLength-alignmentLength
     ed=readLength-alignmentLength+int(line[11].split(':')[2])  #NM:i:0
@@ -208,7 +208,8 @@ def extract_from_read(line):
 #for bowtie2 BAM
 def extract_from_read_bowtie2(line):
     
-    
+    #NS500289:299:HCVG7BGX2:1:11107:3428:3932.read.length_75	0	gi|555853|gb|U13369.1|HSU13369	36979	0	75M	*	0	0	GTGCAGTGGCGCGATCTCGACTCACTGCAAGCTCCGCCTCCCGGGTTCACGCCATTCTCCTGCCTCAACCTCCCG	IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII	AS:i:-42	XN:i:0	XM:i:7	XO:i:0	XG:i:0	NM:i:7	MD:Z:6C4T7G10C0G35G6A0	YT:Z:UU
+
     
     
     alignment=line[17].split(':')[2]  #MD:Z:53T22
@@ -231,7 +232,7 @@ def extract_from_read_bowtie2(line):
     alignmentLength=sum(alignment3)+countA+countC+countG+countT
 
 
-
+    
     
  
 
@@ -251,7 +252,6 @@ def nMicrobialReads(inFile_name, outFile_name,flag):
             for line in csv.reader(inFile, delimiter='\t'):
                 
                 readName=line[0]
-                readLength=int(readName.split("read.length_")[1]) #assumes the read length is written in fasta file
                 
                 alignment=line[12].split(':')[2]  #MD:Z:53T22
 
@@ -275,7 +275,7 @@ def nMicrobialReads(inFile_name, outFile_name,flag):
                         alignment3.append(int(a))
             
                 alignmentLength=sum(alignment3)+countA+countC+countG+countT
-                
+                readLength=alignmentLength #assumes no hard cliping
                 
                 identity=readLength-ed
                 
@@ -316,7 +316,7 @@ def nCircularReads(inFile_name):
 # output: number of reads, read length, name of fastx file
 def prepare_for_analysis(unmapped_file):	
 	# conversions and checks
-	to_fasta = ARGS.skipPreliminary or ARGS.skipQC or ARGS.skipLowq
+	to_fasta = 1
 	if ARGS.b:  # bam input
 		if to_fasta:  # convert to fasta
 			bam2fasta(CD, unmapped_file, INTFNS["lowQFileFasta"])
@@ -374,7 +374,6 @@ def step_1a(unmapped_file, n):
     nLowQReads = 0
     with open(INTFNS["lowQFileFasta"], "w") as lowQFileFasta:
         for record in SeqIO.parse(unmapped_file, "fastq"):
-            # assumes the same length, will not work for Ion Torrent or Pac Bio
             j = record.letter_annotations["phred_quality"]
             prc = len([i for i in j if i >= 20])/float(len(j))
             read_length=len(str(record.seq))
@@ -508,7 +507,6 @@ def step_2(unmapped_file,flag,flag_PE):
         for line in csv.reader(f,delimiter='\t'):
             
             (ed,alignmentLength,clipped)=extract_from_read(line)
-            identity=readLength-ed
             
             
             
@@ -552,7 +550,10 @@ def step_3(unmapped_file, cmd,flag,flag_PE):
         for line in reader:
     
             readName=line[0]
-            readLength=int(readName.split("read.length_")[1]) #assumes the read length is written in fasta file
+            start=int(line[6])
+            end=int(line[7])
+            
+            readLength=end-start+1
             element = line[0]
             identity = float(line[2])
             alignmentLength = float(line[3])

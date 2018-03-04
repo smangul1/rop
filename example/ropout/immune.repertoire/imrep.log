@@ -1,0 +1,20 @@
+('Read CDR3 assembled by ImreP', '/u/home/galaxy/collaboratory/serghei/code/rop/example/ropout/immune.repertoire/imrep.cdr3')
+('Total number of IGH CDR3 is', 1)
+('Total number of IGK CDR3 is', 1)
+('Total number of IGL CDR3 is', 0)
+('Total number of TCRA CDR3 is', 0)
+('Total number of TCRB CDR3 is', 0)
+('Total number of TCRG CDR3 is', 0)
+('Total number of TCRD CDR3 is', 0)
+('Total number of IGH VJ recombinations is', 0)
+('Total number of IGK VJ recombinations is', 0)
+('Total number of IGL VJ recombinations is', 0)
+('Total number of TCRA VJ recombinations is', 0)
+('Total number of TCRB VJ recombinations is', 0)
+('Total number of TCRG VJ recombinations is', 0)
+('Total number of TCRD VJ recombinations is', 0)
+('All results are summarized in ', '/u/home/galaxy/collaboratory/serghei/code/rop/example/ropout/immune.repertoire/immune.clonality.summary/')
+Relative frequencies and counts of assembled CDR3s are saved in individuals files.
+For example, relative frequencies and counts of IGH chain are saved in:
+/u/home/galaxy/collaboratory/serghei/code/rop/example/ropout/immune.repertoire/immune.clonality.summary//IGH.cdr3.FREQ.immune.clonality.summary.csv
+Done!
