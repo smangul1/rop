@@ -71,7 +71,6 @@ if not ARGS.skipPreliminary and not ARGS.skipQC:
         
         
         nReads["rRNA"] = step_1c(unmapped_file)
-        clean(INTFNS["rDNAFile_sam"])
         clean(unmapped_file)
         unmapped_file = INTFNS["afterrRNAFasta"]
         write2Log("--filtered " + str(nReads["rRNA"]) + " reads from ribosomal DNA. Coordinates and other details of rDNA reads are available in " + INTFNS["rDNAFile_bam"] , LOGFNS["gLogfile"], ARGS.quiet)
@@ -184,7 +183,6 @@ if ARGS.circRNA:
     
     
     
-    print (cmd)
 
     if ARGS.qsub or ARGS.qsubArray:
 	    write2Log(cmd, RUNFNS["runNCL_CIRIfile"], True)
@@ -309,9 +307,14 @@ if ARGS.bacteria and 0==1:
     command=read_commands()
     cmd_bacteria=command[3]
     
-    cmd = cmd_bacteria + " " + unmapped_file + "|"+ CD + "/tools/samtools view -SF4 - > bacteria.sam 2>>" +LOGFNS["logBacteria"]
+    cmd = cmd_bacteria + " " + unmapped_file + "|"+ CD + "/tools/samtools view -SF4 -bh - | "+ CD + "/tools/samtools sort - >" +INTFNS["gBamFile"]
 
-    print (cmd)
+
+
+    
+    
+
+
 
 
     write2Log(cmd, LOGFNS["cmdLogfile"], True)
@@ -344,11 +347,13 @@ if ARGS.viral:
     
   
 
-    cmd1 =   cmd_virus1  + " "+ unmapped_file +" 2>>"+LOGFNS["logVirus"]+"|"+ CD + "/tools/samtools view -SF4 -bh  - > "+INTFNS["bam_viral"]+" 2>>" +LOGFNS["logVirus"]
-    cmd2 =   cmd_virus2  + " "+ unmapped_file +" 2>>"+LOGFNS["logVirus"]+"|"+ CD + "/tools/samtools view -SF4 -bh - > "+INTFNS["bam_viral_vipr"]+" 2>>" +LOGFNS["logVirus"]
+
+    cmd1 = cmd_virus1 + " "+unmapped_file + " 2>>" + LOGFNS["logVirus"] + " | " + CD + "/tools/samtools view -SF4 -bh - | " + CD + "/tools/samtools sort - >" +INTFNS["bam_viral"]
+    cmd2 = cmd_virus2 + " "+unmapped_file + " 2>>" + LOGFNS["logVirus"] + " | " + CD + "/tools/samtools view -SF4 -bh - | " + CD + "/tools/samtools sort - >" +INTFNS["bam_viral_vipr"]
+
+
     cmd = cmd1+"\n"+cmd2
     
-
     
     write2Log(cmd, LOGFNS["cmdLogfile"], True)
     if ARGS.qsub or ARGS.qsubArray:
@@ -385,8 +390,8 @@ if ARGS.fungi:
     
     
     
-    cmd =   cmd_fungi  + " "+ unmapped_file + " 2>>"+LOGFNS["logFungi"]+"|"+ CD + "/tools/samtools view -SF4 -bh - > "+INTFNS["bam_fungi"]+" 2>>" +LOGFNS["logFungi"]
-    
+    cmd = cmd_fungi + " "+unmapped_file + " 2>>" + LOGFNS["logFungi"] + " | " + CD + "/tools/samtools view -SF4 -bh - | " + CD + "/tools/samtools sort - >" +INTFNS["bam_fungi"]
+
     
     
     
@@ -420,7 +425,7 @@ if ARGS.protozoa:
     
     
     
-    cmd =   cmd_protozoa  + " "+ unmapped_file + " 2>>"+LOGFNS["logProtozoa"]+"|"+ CD + "/tools/samtools view -SF4 -bh - > "+INTFNS["bam_protozoa"]+" 2>>" +LOGFNS["logProtozoa"]
+    cmd = cmd_protozoa + " "+unmapped_file + " 2>>" + LOGFNS["logProtozoa"] + " | " + CD + "/tools/samtools view -SF4 -bh - | " + CD + "/tools/samtools sort - >" +INTFNS["bam_protozoa"]
 
 
     

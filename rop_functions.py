@@ -14,6 +14,7 @@ ROP Tutorial: https://github.com/smangul1/rop/wiki
 ********************************************************************************"""
 
 from rop_globals import *
+import pysam
 
 
 ################################################################################
@@ -133,7 +134,6 @@ def bam2fastq(cd, bam_name, fastq_name):
     write2Log(message, LOGFNS["gLogfile"], ARGS.quiet)
     
     cmd=cd + "/tools/samtools view -f 0x4 -bh " + bam_name + " | " + cd+ "/tools/samtools bam2fq ->"+fastq_name
-    print cmd
     write2Log(cmd, LOGFNS["cmdLogfile"], "False")
     if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
 
@@ -205,40 +205,7 @@ def extract_from_read(line):
     return (ed,alignmentLength,clipped)
 
 
-#for bowtie2 BAM
-def extract_from_read_bowtie2(line):
-    
-    #NS500289:299:HCVG7BGX2:1:11107:3428:3932.read.length_75	0	gi|555853|gb|U13369.1|HSU13369	36979	0	75M	*	0	0	GTGCAGTGGCGCGATCTCGACTCACTGCAAGCTCCGCCTCCCGGGTTCACGCCATTCTCCTGCCTCAACCTCCCG	IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII	AS:i:-42	XN:i:0	XM:i:7	XO:i:0	XG:i:0	NM:i:7	MD:Z:6C4T7G10C0G35G6A0	YT:Z:UU
 
-    
-    
-    alignment=line[17].split(':')[2]  #MD:Z:53T22
-    ed=int(line[16].split(':')[2])  #NM:i:0
-    
-    
-    countA=alignment.count('A')
-    countC=alignment.count('C')
-    countT=alignment.count('T')
-    countG=alignment.count('G')
-    
-    alignment2=alignment.replace('A',',').replace('C',',').replace('T',',').replace('G',',').replace('^',',').split(',')
-    alignment3=[]
-    
-    for a in alignment2:
-        if a!="":
-            alignment3.append(int(a))
-
-
-    alignmentLength=sum(alignment3)+countA+countC+countG+countT
-
-
-    
-    
- 
-
-
-    
-    return (ed,alignmentLength)
 
 
 
@@ -247,50 +214,27 @@ def extract_from_read_bowtie2(line):
 def nMicrobialReads(inFile_name, outFile_name,flag):
     
     readsMicrobiome = set()
-    with open(inFile_name, "r") as inFile:
-        with open(outFile_name, "w") as outFile:
-            for line in csv.reader(inFile, delimiter='\t'):
-                
-                readName=line[0]
-                
-                alignment=line[12].split(':')[2]  #MD:Z:53T22
+    
+    
+    samfile = pysam.AlignmentFile(inFile_name, "rb")
+    for read in samfile.fetch():
+        number_mismatches=int(read.get_tag("NM"))
+        readLength=int(read.infer_read_length())
+        alignmentLength=int(read.query_alignment_length)
+        ed=number_mismatches/alignmentLength
+        identity=1-ed
+        
+        
+        
+        if  alignmentLength >= 0.8*readLength and identity >= 0.9:
+            readsMicrobiome.add(read.query_name)
+        set2file(readsMicrobiome,outFile_name)
 
-                ed=int(line[11].split(':')[2])  #NM:i:0
-                
-                
-                
-                
-                countA=alignment.count('A')
-                countC=alignment.count('C')
-                countT=alignment.count('T')
-                countG=alignment.count('G')
-                
-                alignment2=alignment.replace('A',',').replace('C',',').replace('T',',').replace('G',',').replace('^',',').split(',')
-                
-                
-                alignment3=[]
-                
-                for a in alignment2:
-                    if a!="":
-                        alignment3.append(int(a))
-            
-                alignmentLength=sum(alignment3)+countA+countC+countG+countT
-                readLength=alignmentLength #assumes no hard cliping
-                
-                identity=readLength-ed
-                
-                
-                
-                if flag!=True:
-                    
-                    if  alignmentLength >= 0.8*readLength and identity >= 0.9*readLength:
-                        readsMicrobiome.add(readName)
-                        outFile.write("\t".join(line) + "\n")
-                else:
-                        readsMicrobiome.add(readName)
-                        outFile.write("\t".join(line) + "\n")
+    samfile.close()
 
     return readsMicrobiome
+
+
 
 def nReadsMetaphlan(inFile_name):
 	readsMetaphlan = set()
@@ -399,16 +343,15 @@ def step_1c(unmapped_file):
     
     
     
-    
-    cmd_rDNA = cmd_rDNA + " "+unmapped_file + " 2>>" + LOGFNS["logrDNA"] + " | " + CD + "/tools/samtools view -SF4 -bh - >" +INTFNS["rDNAFile_bam"]
-    
+    cmd_rDNA = cmd_rDNA + " "+unmapped_file + " 2>>" + LOGFNS["logrDNA"] + " | " + CD + "/tools/samtools view -SF4 -bh - | " + CD + "/tools/samtools sort - >" +INTFNS["rDNAFile_bam"]
+
     
     
     write2Log(cmd_rDNA, LOGFNS["cmdLogfile"], True)
     proc1 = subprocess.Popen([cmd_rDNA], shell=True)
     if proc1.wait(): raise SubprocessError()
     #convert from bam to sam. This is done because we don't use pysam for now!
-    cmd=CD+"/tools/samtools view " + INTFNS["rDNAFile_bam"] + ">" + INTFNS["rDNAFile_sam"]
+    cmd=CD+"/tools/samtools index " + INTFNS["rDNAFile_bam"]
     if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
     
     
@@ -418,18 +361,18 @@ def step_1c(unmapped_file):
     rRNAReads = set()
     
     
-    with open(INTFNS["rDNAFile_sam"], "r") as f:
-        for line in csv.reader(f,delimiter='\t'):
-            read=line[0]
+    
+    samfile = pysam.AlignmentFile(INTFNS["rDNAFile_bam"], "rb")
+    for read in samfile.fetch():
+        number_mismatches=int(read.get_tag("NM"))
+        readLength=int(read.infer_read_length())
+        ed=number_mismatches/readLength
+        identity=1-ed
+        if identity>0.94:
+            rRNAReads.add(read.query_name)
             
-            #for  example - (0, 79) - we use bowtie back to back option
-            (ed,alignmentLength)=extract_from_read_bowtie2(line)
-            identity=1-ed/float(alignmentLength)
-            if identity>0.94:
-                rRNAReads.add(read)
             
-            
-            
+    samfile.close()
 
 
     
@@ -437,6 +380,7 @@ def step_1c(unmapped_file):
     
 
     excludeReadsFromFasta(unmapped_file, rRNAReads, INTFNS["afterrRNAFasta"])
+    set2file(rRNAReads,"rDNA_reads.txt")
     return len(rRNAReads)
 
 
@@ -457,8 +401,8 @@ def step_2(unmapped_file,flag,flag_PE):
     bwa_TR=command[1]
 
 
-    cmdGenome = bwa_WG + " "+unmapped_file + " 2>>" + LOGFNS["log_bowtieWG"] + " | " + CD + "/tools/samtools view -SF4 -bh - >" +INTFNS["gBamFile"]
-    cmdTranscriptome = bwa_TR + " "+unmapped_file + " 2>>" + LOGFNS["log_bowtieTR"] + " | " + CD + "/tools/samtools view -SF4 -bh -  >" + INTFNS["tBamFile"]
+    cmdGenome = bwa_WG + " "+unmapped_file + " 2>>" + LOGFNS["log_bowtieWG"] + " | " + CD + "/tools/samtools view -SF4 -bh - | " + CD + "/tools/samtools sort - >" +INTFNS["gBamFile"]
+    cmdTranscriptome = bwa_TR + " "+unmapped_file + " 2>>" + LOGFNS["log_bowtieTR"] + " | " + CD + "/tools/samtools view -SF4 -bh - | " + CD + "/tools/samtools sort - > " + INTFNS["tBamFile"]
 
 
 
@@ -470,10 +414,10 @@ def step_2(unmapped_file,flag,flag_PE):
     proc2 = subprocess.Popen([cmdGenome], shell=True)
     if proc1.wait() or proc2.wait(): raise SubprocessError()
 
-    cmd=CD+"/tools/samtools view " + INTFNS["gBamFile"] + ">" + INTFNS["gSamFile"]
+    cmd=CD+"/tools/samtools index " + INTFNS["gBamFile"]
     if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
     
-    cmd=CD+"/tools/samtools view " + INTFNS["tBamFile"] + ">" + INTFNS["tSamFile"]
+    cmd=CD+"/tools/samtools index " + INTFNS["tBamFile"]
     if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
 
 
@@ -481,46 +425,53 @@ def step_2(unmapped_file,flag,flag_PE):
     lostReads0 = set()
     lostReads1 = set()
     lostReads2 = set()
-    with open(INTFNS["tSamFile"], "r") as f:
-        for line in csv.reader(f, delimiter='\t'):
-            flag_OK=True # flag: 0 consider read; 1 don't consider
-            cigar=line[5]
-            
-            (ed,alignmentLength,clipped)=extract_from_read(line)
-            
-            
 
 
-            if  ed<=ed_human:
+    samfile = pysam.AlignmentFile(INTFNS["tBamFile"], "rb")
+    for read in samfile.fetch():
+        number_mismatches=int(read.get_tag("NM"))
+        readLength=int(read.infer_read_length())
+        alignmentLength=int(read.query_alignment_length)
+        soft=readLength-alignmentLength
+        number_mismatches2=number_mismatches+soft
+        #print read
+        #print readLength,alignmentLength,number_mismatches,number_mismatches2
+        
+        
+        if  number_mismatches2<=ed_human:
+            lostReads.add(read.query_name)
+            if number_mismatches2 == 0:
+                lostReads0.add(read.query_name)
+            elif number_mismatches2 == 1:
+                lostReads1.add(read.query_name)
+            elif number_mismatches2 == 2:
+                    lostReads2.add(read.query_name)
 
 
-                lostReads.add(line[0])
-                if ed == 0:
-                    lostReads0.add(line[0])
-                elif ed == 1:
-                    lostReads1.add(line[0])
-                elif ed == 2:
-                    lostReads2.add(line[0])
-                        
-                        
-    with open(INTFNS["gSamFile"], "r") as f:
-        for line in csv.reader(f,delimiter='\t'):
-            
-            (ed,alignmentLength,clipped)=extract_from_read(line)
-            
-            
-            
-            
-            
-            if  ed<=ed_human:
+    samfile.close()
 
-                lostReads.add(line[0])
-                if ed == 0:
-                    lostReads0.add(line[0])
-                elif ed == 1:
-                    lostReads1.add(line[0])
-                elif ed == 2:
-                    lostReads2.add(line[0])
+
+    samfile = pysam.AlignmentFile(INTFNS["gBamFile"], "rb")
+    for read in samfile.fetch():
+        readLength=int(read.infer_read_length())
+        alignmentLength=int(read.query_alignment_length)
+        soft=readLength-alignmentLength
+        number_mismatches2=number_mismatches+soft
+        
+        if  number_mismatches2<=ed_human:
+            lostReads.add(read.query_name)
+            if number_mismatches2 == 0:
+                lostReads0.add(read.query_name)
+            elif number_mismatches2 == 1:
+                lostReads1.add(read.query_name)
+            elif number_mismatches2 == 2:
+                lostReads2.add(read.query_name)
+
+
+    samfile.close()
+
+
+
     
     
     write2Log("Unmapped reads mapped to genome and/or transcriptome (using " + "BWA, edit distance<6) are categorized as lost reads and are excluded from the further analysis. This includes : " + str(len(lostReads0)) + " reads with 0 mismatches, " + str(len(lostReads1)) + " reads with 1 mismatch, and" + str(len(lostReads2)) + " reads with 2 mismatches.", LOGFNS["logHuman"],True)
@@ -531,8 +482,6 @@ def step_2(unmapped_file,flag,flag_PE):
         pe2se(lostReads,"lost_human_reads_SE.txt")
     set2file(lostReads,"lost_human_reads.txt")
 
-    os.remove(INTFNS["gSamFile"])
-    os.remove(INTFNS["tSamFile"])
 
 
 
@@ -640,37 +589,34 @@ def step_6c(unmapped_file, cmd,flag,flag_PE):
     if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
     
     
-    cmd=CD+"/tools/samtools view " + INTFNS["bam_viral"] + ">" + INTFNS["sam_viral"]
+    cmd=CD+"/tools/samtools index " + INTFNS["bam_viral"]
     if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
-    cmd=CD+"/tools/samtools view " + INTFNS["bam_viral_vipr"] + ">" + INTFNS["sam_viral_vipr"]
+    cmd=CD+"/tools/samtools index " + INTFNS["bam_viral_vipr"]
     if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
     
-    virusReads_NCBI = nMicrobialReads(INTFNS["sam_viral"],LOGFNS["virusFileFiltered"],flag)
-    virusReads_VIPR = nMicrobialReads(INTFNS["sam_viral_vipr"],LOGFNS["virusFileFiltered"],flag)
+    virusReads_NCBI = nMicrobialReads(INTFNS["bam_viral"],LOGFNS["virusFileFiltered"],flag)
+    virusReads_VIPR = nMicrobialReads(INTFNS["bam_viral_vipr"],LOGFNS["virusFileFiltered"],flag)
     virusReads=virusReads_NCBI | virusReads_VIPR
     excludeReadsFromFasta(unmapped_file, virusReads, INTFNS["afterVirusFasta"])
     if flag_PE:
         pe2se(virusReads,"viral_reads_SE.txt")
     set2file(virusReads,"viral_reads.txt")
 
-    os.remove(INTFNS["sam_viral"])
-    os.remove(INTFNS["sam_viral_vipr"])
 
     return len(virusReads)
 
 def step_6d(unmapped_file, cmd,flag,flag_PE):
     if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
     
-    cmd=CD+"/tools/samtools view " + INTFNS["bam_fungi"] + ">" + INTFNS["sam_fungi"]
+    cmd=CD+"/tools/samtools index " + INTFNS["bam_fungi"]
     if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
     
-    fungiReads = nMicrobialReads(INTFNS["sam_fungi"],LOGFNS["fungiFileFiltered"],flag)
+    fungiReads = nMicrobialReads(INTFNS["bam_fungi"],LOGFNS["fungiFileFiltered"],flag)
     excludeReadsFromFasta(unmapped_file, fungiReads, INTFNS["afterFungiFasta"])
     if flag_PE:
         pe2se(fungiReads,"fungi_reads_SE.txt")
     set2file(fungiReads,"fungi_reads.txt")
 
-    os.remove(INTFNS["sam_fungi"])
 
     return len(fungiReads)
 
@@ -678,16 +624,15 @@ def step_6d(unmapped_file, cmd,flag,flag_PE):
 def step_6_protozoa(unmapped_file, cmd,flag,flag_PE):
     if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
     
-    cmd=CD+"/tools/samtools view " + INTFNS["bam_protozoa"] + ">" + INTFNS["sam_protozoa"]
+    cmd=CD+"/tools/samtools index " + INTFNS["bam_protozoa"]
     if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
     
-    protozoaReads = nMicrobialReads(INTFNS["sam_protozoa"],LOGFNS["protozoaFileFiltered"],flag)
+    protozoaReads = nMicrobialReads(INTFNS["bam_protozoa"],LOGFNS["protozoaFileFiltered"],flag)
     excludeReadsFromFasta(unmapped_file, protozoaReads, INTFNS["afterProtozoaFasta"])
     if flag_PE:
         pe2se(protozoaReads,"protozoa_reads_SE.txt")
     set2file(protozoaReads,"protozoa_reads.txt")
 
-    os.remove(INTFNS["sam_protozoa"])
     return len(protozoaReads)
 
 

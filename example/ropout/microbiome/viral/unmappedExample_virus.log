@@ -1,0 +1,15 @@
+BWA was used to map the reads onto the	viral reference genomes.
+Reads with 0.9 identity and more than 0.8 of nucleotides aligned are considered microbial reads and are saved into /u/home/galaxy/collaboratory/serghei/code/rop/example/ropout/microbiome/viral/unmappedExample_virusFiltered.csv
+---------------
+[M::bwa_idx_load_from_disk] read 0 ALT contigs
+[M::process] read 1987 sequences (157852 bp)...
+[M::mem_process_seqs] Processed 1987 reads in 0.210 CPU sec, 0.209 real sec
+[main] Version: 0.7.13-r1126
+[main] CMD: /u/home/s/serghei/collab/code/rop/tools/bwa mem -a /u/home/s/serghei/collab/code/rop/db_human/viral/viral.ncbi.february.3.2018.fasta /u/home/galaxy/collaboratory/serghei/code/rop/example/ropout/immune.repertoire/unmappedExample_afterImmune.fasta
+[main] Real time: 0.681 sec; CPU: 0.653 sec
+[M::bwa_idx_load_from_disk] read 0 ALT contigs
+[M::process] read 1987 sequences (157852 bp)...
+[M::mem_process_seqs] Processed 1987 reads in 0.301 CPU sec, 0.301 real sec
+[main] Version: 0.7.13-r1126
+[main] CMD: /u/home/s/serghei/collab/code/rop/tools/bwa mem -a /u/home/s/serghei/collab/code/rop/db_human/viral.vipr/NONFLU_All.fastq /u/home/galaxy/collaboratory/serghei/code/rop/example/ropout/immune.repertoire/unmappedExample_afterImmune.fasta
+[main] Real time: 7.960 sec; CPU: 4.823 sec

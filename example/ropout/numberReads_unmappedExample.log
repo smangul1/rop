@@ -1,0 +1,2 @@
+sample,nReads.unmapped,nReads.low.Quality,nReads.rRNA,nReads.lost.human,nReads.repeats,nReads.NCL,nReads.immune,nRead.microbiome
+unmappedExample,2579,0,48,536,8,0,2,7
