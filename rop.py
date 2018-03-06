@@ -1,4 +1,5 @@
 #!/u/home/s/serghei/collab/code/rop/tools/Miniconda-Install/YourApplicationFolder/bin/python
+#!/u/home/s/serghei/collab/code/rop/tools/Miniconda-Install/YourApplicationFolder/bin/python
 print ("""********************************************************************************
 ROP (v1.0.8) is a computational protocol aimed to discover the source of all reads,
 originated from complex RNA molecules, recombinant B and T cell receptors and microbial
