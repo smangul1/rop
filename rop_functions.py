@@ -123,11 +123,11 @@ def pe2se(lostReads,fileName):
 def bam2fasta(cd, bam_name, fasta_name):
 	
 	
-	message = "Convert bam to fasta"
-	write2Log(message, LOGFNS["gLogfile"], ARGS.quiet)
-	cmd = cd + "/tools/bamtools convert -in " + bam_name + " -format fasta >" +fasta_name
-	write2Log(cmd, LOGFNS["cmdLogfile"], "False")
-	if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
+    message = "Convert bam to fasta" + fasta_name
+    write2Log(message, LOGFNS["gLogfile"], ARGS.quiet)
+    cmd=cd + "/tools/samtools view -f 0x4 -bh " + bam_name + " | " + cd+ "/tools/samtools bam2fq - | paste - - - - | cut -f 1,2 | sed 's/^@/>/' | tr \"\t\" \"\n\"  >"+fasta_name
+    write2Log(cmd, LOGFNS["cmdLogfile"], "False")
+    if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
 
 def bam2fastq(cd, bam_name, fastq_name):
     message = "Extract unmapped reads and convert to fastq"
@@ -354,8 +354,8 @@ def step_1c(unmapped_file):
     cmd=CD+"/tools/samtools index " + INTFNS["rDNAFile_bam"]
     if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
     
-    
-    
+    print cmd_rDNA
+    print cmd
     
     n_rRNATotal = 0
     rRNAReads = set()
