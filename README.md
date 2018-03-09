@@ -1,9 +1,17 @@
-# ROP: Read Origin Protocol
+# Read Origin Protocol
 
+The Read Origin Protocol (ROP) is a computational protocol that aims to
+discover the source of all reads, including those originating from complex RNA
+molecules, recombinant antibodies, and microbial communities. 
 
-The ROP protocol is available for free download as a package that is easy to install and run.  It provides a one-command solution to to discover the source of all unmapped reads, which originated from complex RNA molecules, recombinant B and T cell receptors and microbial communities. 
+Written by:
 
-ROP provides a flexible interface that allows users to perform analysis of interest, rather than running a full ROP analysis. For example,  `--microbiome` option allows to run only microbial analysis.   
+- Serghei Mangul (<smangul@ucla.edu>)
+- Harry Taegyun Yang (<harry2416@gmail.com>)
+- Kevin Hsieh (<kevin.hsieh@ucla.edu>)
+- Linus Chen (<u6.30cl@gmail.com>)
 
-See the main webpage [https://github.com/smangul1/rop/wiki](https://github.com/smangul1/rop/wiki)
+at the University of California, Los Angeles (UCLA). 
 
+Released under the terms of the General Public License, version 3.0 (GPLv3).
+For more information, please visit: <https://github.com/smangul1/rop/wiki>
