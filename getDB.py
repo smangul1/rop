@@ -1,5 +1,5 @@
-#!/u/home/s/serghei/collab/code/rop/tools/Miniconda-Install/YourApplicationFolder/bin/python
-#!/u/home/s/serghei/collab/code/rop/tools/Miniconda-Install/YourApplicationFolder/bin/python
+#!/usr/bin/env python2.7
+
 import sys
 import os
 import argparse

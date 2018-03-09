@@ -1,74 +1,50 @@
-echo "ROP requires Python 2.7. Please ensure that Python 2.7 is available on your "
-echo "system. This script will install all other prerequisite software (no "
-echo "administrator permissions required)."
-echo
-echo "In addition, please use getDB.py to download the database(s) you wish to use."
-echo "For more information on downloading databases, run python getDB.py --help."
-echo
-echo "For more details see: https://sergheimangul.wordpress.com/rop/"
-echo "ROP Tutorial: https://github.com/smangul1/rop/wiki"
-echo "--------------------------------------------------------------------------------"
+#!/usr/bin/env bash
 
-echo "Commands are saved in rop.commands.txt"
-./rop.commands.sh
+echo '--------------------------------------------------------------------------------'
+echo 'Read Origin Protocol: Installer'
+echo '--------------------------------------------------------------------------------'
+cat README.md
+echo '--------------------------------------------------------------------------------'
+DIR=`dirname $(readlink -f $0)`
+cd $DIR/tools
 
+# Uninstall previous versions. Restore shebangs and exit if the --clean option
+# is selected.
+rm -fr imrep metaphlan2 MiniConda
+if [ $# -eq 1 ] && [ $1 = '--clean' ]; then
+    sed -i '1c #!/usr/bin/env python2.7' ../rop.py
+    sed -i '1c #!/usr/bin/env python2.7' ../getDB.py
+    echo 'Cleaning complete. Please use install.sh to reinstall.'
+    exit 0
+fi
 
-cd tools
-rm -fr Miniconda-Install
-git clone https://github.com/deto/Miniconda-Install.git
-cd Miniconda-Install
-bash Linux_Install.sh
-cd ..
-
-
-cd tools
-rm -fr imrep
+# Install ImReP.
 git clone https://github.com/mandricigor/imrep.git
 cd imrep
 ./install.sh
 cd ..
 
+# Install MetaPhlAn 2.
 hg clone https://bitbucket.org/biobakery/metaphlan2
-cd  metaphlan2
-ln -s ../../db_human/databases/
-cd ../../
-
-#configure metaphlan2
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-echo "#!${DIR}/tools/Miniconda-Install/YourApplicationFolder/bin/python" >python.header.txt
-
-sed '1d' tools/metaphlan2/metaphlan2.py >tools/metaphlan2/metaphlan2.new.py
-cat python.header.txt tools/metaphlan2/metaphlan2.new.py >tools/metaphlan2/metaphlan2.py 
-sed '1d' tools/metaphlan2/strainphlan.py >tools/metaphlan2/strainphlan.new.py
-cat python.header.txt tools/metaphlan2/strainphlan.new.py >tools/metaphlan2/strainphlan.py
-sed '1d' tools/metaphlan2/utils/read_fastx.py >tools/metaphlan2/utils/read_fastx.new.py
-cat python.header.txt tools/metaphlan2/utils/read_fastx.new.py >tools/metaphlan2/utils/read_fastx.py
-chmod 755 tools/metaphlan2/metaphlan2.py
-chmod 755 tools/metaphlan2/strainphlan.py
-chmod 755 tools/metaphlan2/utils/read_fastx.py
-
-#configure rop and getDB
-cat python.header.txt rop.py >rop.new.py
-mv -f rop.new.py rop.py
-cat python.header.txt getDB.py >getDB.new.py
-mv -f getDB.new.py getDB.py
-chmod 755 rop.py
-chmod 755 getDB.py
-
-
-./tools/Miniconda-Install/YourApplicationFolder/bin/pip install pysam --user
-./tools/Miniconda-Install/YourApplicationFolder/bin/pip install biopython --user
-./tools/Miniconda-Install/YourApplicationFolder/bin/pip install intervaltree --user
-./tools/Miniconda-Install/YourApplicationFolder/bin/pip install jellyfish --user
-./tools/Miniconda-Install/YourApplicationFolder/bin/pip install numpy --user
-./tools/Miniconda-Install/YourApplicationFolder/bin/pip install networkx --user
-cd tools
-tar -xf suffix_tree-2.1.tar.gz
-cd suffix_tree-2.1
-../Miniconda-Install/YourApplicationFolder/bin/python setup.py install --user
+cd metaphlan2
+ln -s ../../db_human/databases
 cd ..
-rm -rf suffix_tree-2.1
 
-echo "Done!"
+# Install MiniConda and add shebangs.
+if [ $# -ne 1 ] || [ $1 != '--no-miniconda' ]; then
+    ./install-MiniConda.sh
+    MiniConda="$PWD/MiniConda/bin/python"
+    sed -i "1c #!$MiniConda" metaphlan2/metaphlan2.py
+    sed -i "1c #!$MiniConda" metaphlan2/strainphlan.py
+    sed -i "1c #!$MiniConda" metaphlan2/utils/read_fastx.py
+    sed -i "1c #!$MiniConda" ../rop.py
+    sed -i "1c #!$MiniConda" ../getDB.py
+else
+    sed -i '1c #!/usr/bin/env python2.7' metaphlan2/metaphlan2.py
+    sed -i '1c #!/usr/bin/env python2.7' metaphlan2/strainphlan.py
+    sed -i '1c #!/usr/bin/env python2.7' metaphlan2/utils/read_fastx.py
+    sed -i '1c #!/usr/bin/env python2.7' ../rop.py
+    sed -i '1c #!/usr/bin/env python2.7' ../getDB.py
+fi
 
-
+echo 'Installation complete. Please use getDB.py to download databases.'
