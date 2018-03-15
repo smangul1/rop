@@ -221,7 +221,7 @@ def nMicrobialReads(inFile_name, outFile_name,flag):
         number_mismatches=int(read.get_tag("NM"))
         readLength=int(read.infer_read_length())
         alignmentLength=int(read.query_alignment_length)
-        ed=number_mismatches/alignmentLength
+        ed=number_mismatches/float(alignmentLength)
         identity=1-ed
         
         
@@ -354,8 +354,6 @@ def step_1c(unmapped_file):
     cmd=CD+"/tools/samtools index " + INTFNS["rDNAFile_bam"]
     if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
     
-    print cmd_rDNA
-    print cmd
     
     n_rRNATotal = 0
     rRNAReads = set()
@@ -594,9 +592,23 @@ def step_6c(unmapped_file, cmd,flag,flag_PE):
     cmd=CD+"/tools/samtools index " + INTFNS["bam_viral_vipr"]
     if subprocess.Popen([cmd], shell=True).wait(): raise SubprocessError()
     
-    virusReads_NCBI = nMicrobialReads(INTFNS["bam_viral"],LOGFNS["virusFileFiltered"],flag)
+    #virusReads_NCBI = nMicrobialReads(INTFNS["bam_viral"],LOGFNS["virusFileFiltered"],flag)
     virusReads_VIPR = nMicrobialReads(INTFNS["bam_viral_vipr"],LOGFNS["virusFileFiltered"],flag)
-    virusReads=virusReads_NCBI | virusReads_VIPR
+    #n_only_NCBI=len(virusReads_NCBI-virusReads_VIPR)
+    #n_only_VIPR=len(virusReads_VIPR-virusReads_NCBI)
+    
+
+    
+    
+    
+    
+    #virusReads=virusReads_NCBI | virusReads_VIPR
+    
+    virusReads=virusReads_VIPR
+    
+    #print n_only_NCBI,n_only_VIPR
+    #print len(virusReads_NCBI), len(virusReads_VIPR),len(virusReads)
+    
     excludeReadsFromFasta(unmapped_file, virusReads, INTFNS["afterVirusFasta"])
     if flag_PE:
         pe2se(virusReads,"viral_reads_SE.txt")
