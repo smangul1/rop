@@ -228,7 +228,7 @@ def nMicrobialReads(inFile_name, outFile_name,flag):
         
         if  alignmentLength >= 0.8*readLength and identity >= 0.9:
             readsMicrobiome.add(read.query_name)
-        set2file(readsMicrobiome,outFile_name)
+    set2file(readsMicrobiome,outFile_name)
 
     samfile.close()
 
