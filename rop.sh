@@ -9,7 +9,7 @@ echo '--------------------------------------------------------------------------
 echo 'Read Origin Protocol: Main Program'
 echo '--------------------------------------------------------------------------------'
 DIR=`dirname $(readlink -e "$0")`
-cat "$DIR/README.md"
+sed '/##/ q' "$DIR/README.md" | head -n -2 | tail -n +3
 echo '--------------------------------------------------------------------------------'
 
 # Add MiniConda to PATH if it's available.
@@ -28,17 +28,17 @@ if [ $? -ne 4 ]; then
     echo "Error: Environment doesn't support getopt." >&2
     exit 1
 fi
-set -e
 
 # Call getopt.
-SHORT_OPTIONS='o:s:mfdzbah'
-LONG_OPTIONS='organism:,steps:,max,force,dev,gzip,bam,fasta,help'
+SHORT_OPTIONS='o:s:mfdzbaxh'
+LONG_OPTIONS='organism:,steps:,max,force,dev,gzip,bam,fasta,commands,help'
 PARSED=`getopt --options="$SHORT_OPTIONS" --longoptions="$LONG_OPTIONS" \
 --name "$0" -- "$@"`
 if [ $? -ne 0 ]; then
     exit 1  # getopt will have printed the error message
 fi
 eval set -- "$PARSED"
+set -e
 
 # Set default options.
 UNMAPPED_READS=''
@@ -55,6 +55,7 @@ DEV=false
 GZIP=false
 BAM=false
 FASTA=false
+COMMANDS=false
 
 # Review parsed options.
 while true; do
@@ -113,6 +114,11 @@ while true; do
             FASTA=true
             shift
             ;;
+        -x|--commands)
+            # Print all commands.
+            COMMANDS=true
+            shift
+            ;;
         -h|--help)
             echo "Usage: $0 [-o ORGANISM] [-s STEPS] [-mfdzba]" \
                 "unmapped_reads output_dir" >&2
@@ -137,9 +143,20 @@ while true; do
     esac
 done
 
+# Add all steps if selected.
+if [ "$STEPS" = 'all' ]; then
+    STEPS='lowq rdna reference repeats circrna immune microbiome'
+fi
+
 # Convert to absolute paths.
-UNMAPPED_READS=`readlink -e "$UNMAPPED_READS"`
+UNMAPPED_READS=`readlink -m "$UNMAPPED_READS"`
 OUTPUT_DIR=`readlink -m "$OUTPUT_DIR"`
+
+# Check if UNMAPPED_READS exists.
+if [ ! -e "$UNMAPPED_READS" ]; then
+    echo "Error: $UNMAPPED_READS doesn't exist." >&2
+    exit 1
+fi
 
 # Check if OUTPUT_DIR exists, then make it.
 if [ -d "$OUTPUT_DIR" ]; then
@@ -162,9 +179,12 @@ mkdir -p "$OUTPUT_DIR"
 SAMPLE=`basename "$UNMAPPED_READS" | sed 's \([^\.]*\)\..* \1 '`
 DB="$DIR/db_$ORGANISM"
 
-# Duplicate stdout and stderr to the log file.
+# Duplicate stdout and stderr to the log file. Print commands if selected.
 touch "$OUTPUT_DIR/$SAMPLE--general.log"
 exec &> >(tee -i "$OUTPUT_DIR/$SAMPLE--general.log")
+if [ $COMMANDS = true ]; then
+    set -x
+fi
 echo "Input file: $UNMAPPED_READS"
 
 # Declare output directories.
@@ -279,7 +299,7 @@ reads_present () {
 }
 
 clean () {
-    if [ $DEV = false ] && [ `dirname "$1"` != "$OUTPUT_DIR" ]; then
+    if [ $DEV = false ]; then
         rm "$1"
     fi
 }
@@ -312,6 +332,7 @@ if [ $BAM == true ]; then
         exit 1
     fi
     samtools bam2fq "$current" >"$post"
+    clean "$current"
     current="$post"
 fi
 
@@ -364,15 +385,17 @@ if ! grep -q 'lowq' <<<"$STEPS" || [ $FASTA = true ] || \
     
     # Must convert to fasta to continue.
     if [ $FASTA = false ]; then
-        fastq_to_fasta <"$current" >"$post"
+        fastq_to_fasta -n <"$current" >"$post"
+        clean "$current"
         current="$post"
     fi
 else
     n_reads['01_lowq']=`python "$DIR/helper.py" lowq $MAX $PE \
         --pre "$current" --post "$post"`
     echo "--> Marked lowq in the names of ${n_reads['01_lowq']} low quality" \
-        'reads. Reads not filtered.'
-    # Don't clean $current. It won't have an effect, anyway.
+        'reads.'
+    echo '    These reads are not filtered.'
+    clean "$current"
     current="$post"
 fi
 
@@ -510,22 +533,19 @@ fi
 
 echo '7a. MetaPhlAn profiling (-s metaphlan)...'
 cd "${DIRS['07a_metaphlan']}"
-# No $post file (don't reduce unmapped reads using MetaPhlAn results).
+# No post file (don't reduce unmapped reads using MetaPhlAn results).
 
 if ! grep -qE 'metaphlan|microbiome' <<<"$STEPS" || ! reads_present "$current"; then
     echo '--> Skipped MetaPhlAn profiling.'
 else
-    echo '--> MetaPhlAn profiling will execute in the background.'
-    {
     python "$DIR/tools/metaphlan2/metaphlan2.py" "$current" \
         --input_type multifasta --nproc 8 \
         --bowtie2out "${INTFNS['07a_metaphlan_bowtie2out']}" \
         >"${INTFNS['07a_metaphlan_output']}" 2>"${LOGFNS['07a_metaphlan']}"
-    n_reads['07a_metaphlan']=`cat "${INTFNS['07a_metaphlan_output']}" | wc -l`
-    echo "--> (background) Identified ${n_reads['07a_metaphlan']} reads using" \
-        'MetaPhlAn. Reads not filtered.'
+    n_reads_07a_metaphlan=`cat "${INTFNS['07a_metaphlan_output']}" | wc -l`
+    echo "--> Identified $n_reads_07a_metaphlan reads using MetaPhlAn."
+    echo '    These reads are neither filtered nor included in the total.'
     # Don't clean or change $current.
-    } &
 fi
 
 echo '7b. Bacterial profiling (-s bacteria)...'
@@ -616,12 +636,6 @@ fi
 # CLEANUP
 # ------------------------------------------------------------------------------
 
-# Wait for MetaPhlAn to finish.
-if ps -p $! >/dev/null; then
-    echo 'Waiting for MetaPhlAn to finish...'
-    wait
-fi
-
 # Revise low quality read count.
 if grep -q 'lowq' <<<"$STEPS"; then
     n_reads['01_lowq']=`grep -c '^>lowq_' "$current"`
@@ -634,7 +648,7 @@ sum=0
 for key in "${!n_reads[@]}"; do
     steps+="$key,"
     counts+="${n_reads[$key]},"
-    ((sum += ${n_reads[$key]}))
+    ((sum += ${n_reads[$key]})) || true
 done
 steps=`sed 's .$  ' <<<"$steps"`
 counts=`sed 's .$  ' <<<"$counts"`

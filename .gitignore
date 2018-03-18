@@ -1,4 +1,5 @@
 # Project-specific
+db_*
 tools/imrep
 tools/metaphlan2
 tools/MiniConda

@@ -9,7 +9,7 @@ echo '--------------------------------------------------------------------------
 echo 'Read Origin Protocol: Installer'
 echo '--------------------------------------------------------------------------------'
 DIR=`dirname $(readlink -e "$0")`
-cat "$DIR/README.md"
+sed '/##/ q' "$DIR/README.md" | head -n -2 | tail -n +3
 echo '--------------------------------------------------------------------------------'
 
 # ------------------------------------------------------------------------------
@@ -49,7 +49,6 @@ if [ $? -ne 4 ]; then
     echo "Error: Environment doesn't support getopt." >&2
     exit 1
 fi
-set -e
 
 # Call getopt.
 SHORT_OPTIONS='cnfl:d:o:s:h'
@@ -59,6 +58,7 @@ if [ $? -ne 0 ]; then
     exit 1  # getopt will have printed the error message
 fi
 eval set -- "$PARSED"
+set -e
 
 # Set default options.
 CLEAN_ONLY=false
@@ -166,12 +166,10 @@ if [ $NATIVE = false ]; then
     sed -i "1c #!$MiniConda" metaphlan2/metaphlan2.py
     sed -i "1c #!$MiniConda" metaphlan2/strainphlan.py
     sed -i "1c #!$MiniConda" metaphlan2/utils/read_fastx.py
-    sed -i "1c #!$MiniConda" ../rop.py
 else
     sed -i '1c #!/usr/bin/env python2.7' metaphlan2/metaphlan2.py
     sed -i '1c #!/usr/bin/env python2.7' metaphlan2/strainphlan.py
     sed -i '1c #!/usr/bin/env python2.7' metaphlan2/utils/read_fastx.py
-    sed -i '1c #!/usr/bin/env python2.7' ../rop.py
 fi
 
 # ------------------------------------------------------------------------------
