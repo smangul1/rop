@@ -1,0 +1,15 @@
+Example of preparing the bed files:
+
+python ../../scripts/prepareBed.py bedOriginal/CDS_NCBIM37.bed bedPrepared/CDS_NCBIM37_prepared.bed m
+
+Extract gene boundaries from gtf:
+
+
+python ../../../scripts/extractGeneBoundaries.py ../genes_Ensembl_NCBIM37.gtf geneBoundaries.bed m
+
+
+python extractGeneBoundaries.py ~/collab/genes_Ensembl_NCBIM37.gtf /u/home/s/serghei/code2/gWrench/annotations/mus_musculus/bedPrepared/geneCoordinatesType_prepared2.bed m
+
+python extractGeneBoundaries.py ~/project/genes_Ensembl_GRCh37.gtf /u/home/s/serghei/code2/gWrench/annotations/human/bedPrepared/geneCoordinatesType_prepared.bed h
+
+
