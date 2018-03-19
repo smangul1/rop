@@ -47,6 +47,8 @@ available:
   specified organism.
     - A comma-separated list of one or more of the following: repeat, immune,
       microbiome metaphlan, viral, fungi, protozoa.
+- `-i|--ignore-extensions`: Ignore incorrect .fastq/.fq/.fasta/.fa file
+  extensions. Does not ignore incorrect .gz/.bam file extensions.
 - `-h|--help`: Displays usage information.
 
 ## Using ROP

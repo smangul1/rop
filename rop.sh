@@ -30,8 +30,8 @@ if [ $? -ne 4 ]; then
 fi
 
 # Call getopt.
-SHORT_OPTIONS='o:s:mfdzbaxh'
-LONG_OPTIONS='organism:,steps:,max,force,dev,gzip,bam,fasta,commands,help'
+SHORT_OPTIONS='o:s:mfdzbaixh'
+LONG_OPTIONS='organism:,steps:,max,force,dev,gzip,bam,fasta,ignore-extensions,commands,help'
 PARSED=`getopt --options="$SHORT_OPTIONS" --longoptions="$LONG_OPTIONS" \
 --name "$0" -- "$@"`
 if [ $? -ne 0 ]; then
@@ -55,6 +55,7 @@ DEV=false
 GZIP=false
 BAM=false
 FASTA=false
+IGNORE_EXTENSIONS=false
 COMMANDS=false
 
 # Review parsed options.
@@ -114,6 +115,12 @@ while true; do
             FASTA=true
             shift
             ;;
+        -i|--ignore-extensions)
+            # Ignore incorrect .fastq/.fq/.fasta/.fa file extensions.
+            # Does not ignore incorrect .gz/.bam file extensions.
+            IGNORE_EXTENSIONS=true
+            shift
+            ;;
         -x|--commands)
             # Print all commands.
             COMMANDS=true
@@ -129,7 +136,7 @@ while true; do
             UNMAPPED_READS="$2"
             OUTPUT_DIR="$3"
             if [ "$UNMAPPED_READS" = '' ] || [ "$OUTPUT_DIR" = '' ]; then
-                echo "Usage: $0 [-o ORGANISM] [-s STEPS] [-mfdzba]" \
+                echo "Usage: $0 [-o ORGANISM] [-s STEPS] [-mfdzbaih]" \
                     "unmapped_reads output_dir" >&2
                 exit 1
             fi
@@ -338,7 +345,8 @@ fi
 
 # Inspect the input file, then restore current to a full path.
 if [ $FASTA == true ]; then
-    if [ `basename $current .fasta` == "$current" ] && \
+    if [ $IGNORE_EXTENSIONS = false ] && \
+        [ `basename $current .fasta` == "$current" ] && \
         [ `basename $current .fa` == "$current" ]; then
         echo 'Error: input file missing .fasta/.fa extension' >&2
         exit 1
@@ -346,7 +354,8 @@ if [ $FASTA == true ]; then
     N=`grep -c '^>' "$current"`
     READ_LENGTH=$(($(grep -A 1 -m 1 '^>' "$current" | tail -n 1 | wc -m) - 1))
 else
-    if [ `basename $current .fastq` == "$current" ] && \
+    if [ $IGNORE_EXTENSIONS = false ] && \
+        [ `basename $current .fastq` == "$current" ] && \
         [ `basename $current .fq` == "$current" ]; then
         echo 'Error: input file missing .fastq/.fq extension' >&2
         exit 1
