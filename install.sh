@@ -49,21 +49,23 @@ if [ $? -ne 4 ]; then
     echo "Error: Environment doesn't support getopt." >&2
     exit 1
 fi
+set -e
 
 # Call getopt.
-SHORT_OPTIONS='cnfl:d:o:s:h'
-LONG_OPTIONS='clean,native,force,link:,db-dest:,organism:,select-db:,help'
+SHORT_OPTIONS='cfnl:d:o:s:h'
+LONG_OPTIONS='clean,force,native,link:,db-dest:,organism:,select-db:,help'
+set +e
 PARSED=`getopt --options="$SHORT_OPTIONS" --longoptions="$LONG_OPTIONS" --name "$0" -- "$@"`
 if [ $? -ne 0 ]; then
     exit 1  # getopt will have printed the error message
 fi
-eval set -- "$PARSED"
 set -e
+eval set -- "$PARSED"
 
 # Set default options.
 CLEAN_ONLY=false
-NATIVE=false
 FORCE=false
+NATIVE=false
 LINK=''
 DB_DEST="$DIR"
 ORGANISM='human'
@@ -78,14 +80,14 @@ while true; do
             CLEAN_ONLY=true
             shift
             ;;
-        -n|--native)
-            # Use native python.
-            NATIVE=true
-            shift
-            ;;
         -f|--force)
             # Unlink databases.
             FORCE=true
+            shift
+            ;;
+        -n|--native)
+            # Use native python.
+            NATIVE=true
             shift
             ;;
         -l|--link)
@@ -109,7 +111,7 @@ while true; do
             shift 2
             ;;
         -h|--help)
-            echo "Usage: $0 [-cnf] [-l LINK] [-d DB_DEST] [-o ORGANISM]"\
+            echo "Usage: $0 [-cfnh] [-l LINK] [-d DB_DEST] [-o ORGANISM]"\
                 '[-s SELECT_DB]' >&2
             exit 0
             ;;

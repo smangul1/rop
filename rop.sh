@@ -28,35 +28,38 @@ if [ $? -ne 4 ]; then
     echo "Error: Environment doesn't support getopt." >&2
     exit 1
 fi
+set -e
 
 # Call getopt.
-SHORT_OPTIONS='o:s:mfdzbaixh'
-LONG_OPTIONS='organism:,steps:,max,force,dev,gzip,bam,fasta,ignore-extensions,commands,help'
+SHORT_OPTIONS='o:s:abzdfimpqxh'
+LONG_OPTIONS='organism:,steps:,fasta,bam,gzip,dev,force,ignore-extensions,max,\
+pe,quiet,commands,help'
+set +e
 PARSED=`getopt --options="$SHORT_OPTIONS" --longoptions="$LONG_OPTIONS" \
 --name "$0" -- "$@"`
 if [ $? -ne 0 ]; then
     exit 1  # getopt will have printed the error message
 fi
-eval set -- "$PARSED"
 set -e
+eval set -- "$PARSED"
 
 # Set default options.
-UNMAPPED_READS=''
-OUTPUT_DIR=''
 ORGANISM='human'
 STEPS='rdna reference repeats immune metaphlan viral fungi protozoa'
     # Non-default: lowq (too slow).
     # Disabled: circrna bacteria (databases missing).
+FASTA=false
+BAM=false
+GZIP=false
+DEV=false
+FORCE=false
+IGNORE_EXTENSIONS=false
 MAX=''
 PE=''
-FORCE=false
 QUIET=false
-DEV=false
-GZIP=false
-BAM=false
-FASTA=false
-IGNORE_EXTENSIONS=false
 COMMANDS=false
+UNMAPPED_READS=''
+OUTPUT_DIR=''
 
 # Review parsed options.
 while true; do
@@ -71,6 +74,38 @@ while true; do
             STEPS=`tr ',' ' ' <<<"$2"`
             shift 2
             ;;
+        -a|--fasta)
+            # Input unmapped reads in .fasta format instead of .fastq format.
+            # Forcibly disables low-quality read filtering.
+            FASTA=true
+            shift
+            ;;
+        -b|--bam)
+            # Input unmapped reads in .bam format instead of .fastq format.
+            BAM=true
+            shift
+            ;;
+        -z|--gzip)
+            # gunzip the input file.
+            GZIP=true
+            shift
+            ;;
+        -d|--dev)
+            # Keep intermediate FASTA files.
+            DEV=true
+            shift
+            ;;
+        -f|--force)
+            # Overwrite the analysis destination directory.
+            FORCE=true
+            shift
+            ;;
+        -i|--ignore-extensions)
+            # Ignore incorrect .fastq/.fq/.fasta/.fa file extensions.
+            # Does not ignore incorrect .gz/.bam file extensions.
+            IGNORE_EXTENSIONS=true
+            shift
+            ;;
         -m|--max)
             # Use a liberal threshold when remapping to reference.
             MAX='--max'
@@ -83,42 +118,10 @@ while true; do
             PE='--pe'
             shift
             ;;
-        -f|--force)
-            # Overwrite the analysis destination directory.
-            FORCE=true
-            shift
-            ;;
         -q|--quiet)
             # Not implemented (usage unclear).
             # Suppress progress report and warnings.
             QUIET=true
-            shift
-            ;;
-        -d|--dev)
-            # Keep intermediate FASTA files.
-            DEV=true
-            shift
-            ;;
-        -z|--gzip)
-            # gunzip the input file.
-            GZIP=true
-            shift
-            ;;
-        -b|--bam)
-            # Input unmapped reads in .bam format instead of .fastq format.
-            BAM=true
-            shift
-            ;;
-        -a|--fasta)
-            # Input unmapped reads in .fasta format instead of .fastq format.
-            # Forcibly disables low-quality read filtering.
-            FASTA=true
-            shift
-            ;;
-        -i|--ignore-extensions)
-            # Ignore incorrect .fastq/.fq/.fasta/.fa file extensions.
-            # Does not ignore incorrect .gz/.bam file extensions.
-            IGNORE_EXTENSIONS=true
             shift
             ;;
         -x|--commands)
@@ -127,7 +130,7 @@ while true; do
             shift
             ;;
         -h|--help)
-            echo "Usage: $0 [-o ORGANISM] [-s STEPS] [-mfdzba]" \
+            echo "Usage: $0 [-o ORGANISM] [-s STEPS] [-abz] [-dfimxh]" \
                 "unmapped_reads output_dir" >&2
             exit 0
             ;;
@@ -136,8 +139,7 @@ while true; do
             UNMAPPED_READS="$2"
             OUTPUT_DIR="$3"
             if [ "$UNMAPPED_READS" = '' ] || [ "$OUTPUT_DIR" = '' ]; then
-                echo "Usage: $0 [-o ORGANISM] [-s STEPS] [-mfdzbaih]" \
-                    "unmapped_reads output_dir" >&2
+                echo 'Error: Insufficient arguments.'
                 exit 1
             fi
             shift 3
@@ -297,7 +299,7 @@ declare -A LOGFNS=(
 # ------------------------------------------------------------------------------
 
 reads_present () {
-    if [ `cat "$1" | wc -l` -le 1 ]; then
+    if [ `wc -l <"$1"` -le 1 ]; then
         echo 'No more reads!'
         return 1  # false
     else
@@ -352,7 +354,7 @@ if [ $FASTA == true ]; then
         exit 1
     fi
     N=`grep -c '^>' "$current"`
-    READ_LENGTH=$(($(grep -A 1 -m 1 '^>' "$current" | tail -n 1 | wc -m) - 1))
+    READ_LENGTH=$(($(sed -n '2 p' <"$current" | wc -m) - 1))
 else
     if [ $IGNORE_EXTENSIONS = false ] && \
         [ `basename $current .fastq` == "$current" ] && \
@@ -360,8 +362,9 @@ else
         echo 'Error: input file missing .fastq/.fq extension' >&2
         exit 1
     fi
-    N=`grep -c '^+$' "$current"`
-    READ_LENGTH=$(($(grep -B 1 -m 1 '^+$' "$current" | head -n 1 | wc -m) - 1))
+    line_count=`wc -l <"$current"`
+    N=`bc <<<"$line_count/4"`
+    READ_LENGTH=$(($(sed -n '2 p' <"$current" | wc -m) - 1))
 fi
 echo "Processing $N unmapped reads. The first unmapped read has length $READ_LENGTH."
 current=`readlink -e "$current"`
@@ -476,11 +479,11 @@ else
         -use_index true -query "$current" -db "$DB/repeats/repbase.fa" \
         -outfmt 6 -evalue 1e-05 >"${INTFNS['04_repeats_output']}" \
         2>"${LOGFNS['04_repeats']}"
-    n_reads['03_reference']=`python "$DIR/helper.py" repeats $MAX $PE \
+    n_reads['04_repeats']=`python "$DIR/helper.py" repeats $MAX $PE \
         -i "${INTFNS['04_repeats_output']}" \
         -o "${INTFNS['04_repeats_reads']}" \
         --pre "$current" --post "$post"`
-    echo "--> Filtered ${n_reads['03_reference']} reads from repeat sequences."
+    echo "--> Filtered ${n_reads['04_repeats']} reads from repeat sequences."
     clean "$current"
     current="$post"
 fi
@@ -551,7 +554,7 @@ else
         --input_type multifasta --nproc 8 \
         --bowtie2out "${INTFNS['07a_metaphlan_bowtie2out']}" \
         >"${INTFNS['07a_metaphlan_output']}" 2>"${LOGFNS['07a_metaphlan']}"
-    n_reads_07a_metaphlan=`cat "${INTFNS['07a_metaphlan_output']}" | wc -l`
+    n_reads_07a_metaphlan=`wc -l <"${INTFNS['07a_metaphlan_output']}"`
     echo "--> Identified $n_reads_07a_metaphlan reads using MetaPhlAn."
     echo '    These reads are neither filtered nor included in the total.'
     # Don't clean or change $current.
@@ -636,7 +639,7 @@ else
         -i "${INTFNS['07e_protozoa_output']}" \
         -o "${INTFNS['07e_protozoa_reads']}" \
         --pre "$current" --post "$post"`
-    echo "--> Filtered ${n_reads['07d_fungi']} reads from protozoan genomes."
+    echo "--> Filtered ${n_reads['07e_protozoa']} reads from protozoan genomes."
     clean "$current"
     current="$post"
 fi

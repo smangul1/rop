@@ -1,4 +1,4 @@
-#!/u/project/zarlab/kahsieh/rop-wip/tools/MiniConda/bin/python
+#!/usr/bin/env python2.7
 
 """
 --------------------------------------------------------------------------------

@@ -30,11 +30,11 @@ available:
 
 - `-c|--clean`: Just remove installed tools.
     - The installation script then must be re-run in order to use ROP again.
+- `-f|--force`: Unlink databases.
+    - Use with caution.
 - `-n|--native`: Use native python.
     - MiniConda will not be downloaded.
     - May lead to dependency errors.
-- `-f|--force`: Unlink databases.
-    - Use with caution.
 - `-l|--link LINK`: Link databases instead of downloading.
     - Useful if you previously downloaded an ROP database.
     - A symlink will be created in the current directory.
@@ -47,8 +47,6 @@ available:
   specified organism.
     - A comma-separated list of one or more of the following: repeat, immune,
       microbiome metaphlan, viral, fungi, protozoa.
-- `-i|--ignore-extensions`: Ignore incorrect .fastq/.fq/.fasta/.fa file
-  extensions. Does not ignore incorrect .gz/.bam file extensions.
 - `-h|--help`: Displays usage information.
 
 ## Using ROP
@@ -72,15 +70,18 @@ of the pipeline. The following options are available:
       into bacteria, metaphlan, viral, fungi, protozoa).
     - `-s all` selects everything.
     - circrna and bacteria are not available in this release.
-- `-m|--max`: Use a liberal threshold when remapping to reference.
-    - May account for more reads.
-- `-f|--force`: Overwrite the analysis destination directory.
-- `-d|--dev`: Keep intermediate FASTA files.
-    - Consumes extra space.
-- `-z|--gzip`: gunzip the input file.
-- `-b|--bam`: Input unmapped reads in .bam format instead of .fastq format.
 - `-a|--fasta`: Input unmapped reads in .fasta format instead of .fastq format.
   Forcibly disables low-quality read filtering.
+- `-b|--bam`: Input unmapped reads in .bam format instead of .fastq format.
+- `-z|--gzip`: gunzip the input file.
+- `-d|--dev`: Keep intermediate FASTA files.
+    - Consumes extra space.
+- `-f|--force`: Overwrite the analysis destination directory.
+- `-i|--ignore-extensions`: Ignore incorrect .fastq/.fq/.fasta/.fa file
+  extensions. Does not ignore incorrect .gz/.bam file extensions.
+- `-m|--max`: Use a liberal threshold when remapping to reference.
+    - May account for more reads.
+- `-x|--commands`: Print all commands (diagnostic mode).
 - `-h|--help`: Displays usage information.
 
 A small example file is included in the repository in various formats. To try it
