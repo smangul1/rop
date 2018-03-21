@@ -504,7 +504,7 @@ else  # WARNING: This branch is untested!
     tophat2 -o . --fusion-search --keep-fasta-order --no-coverage-search \
         "$DB/Bowtie2Index/genome" "$current" 2>"${LOGFNS['05_circrna']}"
     samtools bam2fq 'accepted_hits.bam' >'accepted_hits.fastq'
-    n_reads['04_circrna']=`python "$DIR/helper.py" circrna $MAX $PE \
+    n_reads['05_circrna']=`python "$DIR/helper.py" circrna $MAX $PE \
         -i 'accepted_hits.fastq' \
         -o "${INTFNS['05_circrna_reads']}" \
         --pre "$current" --post "$post"`
@@ -530,7 +530,7 @@ else
         "${INTFNS['06_immune_output']}" \
         "${INTFNS['06_immune_clonality']}" &>>"${LOGFNS['06_immune']}"
     n_reads['06_immune']=`python "$DIR/helper.py" immune $MAX $PE \
-        -i "$(ls full_cdr3_*),$(ls partial_cdr3_*)" \
+        -i $(ls full_cdr3_*) \
         -o "${INTFNS['06_immune_reads']}" \
         --pre "$current" --post "$post"`
     echo "--> Filtered ${n_reads['06_immune']} reads from T and B cell"\
@@ -571,11 +571,11 @@ if true; then
 else
     bwa mem "$DB/bacteria/bacteria.ncbi.february.3.2018.fasta" "$current" \
         | samtools sort - >"${INTFNS['07b_bacteria_output']}"
-    n_reads['06b_bacteria']=`python "$DIR"/helper.py microbiome $MAX $PE \
+    n_reads['07b_bacteria']=`python "$DIR"/helper.py microbiome $MAX $PE \
         -i "${INTFNS['07b_bacteria_output']}" \
         -o "${INTFNS['07b_bacteria_reads']}" \
         --pre "$current" --post "$post"`
-    echo "--> Filtered ${n_reads['06b_bacterial']} reads from bacterial genomes."
+    echo "--> Filtered ${n_reads['07b_bacteria']} reads from bacterial genomes."
     clean "$current"
     current="$post"
 fi
