@@ -69,7 +69,7 @@ NATIVE=false
 LINK=''
 DB_DEST="$DIR"
 ORGANISM='human'
-SELECT_DB='repeat immune microbiome metaphlan viral fungi protozoa'
+SELECT_DB='repeat microbiome metaphlan viral fungi protozoa'
 
 # Review parsed options. If -c or -l is selected, then options below it will
 # be ignored.
