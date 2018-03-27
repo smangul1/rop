@@ -69,7 +69,7 @@ NATIVE=false
 LINK=''
 DB_DEST="$DIR"
 ORGANISM='human'
-SELECT_DB='repeat microbiome metaphlan viral fungi protozoa'
+SELECT_DB='repeats microbiome'
 
 # Review parsed options. If -c or -l is selected, then options below it will
 # be ignored.
@@ -221,7 +221,7 @@ for database in $SELECT_DB; do
     case "$database" in
         basic)
             ;;
-        repeat)
+        repeats)
             download_list+=$'\nrepeats'
             ;;
         microbiome)

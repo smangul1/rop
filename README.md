@@ -45,8 +45,9 @@ available:
   for.
 - `-s|--select-db SELECT_DB` (default: all): Database(s) to download for the
   specified organism.
-    - A comma-separated list of one or more of the following: repeat, immune,
-      microbiome metaphlan, viral, fungi, protozoa.
+    - A comma-separated list of one or more of the following: basic, repeats,
+      microbiome (which may be subdivided into metaphlan, viral, fungi,
+      protozoa).
 - `-h|--help`: Displays usage information.
 
 ## Using ROP
@@ -64,12 +65,13 @@ of the pipeline. The following options are available:
 
 - `-o|--organism` (default: `human`): Run for the specified organism instead of
   human.
-- `-s|--steps` (default: all except lowq and bacteria): Select the analysis modes to use.
+- `-s|--steps` (default: all except lowq and bacteria): Select the analysis
+  modes to use.
     - A comma-separated list of one or more of the following: lowq, rdna,
       reference, repeats, circrna, immune, microbiome (which may be subdivided
       into bacteria, metaphlan, viral, fungi, protozoa).
-    - `-s all` selects everything.
     - circrna and bacteria are not available in this release.
+    - `-s all` selects everything.
 - `-a|--fasta`: Input unmapped reads in .fasta format instead of .fastq format.
   Forcibly disables low-quality read filtering.
 - `-b|--bam`: Input unmapped reads in .bam format instead of .fastq format.
