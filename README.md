@@ -7,9 +7,9 @@ molecules, recombinant antibodies, and microbial communities.
 Written by:
 
 - Serghei Mangul (<smangul@ucla.edu>)
-- Harry Taegyun Yang (<harry2416@gmail.com>)
 - Kevin Hsieh (<kevin.hsieh@ucla.edu>)
 - Linus Chen (<u6.30cl@gmail.com>)
+- Harry Taegyun Yang (<harry2416@gmail.com>)
 
 at the University of California, Los Angeles (UCLA). 
 
