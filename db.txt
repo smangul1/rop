@@ -1,1 +1,0 @@
-ln -s /u/home/s/serghei/project/db.human.raw/ db_human

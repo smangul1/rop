@@ -1,31 +1,3 @@
-
-    Read Origin Protocol is a computational protocol for profiling the 
-    composition of unmapped reads, which failed to map to the human references. 
-    ROP profiles repeats, circRNAs, gene fusions, trans-splicing events, 
-    recombined B and T cell receptors and microbial communities.
-    Copyright (c) 2016 by Serghei Mangul (smangul@ucla.edu), Harry Taegyun Yang 
-    (harry2416@gmail.com), Kevin Hsieh (kevin.hsieh@ucla.edu), and Linus Chen 
-    (u6.30cl@gmail.com). University of California, Los Angeles (UCLA). 
-
-    Read Origin Protocol is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Read Origin Protocol is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-
-
-
-
-
-
                     GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
 

@@ -1,3 +1,0 @@
-((Epsilon,Delta),((Gamma,Beta),Alpha));
-((Epsilon,Delta),(Gamma,(Beta,Alpha)));
-(Epsilon,(Delta,((Gamma,Beta),Alpha)));
