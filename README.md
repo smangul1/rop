@@ -97,4 +97,4 @@ rop.sh -a example/example.fasta ropout
 rop.sh -az example/example.fasta.gz ropout
 ```
 
-Then, browser to the `ropout` directory to see the analysis results!
+Then, browse to the `ropout` directory to see the analysis results!
