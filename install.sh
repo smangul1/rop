@@ -27,6 +27,17 @@ declare -A DB_ID_HUMAN=(
     ['viral']='1HfnoEhoYzlvo4f6Ap_LZvIrxqzIiKrv-'
 )
 
+declare -A DB_ID_MOUSE=(
+    ['viral_vipr']='1fIxhnwNSPj6NL2R44bqYkYu2T8OLfqpk'  # same as human
+    ['fungi']='1yBeBjnrnHtxZliruu3oC8NjZ3wHg-WQ3'  # same as human
+    ['BWAindex']='17g26AzgYhvpY5J5Spofs_rVwXVgVxtrL'
+    ['protozoa']='1_dPn8kk3I--Icy0gwTorFneV1sor1dU2'  # same as human
+    ['metaphlan']='15UGuZ4klBjIEYV-tv6t1nYa2GdyadZAm'  # same as human
+    ['repeats']='1f4xhA8Ku0bMQagY78qDpjb5-6H2AkxIp'
+    ['ribosomal.DNA']='1AnzuhTtEGU8_QnHu9ueofSAJoXK-Sg7B'
+    ['viral']='1HfnoEhoYzlvo4f6Ap_LZvIrxqzIiKrv-'  # same as human
+)
+
 declare -A DB_MD5_HUMAN=(
     ['viral_vipr']='9dce447328dfbc3a62cc7dd5b052242f'
     ['fungi']='9f2d304fd5c49981682b2bb7a900a30e'
@@ -36,6 +47,17 @@ declare -A DB_MD5_HUMAN=(
     ['repeats']='109a97423f505b73a7e55995b827e2fd'
     ['ribosomal.DNA']='9663a0e1121a0b122c8e23f41c558083'
     ['viral']='7ce95144827603a64dc5996aa0112cc0'
+)
+
+declare -A DB_MD5_MOUSE=(
+    ['viral_vipr']='9dce447328dfbc3a62cc7dd5b052242f'  # same as human
+    ['fungi']='9f2d304fd5c49981682b2bb7a900a30e'  # same as human
+    ['BWAindex']='a5166f9e134582a66030878b0b91aed2'
+    ['protozoa']='23e12115a5e9d526553c901e772731f5'  # same as human
+    ['metaphlan']='3c9b9d6414d86a0c3d5018aefa5aaec4'  # same as human
+    ['repeats']='223777c32bfdf8cfe43ca8a01499d4ee'
+    ['ribosomal.DNA']='971401e7eae7a721097ae91cb7237b46'
+    ['viral']='7ce95144827603a64dc5996aa0112cc0'  # same as human
 )
 
 # ------------------------------------------------------------------------------
@@ -69,7 +91,7 @@ NATIVE=false
 LINK=''
 DB_DEST="$DIR"
 ORGANISM='human'
-SELECT_DB='repeats microbiome'
+SELECT_DB='all'
 
 # Review parsed options. If -c or -l is selected, then options below it will
 # be ignored.
@@ -239,6 +261,10 @@ for database in $SELECT_DB; do
         protozoa)
             download_list+=$'\nprotozoa'
             ;;
+        all)
+            download_list+=$'\nrepeats'
+            download_list+=$'\nmetaphlan\nviral\nviral_vipr\nfungi\nprotozoa'
+            ;;
         *)
             echo 'Error: Unknown database.' >&2
             exit 1
@@ -256,6 +282,10 @@ for download in $download_list; do
             human)
                 db_id="${DB_ID_HUMAN[$download]}"
                 db_md5="${DB_MD5_HUMAN[$download]}"
+                ;;
+            mouse)
+                db_id="${DB_ID_MOUSE[$download]}"
+                db_md5="${DB_MD5_MOUSE[$download]}"
                 ;;
             *)
                 echo 'Error: Unknown ORGANISM.' >&2

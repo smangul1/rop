@@ -43,11 +43,13 @@ available:
     - A symlink will be created in the current directory.
 - `-o|--organism ORGANISM` (default: `human`): Organism to download databases
   for.
-- `-s|--select-db SELECT_DB` (default: all): Database(s) to download for the
+    - Exactly one of the following: human, mouse.
+- `-s|--select-db SELECT_DB` (default: `all`): Database(s) to download for the
   specified organism.
     - A comma-separated list of one or more of the following: basic, repeats,
       microbiome (which may be subdivided into metaphlan, viral, fungi,
       protozoa).
+    - `-s all` selects everything.
 - `-h|--help`: Displays usage information.
 
 ## Using ROP
@@ -63,8 +65,8 @@ must be a .fastq/.fq file, and `output_dir` must not exist (it will be created).
 Results will be written to `output_dir`, with one subdirectory for every stage
 of the pipeline. The following options are available:
 
-- `-o|--organism` (default: `human`): Run for the specified organism instead of
-  human.
+- `-o|--organism` (default: `human`): Organism to run ROP for.
+    - Exactly one of the following: human, mouse.
 - `-s|--steps` (default: all except lowq and bacteria): Select the analysis
   modes to use.
     - A comma-separated list of one or more of the following: lowq, rdna,
