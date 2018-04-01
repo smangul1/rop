@@ -65,7 +65,7 @@ OUTPUT_DIR=''
 while true; do
     case "$1" in
         -o|--organism)
-            # Run for the specified organism instead of human.
+            # Organism to run ROP for.
             ORGANISM="$2"
             shift 2
             ;;
