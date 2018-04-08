@@ -3,6 +3,7 @@ channels:
     - bioconda
 dependencies:
     - python=2.7
+    - biopython
     - numpy
     - scipy
     - scikit-learn
@@ -17,4 +18,4 @@ dependencies:
     - samtools
     - tophat
     - pip:
-        - suffix_tree-2.1.tar.gz
+        - tools/suffix_tree-2.1.tar.gz
