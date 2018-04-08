@@ -1,0 +1,20 @@
+name: rop
+channels:
+    - bioconda
+dependencies:
+    - python=2.7
+    - numpy
+    - scipy
+    - scikit-learn
+    - pandas
+    - blast
+    - bowtie2
+    - bwa
+    - fastx_toolkit
+    - intervaltree
+    - jellyfish
+    - pysam
+    - samtools
+    - tophat
+    - pip:
+        - suffix_tree-2.1.tar.gz

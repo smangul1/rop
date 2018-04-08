@@ -74,8 +74,8 @@ fi
 set -e
 
 # Call getopt.
-SHORT_OPTIONS='cfnl:d:o:s:h'
-LONG_OPTIONS='clean,force,native,link:,db-dest:,organism:,select-db:,help'
+SHORT_OPTIONS='cfnl:d:o:rs:h'
+LONG_OPTIONS='clean,force,native,link:,db-dest:,organism:,reinstall,select-db:,help'
 set +e
 PARSED=`getopt --options="$SHORT_OPTIONS" --longoptions="$LONG_OPTIONS" --name "$0" -- "$@"`
 if [ $? -ne 0 ]; then
@@ -91,10 +91,10 @@ NATIVE=false
 LINK=''
 DB_DEST="$DIR"
 ORGANISM='human'
+REINSTALL=false
 SELECT_DB='all'
 
-# Review parsed options. If -c or -l is selected, then options below it will
-# be ignored.
+# Review parsed options. -c and -l override conflicting options.
 while true; do
     case "$1" in
         -c|--clean-only)
@@ -127,13 +127,18 @@ while true; do
             ORGANISM="$2"
             shift 2
             ;;
+        -r|--reinstall)
+            # Reinstall tools, even if they're already present.
+            REINSTALL=true
+            shift
+            ;;
         -s|--select-db)
             # Database(s) to download for the specified organism.
             SELECT_DB=`tr ',' ' ' <<<"$2"`
             shift 2
             ;;
         -h|--help)
-            echo "Usage: $0 [-cfnh] [-l LINK] [-d DB_DEST] [-o ORGANISM]"\
+            echo "Usage: $0 [-cfnrh] [-l LINK] [-d DB_DEST] [-o ORGANISM]"\
                 '[-s SELECT_DB]' >&2
             exit 0
             ;;
@@ -155,45 +160,50 @@ done
 
 cd "$DIR/tools"
 
-# Remove previous versions. Restore shebangs and exit if the -c option is
-# selected.
-echo '----- Removing previous versions -----------------------------------------------'
-rm -fr imrep metaphlan2 MiniConda
-if [ $CLEAN_ONLY = true ]; then
-    sed -i '1c #!/usr/bin/env python2.7' ../rop.py
-    echo 'Done: Cleaning complete. To reinstall, run this script again.'
-    exit 0
-fi
-
-# Download ImReP.
-echo '----- Downloading ImRep --------------------------------------------------------'
-git clone https://github.com/mandricigor/imrep.git
-cd imrep
-./install.sh
-cd ..
-
-# Download MetaPhlAn 2.
-echo '----- Downloading MetaPhlAn 2 --------------------------------------------------'
-hg clone https://bitbucket.org/biobakery/metaphlan2
-cd metaphlan2
-ln -s ../../db_human/databases
-cd ..
-
-# Download MiniConda and add shebangs.
-echo '----- Setting up Python environment --------------------------------------------'
-if [ $NATIVE = false ]; then
-    ./install-MiniConda.sh
-    cd MiniConda/lib
-    ln -s libncursesw.so.5 libtinfow.so.5
-    cd ../..
-    MiniConda="$PWD/MiniConda/bin/python"
-    sed -i "1c #!$MiniConda" metaphlan2/metaphlan2.py
-    sed -i "1c #!$MiniConda" metaphlan2/strainphlan.py
-    sed -i "1c #!$MiniConda" metaphlan2/utils/read_fastx.py
+# Skip this section if neither -c nor -r are selected and there is a previous
+# installation (as indicated by the presence of the imrep directory).
+echo '----- Checking for existing installations --------------------------------------'
+if [ $CLEAN_ONLY = false ] && [ $REINSTALL = false ] && [ -d 'imrep' ]; then
+    echo 'Existing installation found. Skipping tools download. To reinstall,' \
+        'please use the -r option.'
 else
-    sed -i '1c #!/usr/bin/env python2.7' metaphlan2/metaphlan2.py
-    sed -i '1c #!/usr/bin/env python2.7' metaphlan2/strainphlan.py
-    sed -i '1c #!/usr/bin/env python2.7' metaphlan2/utils/read_fastx.py
+    echo '----- Removing previous versions -----------------------------------------------'
+    rm -fr imrep metaphlan2 MiniConda
+    if [ $CLEAN_ONLY = true ]; then
+        echo 'Done: Cleaning complete.'
+        exit 0
+    fi
+
+    # Download ImReP.
+    echo '----- Downloading ImRep --------------------------------------------------------'
+    git clone https://github.com/mandricigor/imrep.git
+    cd imrep
+    ./install.sh
+    cd ..
+
+    # Download MetaPhlAn 2.
+    echo '----- Downloading MetaPhlAn 2 --------------------------------------------------'
+    hg clone https://bitbucket.org/biobakery/metaphlan2
+    cd metaphlan2
+    ln -s ../../db_human/databases
+    cd ..
+
+    # Download MiniConda and add shebangs.
+    echo '----- Setting up Python environment --------------------------------------------'
+    if [ $NATIVE = false ]; then
+        ./install-MiniConda.sh
+        cd MiniConda/lib
+        ln -s libncursesw.so.5 libtinfow.so.5
+        cd ../..
+        MiniConda="$PWD/MiniConda/bin/python"
+        sed -i "1c #!$MiniConda" metaphlan2/metaphlan2.py
+        sed -i "1c #!$MiniConda" metaphlan2/strainphlan.py
+        sed -i "1c #!$MiniConda" metaphlan2/utils/read_fastx.py
+    else
+        sed -i '1c #!/usr/bin/env python2.7' metaphlan2/metaphlan2.py
+        sed -i '1c #!/usr/bin/env python2.7' metaphlan2/strainphlan.py
+        sed -i '1c #!/usr/bin/env python2.7' metaphlan2/utils/read_fastx.py
+    fi
 fi
 
 # ------------------------------------------------------------------------------

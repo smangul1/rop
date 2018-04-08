@@ -29,21 +29,24 @@ The default installation will generally suffice, but the following options are
 available:
 
 - `-c|--clean`: Just remove installed tools.
-    - The installation script then must be re-run in order to use ROP again.
+    - To reinstall, use `-r|--reinstall` instead.
+    - Overrides conflicting options.
 - `-f|--force`: Unlink databases.
     - Use with caution.
 - `-n|--native`: Use native python.
     - MiniConda will not be downloaded.
-    - May lead to dependency errors.
+    - You may use `tools/environment.yml` to set up your python environment.
 - `-l|--link LINK`: Link databases instead of downloading.
     - Useful if you previously downloaded an ROP database.
     - A symlink will be created in the current directory.
+    - Overrides conflicting options.
 - `-d|--db-dest DB_DEST` (default: `.`): Change database download location.
     - Useful for managing space.
     - A symlink will be created in the current directory.
 - `-o|--organism ORGANISM` (default: `human`): Organism to download databases
   for.
     - Exactly one of the following: human, mouse.
+- `-r|--reinstall`: Reinstall tools, even if they're already present.
 - `-s|--select-db SELECT_DB` (default: `all`): Database(s) to download for the
   specified organism.
     - A comma-separated list of one or more of the following: basic, repeats,
