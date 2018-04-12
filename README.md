@@ -35,7 +35,7 @@ available:
     - Use with caution.
 - `-n|--native`: Use native python.
     - MiniConda will not be downloaded.
-    - You may use `tools/environment.yml` to set up your python environment.
+    - You may use `environment.yml` to set up your python environment.
 - `-l|--link LINK`: Link databases instead of downloading.
     - Useful if you previously downloaded an ROP database.
     - A symlink will be created in the current directory.
