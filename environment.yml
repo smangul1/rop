@@ -12,10 +12,11 @@ dependencies:
     - bowtie2
     - bwa
     - fastx_toolkit
-    - intervaltree
     - jellyfish
     - pysam
     - samtools
     - tophat
     - pip:
+        - intervaltree
+        - networkx
         - tools/suffix_tree-2.1.tar.gz

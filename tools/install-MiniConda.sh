@@ -10,11 +10,11 @@ InstallDir="MiniConda"
 # Dependencies installed by Conda
 # Comment out the next line if no Conda dependencies
 CondaDeps="biopython numpy scipy scikit-learn pandas"
-BiocondaDeps="blast bowtie2 bwa fastx_toolkit intervaltree jellyfish pysam samtools tophat"
+BiocondaDeps="blast bowtie2 bwa fastx_toolkit jellyfish pysam samtools tophat"
 
 # Install the package from PyPi
 # Comment out next line if installing locally
-PyPiPackage="biopython networkx"
+PyPiPackage="intervaltree networkx"
 
 # Local packages to install
 # Useful if your application is not in PyPi

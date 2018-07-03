@@ -45,8 +45,8 @@ eval set -- "$PARSED"
 
 # Set default options.
 ORGANISM='human'
-STEPS='rdna reference repeats immune metaphlan viral fungi protozoa'
-    # Non-default: lowq (too slow).
+STEPS='rdna reference repeats immune viral fungi protozoa'
+    # Non-default: metaphlan (temporarily broken), lowq (slow).
     # Disabled: circrna bacteria (databases missing).
 FASTA=false
 BAM=false
