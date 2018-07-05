@@ -182,11 +182,11 @@ else
     cd ..
 
     # Download MetaPhlAn 2.
-    echo '----- Downloading MetaPhlAn 2 --------------------------------------------------'
-    hg clone https://bitbucket.org/biobakery/metaphlan2
-    cd metaphlan2
-    ln -s ../../db_human/databases
-    cd ..
+    #echo '----- Downloading MetaPhlAn 2 --------------------------------------------------'
+    #hg clone https://bitbucket.org/biobakery/metaphlan2
+    #cd metaphlan2
+    #ln -s ../../db_human/databases
+    #cd ..
 
     # Download MiniConda and add shebangs.
     echo '----- Setting up Python environment --------------------------------------------'
@@ -196,13 +196,13 @@ else
         ln -s libncursesw.so.5 libtinfow.so.5
         cd ../..
         MiniConda="$PWD/MiniConda/bin/python"
-        sed -i "1c #!$MiniConda" metaphlan2/metaphlan2.py
-        sed -i "1c #!$MiniConda" metaphlan2/strainphlan.py
-        sed -i "1c #!$MiniConda" metaphlan2/utils/read_fastx.py
-    else
-        sed -i '1c #!/usr/bin/env python2.7' metaphlan2/metaphlan2.py
-        sed -i '1c #!/usr/bin/env python2.7' metaphlan2/strainphlan.py
-        sed -i '1c #!/usr/bin/env python2.7' metaphlan2/utils/read_fastx.py
+    #    sed -i "1c #!$MiniConda" metaphlan2/metaphlan2.py
+    #    sed -i "1c #!$MiniConda" metaphlan2/strainphlan.py
+    #    sed -i "1c #!$MiniConda" metaphlan2/utils/read_fastx.py
+    #else
+    #    sed -i '1c #!/usr/bin/env python2.7' metaphlan2/metaphlan2.py
+    #    sed -i '1c #!/usr/bin/env python2.7' metaphlan2/strainphlan.py
+    #    sed -i '1c #!/usr/bin/env python2.7' metaphlan2/utils/read_fastx.py
     fi
 fi
 

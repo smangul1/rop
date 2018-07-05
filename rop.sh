@@ -46,8 +46,8 @@ eval set -- "$PARSED"
 # Set default options.
 ORGANISM='human'
 STEPS='rdna reference repeats immune viral fungi protozoa'
-    # Non-default: metaphlan (temporarily broken), lowq (slow).
-    # Disabled: circrna bacteria (databases missing).
+    # Non-default: lowq (slow)
+    # Disabled: circrna metaphlan bacteria
 FASTA=false
 BAM=false
 GZIP=false
@@ -547,7 +547,9 @@ echo '7a. MetaPhlAn profiling (-s metaphlan)...'
 cd "${DIRS['07a_metaphlan']}"
 # No post file (don't reduce unmapped reads using MetaPhlAn results).
 
-if ! grep -qE 'metaphlan|microbiome' <<<"$STEPS" || ! reads_present "$current"; then
+# Disabled (temporarily broken).
+#if ! grep -qE 'metaphlan|microbiome' <<<"$STEPS" || ! reads_present "$current"; then
+if true; then
     echo '--> Skipped MetaPhlAn profiling.'
 else
     python "$DIR/tools/metaphlan2/metaphlan2.py" "$current" \
