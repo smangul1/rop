@@ -70,8 +70,7 @@ of the pipeline. The following options are available:
 
 - `-o|--organism` (default: `human`): Organism to run ROP for.
     - Exactly one of the following: human, mouse.
-- `-s|--steps` (default: all except lowq, metaphlan, bacteria): Select the
-  analysis modes to use.
+- `-s|--steps` (default: all except lowq): Select the analysis modes to use.
     - A comma-separated list of one or more of the following: lowq, rdna,
       reference, repeats, circrna, immune, microbiome (which may be subdivided
       into metaphlan, bacteria, viral, fungi, protozoa).

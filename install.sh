@@ -302,11 +302,10 @@ for download in $download_list; do
                 exit 1
                 ;;
         esac
-        confirm_code=`wget --keep-session-cookies --save-cookies cookies.txt \
-            --quiet --no-check-certificate \
-            "https://docs.google.com/uc?export=download&id=$db_id" -O - \
+        confirm_code=`curl --silent --insecure --cookie-jar cookies.txt \
+            "https://docs.google.com/uc?export=download&id=$db_id" \
             | sed -rn 's .*confirm=([0-9A-Za-z_]+).* \1\n p'`
-        wget --load-cookies cookies.txt -O $download.tar.gz \
+        curl --location --insecure --cookie cookies.txt -o "$download.tar.gz" \
             "https://docs.google.com/uc?export=download&confirm=$confirm_code&id=$db_id"
         rm cookies.txt
         if [ `md5sum "$download.tar.gz" | sed 's \(.*\)\ .* \1 '` = "$db_md5" ]; then
