@@ -45,9 +45,9 @@ eval set -- "$PARSED"
 
 # Set default options.
 ORGANISM='human'
-STEPS='rdna reference repeats immune viral fungi protozoa'
-    # Non-default: lowq (slow)
-    # Disabled: circrna metaphlan bacteria
+STEPS='rdna reference repeats viral fungi protozoa'
+    # Non-default: lowq
+    # Disabled: circrna immune metaphlan bacteria
 FASTA=false
 BAM=false
 GZIP=false
@@ -496,9 +496,8 @@ echo '5. Circular RNA profiling (-s circrna)...'
 cd "${DIRS['05_circrna']}"
 post="${INTFNS['05_circrna_post']}"
 
-# Disabled (database missing).
-#if ! grep -q 'circrna' <<<"$STEPS" || ! reads_present "$current"; then
-if true; then
+if ! grep -q 'circrna' <<<"$STEPS" || ! reads_present "$current" \
+    || ! grep -q 'override' <<<"$STEPS"; then  # Disabled (no database).
     echo '--> Skipped circular RNA profiling.'
 else  # WARNING: This branch is untested!
     tophat2 -o . --fusion-search --keep-fasta-order --no-coverage-search \
@@ -521,7 +520,8 @@ echo '6. Immune profiling (-s immune)...'
 cd "${DIRS['06_immune']}"
 post="${INTFNS['06_immune_post']}"
 
-if ! grep -q 'immune' <<<"$STEPS" || ! reads_present "$current"; then
+if ! grep -q 'immune' <<<"$STEPS" || ! reads_present "$current" \
+    || ! grep -q 'override' <<<"$STEPS"; then  # Disabled (broken).
     echo '--> Skipped immune profiling.'
 else
     python "$DIR/tools/imrep/imrep.py" -f -1 --extendedOutput "$current" \
@@ -547,9 +547,8 @@ echo '7a. MetaPhlAn profiling (-s metaphlan)...'
 cd "${DIRS['07a_metaphlan']}"
 # No post file (don't reduce unmapped reads using MetaPhlAn results).
 
-# Disabled (temporarily broken).
-#if ! grep -qE 'metaphlan|microbiome' <<<"$STEPS" || ! reads_present "$current"; then
-if true; then
+if ! grep -qE 'metaphlan|microbiome' <<<"$STEPS" || ! reads_present "$current" \
+    || ! grep -q 'override' <<<"$STEPS"; then  # Disabled (broken).
     echo '--> Skipped MetaPhlAn profiling.'
 else
     python "$DIR/tools/metaphlan2/metaphlan2.py" "$current" \
@@ -566,9 +565,8 @@ echo '7b. Bacterial profiling (-s bacteria)...'
 cd "${DIRS['07b_bacteria']}"
 post="${INTFNS['07b_bacteria_post']}"
 
-# Disabled (database missing).
-#if ! grep -qE 'bacteria|microbiome' <<<"$STEPS" || ! reads_present "$current"; then
-if true; then
+if ! grep -qE 'bacteria|microbiome' <<<"$STEPS" || ! reads_present "$current" \
+    || ! grep -q 'override' <<<"$STEPS"; then  # Disabled (no database).
     echo '--> Skipped bacterial profiling.'
 else
     bwa mem "$DB/bacteria/bacteria.ncbi.february.3.2018.fasta" "$current" \

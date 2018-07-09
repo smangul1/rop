@@ -175,11 +175,11 @@ else
     fi
 
     # Download ImReP.
-    echo '----- Downloading ImRep --------------------------------------------------------'
-    git clone https://github.com/mandricigor/imrep.git
-    cd imrep
-    ./install.sh
-    cd ..
+    #echo '----- Downloading ImRep --------------------------------------------------------'
+    #git clone https://github.com/mandricigor/imrep.git
+    #cd imrep
+    #./install.sh
+    #cd ..
 
     # Download MetaPhlAn 2.
     #echo '----- Downloading MetaPhlAn 2 --------------------------------------------------'
@@ -260,7 +260,7 @@ for database in $SELECT_DB; do
             download_list+=$'\nmetaphlan\nviral\nviral_vipr\nfungi\nprotozoa'
             ;;
         metaphlan)
-            download_list+=$'\nmetaphlan'
+            #download_list+=$'\nmetaphlan'
             ;;
         viral)
             download_list+=$'\nviral\nviral_vipr'
