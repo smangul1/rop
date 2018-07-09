@@ -85,8 +85,6 @@ of the pipeline. The following options are available:
 - `-f|--force`: Overwrite the analysis destination directory.
 - `-i|--ignore-extensions`: Ignore incorrect .fastq/.fq/.fasta/.fa file
   extensions. Does not ignore incorrect .gz/.bam file extensions.
-- `-l|--lazy-install`: Do a lazy native installation. For use with package
-  managers.
 - `-m|--max`: Use a liberal threshold when remapping to reference.
     - May account for more reads.
 - `-x|--commands`: Print all commands (diagnostic mode).

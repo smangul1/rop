@@ -31,9 +31,9 @@ fi
 set -e
 
 # Call getopt.
-SHORT_OPTIONS='o:s:abzdfilmpqxh'
-LONG_OPTIONS='organism:,steps:,fasta,bam,gzip,dev,force,ignore-extensions,\
-lazy-install,max,pe,quiet,commands,help'
+SHORT_OPTIONS='o:s:abzdfimpqxh'
+LONG_OPTIONS='organism:,steps:,fasta,bam,gzip,dev,force,ignore-extensions,max,\
+pe,quiet,commands,help'
 set +e
 PARSED=`getopt --options="$SHORT_OPTIONS" --longoptions="$LONG_OPTIONS" \
 --name "$0" -- "$@"`
@@ -54,7 +54,6 @@ GZIP=false
 DEV=false
 FORCE=false
 IGNORE_EXTENSIONS=false
-LAZY_INSTALL=false
 MAX=''
 PE=''
 QUIET=false
@@ -105,11 +104,6 @@ while true; do
             # Ignore incorrect .fastq/.fq/.fasta/.fa file extensions.
             # Does not ignore incorrect .gz/.bam file extensions.
             IGNORE_EXTENSIONS=true
-            shift
-            ;;
-        -l|--lazy-install)
-            # Do a lazy native installation. For use with package managers.
-            LAZY_INSTALL=true
             shift
             ;;
         -m|--max)
@@ -194,8 +188,9 @@ mkdir -p "$OUTPUT_DIR"
 SAMPLE=`basename "$UNMAPPED_READS" | sed 's \([^\.]*\)\..* \1 '`
 DB="$DIR/db_$ORGANISM"
 
-# Perform lazy native installation if selected.
-if [ $LAZY_INSTALL = true ] && [ ! -d "$DB" ]; then
+# Perform lazy native installation if needed.
+if [ ! -d "$DB" ]; then
+    echo 'Performing a lazy native installation. This might take some time.' >&2
     cd "$DIR"
     ./install.sh -n
 fi
