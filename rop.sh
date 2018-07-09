@@ -189,10 +189,10 @@ SAMPLE=`basename "$UNMAPPED_READS" | sed 's \([^\.]*\)\..* \1 '`
 DB="$DIR/db_$ORGANISM"
 
 # Perform lazy native installation if needed.
-if [ ! -d "$DB" ]; then
+if [ ! -h "$DB" ] && [ ! -d "$DB" ]; then
     echo 'Performing a lazy native installation. This might take some time.' >&2
     cd "$DIR"
-    ./install.sh -n
+    ./install.sh -no $ORGANISM
 fi
 
 # Duplicate stdout and stderr to the log file. Print commands if selected.
