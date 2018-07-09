@@ -8,7 +8,7 @@ set -e
 echo '--------------------------------------------------------------------------------'
 echo 'Read Origin Protocol: Installer'
 echo '--------------------------------------------------------------------------------'
-DIR=`dirname $(readlink -e "$0")`
+DIR=`dirname $(readlink -f "$0")`
 sed '/##/ q' "$DIR/README.md" | head -n -2 | tail -n +3
 echo '--------------------------------------------------------------------------------'
 
@@ -175,11 +175,11 @@ else
     fi
 
     # Download ImReP.
-    #echo '----- Downloading ImRep --------------------------------------------------------'
-    #git clone https://github.com/mandricigor/imrep.git
-    #cd imrep
-    #./install.sh
-    #cd ..
+    echo '----- Downloading ImRep --------------------------------------------------------'
+    git clone https://github.com/mandricigor/imrep.git
+    cd imrep
+    ./install.sh
+    cd ..
 
     # Download MetaPhlAn 2.
     #echo '----- Downloading MetaPhlAn 2 --------------------------------------------------'

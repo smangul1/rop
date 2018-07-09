@@ -8,7 +8,7 @@ set -e
 echo '--------------------------------------------------------------------------------'
 echo 'Read Origin Protocol: Main Program'
 echo '--------------------------------------------------------------------------------'
-DIR=`dirname $(readlink -e "$0")`
+DIR=`dirname $(readlink -f "$0")`
 sed '/##/ q' "$DIR/README.md" | head -n -2 | tail -n +3
 echo '--------------------------------------------------------------------------------'
 
@@ -31,9 +31,9 @@ fi
 set -e
 
 # Call getopt.
-SHORT_OPTIONS='o:s:abzdfimpqxh'
-LONG_OPTIONS='organism:,steps:,fasta,bam,gzip,dev,force,ignore-extensions,max,\
-pe,quiet,commands,help'
+SHORT_OPTIONS='o:s:abzdfilmpqxh'
+LONG_OPTIONS='organism:,steps:,fasta,bam,gzip,dev,force,ignore-extensions,\
+lazy-install,max,pe,quiet,commands,help'
 set +e
 PARSED=`getopt --options="$SHORT_OPTIONS" --longoptions="$LONG_OPTIONS" \
 --name "$0" -- "$@"`
@@ -54,6 +54,7 @@ GZIP=false
 DEV=false
 FORCE=false
 IGNORE_EXTENSIONS=false
+LAZY_INSTALL=false
 MAX=''
 PE=''
 QUIET=false
@@ -104,6 +105,11 @@ while true; do
             # Ignore incorrect .fastq/.fq/.fasta/.fa file extensions.
             # Does not ignore incorrect .gz/.bam file extensions.
             IGNORE_EXTENSIONS=true
+            shift
+            ;;
+        -l|--lazy-install)
+            # Do a lazy native installation. For use with package managers.
+            LAZY_INSTALL=true
             shift
             ;;
         -m|--max)
@@ -187,6 +193,12 @@ mkdir -p "$OUTPUT_DIR"
 # Sample name and database location.
 SAMPLE=`basename "$UNMAPPED_READS" | sed 's \([^\.]*\)\..* \1 '`
 DB="$DIR/db_$ORGANISM"
+
+# Perform lazy native installation if selected.
+if [ $LAZY_INSTALL = true ] && [ ! -d "$DB" ]; then
+    cd "$DIR"
+    ./install.sh -n
+fi
 
 # Duplicate stdout and stderr to the log file. Print commands if selected.
 touch "$OUTPUT_DIR/$SAMPLE--general.log"
@@ -520,8 +532,7 @@ echo '6. Immune profiling (-s immune)...'
 cd "${DIRS['06_immune']}"
 post="${INTFNS['06_immune_post']}"
 
-if ! grep -q 'immune' <<<"$STEPS" || ! reads_present "$current" \
-    || ! grep -q 'override' <<<"$STEPS"; then  # Disabled (broken).
+if ! grep -q 'immune' <<<"$STEPS" || ! reads_present "$current"; then
     echo '--> Skipped immune profiling.'
 else
     python "$DIR/tools/imrep/imrep.py" -f -1 --extendedOutput "$current" \
