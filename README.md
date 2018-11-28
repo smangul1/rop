@@ -74,7 +74,7 @@ of the pipeline. The following options are available:
     - A comma-separated list of one or more of the following: lowq, rdna,
       reference, repeats, circrna, immune, microbiome (which may be subdivided
       into metaphlan, bacteria, viral, fungi, protozoa).
-    - circrna, metaphlan, and bacteria are not available in the current release.
+    - circrna and bacteria are not available in the current release.
     - `-s all` selects everything.
 - `-a|--fasta`: Input unmapped reads in .fasta format instead of .fastq format.
   Forcibly disables low-quality read filtering.

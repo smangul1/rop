@@ -182,13 +182,13 @@ else
     cd ..
 
     # Download MetaPhlAn 2.
-    #echo '----- Downloading MetaPhlAn 2 --------------------------------------------------'
-    #hg clone https://bitbucket.org/biobakery/metaphlan2
-    #cd metaphlan2
+    echo '----- Downloading MetaPhlAn 2 --------------------------------------------------'
+    hg clone https://bitbucket.org/biobakery/metaphlan2
+    cd metaphlan2
     #ln -s ../../db_human/databases
-    #cd ..
+    cd ..
 
-    # Download MiniConda and add shebangs.
+    # Download MiniConda.
     echo '----- Setting up Python environment --------------------------------------------'
     if [ $NATIVE = false ]; then
         ./install-MiniConda.sh
@@ -196,13 +196,6 @@ else
         ln -s libncursesw.so.5 libtinfow.so.5
         cd ../..
         MiniConda="$PWD/MiniConda/bin/python"
-    #    sed -i "1c #!$MiniConda" metaphlan2/metaphlan2.py
-    #    sed -i "1c #!$MiniConda" metaphlan2/strainphlan.py
-    #    sed -i "1c #!$MiniConda" metaphlan2/utils/read_fastx.py
-    #else
-    #    sed -i '1c #!/usr/bin/env python2.7' metaphlan2/metaphlan2.py
-    #    sed -i '1c #!/usr/bin/env python2.7' metaphlan2/strainphlan.py
-    #    sed -i '1c #!/usr/bin/env python2.7' metaphlan2/utils/read_fastx.py
     fi
 fi
 
@@ -260,7 +253,7 @@ for database in $SELECT_DB; do
             download_list+=$'\nmetaphlan\nviral\nviral_vipr\nfungi\nprotozoa'
             ;;
         metaphlan)
-            #download_list+=$'\nmetaphlan'
+            download_list+=$'\nmetaphlan'
             ;;
         viral)
             download_list+=$'\nviral\nviral_vipr'
