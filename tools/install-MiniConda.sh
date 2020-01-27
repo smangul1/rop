@@ -106,7 +106,7 @@ fi
 
 # Cleanup
 rm Miniconda_Install.sh
-conda clean -iltp --yes
+conda clean -itp --yes
 
 # Add Entry Point to the path
 if [[ $EntryPoint ]]; then
