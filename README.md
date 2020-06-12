@@ -4,19 +4,11 @@ The Read Origin Protocol (ROP) is a computational protocol that aims to
 discover the source of all reads, including those originating from complex RNA
 molecules, recombinant antibodies, and microbial communities. 
 
-Written by:
+Created by Serghei Mangul, Kevin Hsieh, Linus Chen, and Harry Taegyun Yang at
+the University of California, Los Angeles (UCLA). Released under the terms of
+the General Public License, version 3.0 (GPLv3).
 
-- Serghei Mangul (<smangul@ucla.edu>)
-- Kevin Hsieh (<kevin.hsieh@ucla.edu>)
-- Linus Chen (<u6.30cl@gmail.com>)
-- Harry Taegyun Yang (<harry2416@gmail.com>)
-
-at the University of California, Los Angeles (UCLA). 
-
-Released under the terms of the General Public License, version 3.0 (GPLv3).
-For more information, please visit: <https://github.com/smangul1/rop/wiki>
-
-## Installing ROP
+## Installation
 
 To install ROP, first clone this repository, then run
 
@@ -55,7 +47,7 @@ available:
     - `-s all` selects everything.
 - `-h|--help`: Displays usage information.
 
-## Using ROP
+## Usage
 
 To use ROP, run
 
