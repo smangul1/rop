@@ -183,9 +183,9 @@ else
 
     # Download MetaPhlAn 2.
     echo '----- Downloading MetaPhlAn 2 --------------------------------------------------'
-    hg clone https://bitbucket.org/biobakery/metaphlan2
+    git clone https://github.com/biobakery/metaphlan2
     cd metaphlan2
-    #ln -s ../../db_human/databases
+    ln -s ../../db_human/databases db_v20
     cd ..
 
     # Download MiniConda.
