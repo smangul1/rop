@@ -17,47 +17,47 @@ echo '--------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 
 declare -A DB_ID_HUMAN=(
-    ['viral_vipr']='1fIxhnwNSPj6NL2R44bqYkYu2T8OLfqpk'
-    ['fungi']='1yBeBjnrnHtxZliruu3oC8NjZ3wHg-WQ3'
-    ['BWAindex']='19Uscw8KrPyUiuPcErrXpyOxN0PqUtbOZ'
-    ['protozoa']='1_dPn8kk3I--Icy0gwTorFneV1sor1dU2'
-    ['metaphlan']='15UGuZ4klBjIEYV-tv6t1nYa2GdyadZAm'
-    ['repeats']='1rK1m7sWbiG2cTahLY5SDuDe26KvCWSPL'
-    ['ribosomal.DNA']='1kFI5waihEpoZE8DBNYhlfCwJXGsOf4NS'
-    ['viral']='1HfnoEhoYzlvo4f6Ap_LZvIrxqzIiKrv-'
+    ['viral_vipr']='1qww_AlNRyBDkdLwTueTgscN_k59z0M_f'
+    ['fungi']='1d2Cfag32KR1sPm5YfVHgBNYlvJzS9_Kw'
+    ['BWAindex']='1kfhZ74tlfhfL4K7jzeIQ7yCuTWlwlleH'
+    ['protozoa']='1SYXGrHNJwrE5CTaWfkfxrYeZ4L5dMNQa'
+    ['metaphlan']='1aa7Ph5CJNRK4ht631jyj9VD-qJVRKDeJ'
+    ['repeats']='1rWHMDr6y51LRh4MLYMiTOh0mqnMxW8Xl'
+    ['ribosomal.DNA']='114Oro_8YRB3j8MT_7meQc5uVL8rIfQd6'
+    ['viral']='1nUEtXqnwZi-6Hb7lB6Hs4VGflxDJ7bjJ'
 )
 
 declare -A DB_ID_MOUSE=(
-    ['viral_vipr']='1fIxhnwNSPj6NL2R44bqYkYu2T8OLfqpk'  # same as human
-    ['fungi']='1yBeBjnrnHtxZliruu3oC8NjZ3wHg-WQ3'  # same as human
-    ['BWAindex']='17g26AzgYhvpY5J5Spofs_rVwXVgVxtrL'
-    ['protozoa']='1_dPn8kk3I--Icy0gwTorFneV1sor1dU2'  # same as human
-    ['metaphlan']='15UGuZ4klBjIEYV-tv6t1nYa2GdyadZAm'  # same as human
-    ['repeats']='1f4xhA8Ku0bMQagY78qDpjb5-6H2AkxIp'
-    ['ribosomal.DNA']='1AnzuhTtEGU8_QnHu9ueofSAJoXK-Sg7B'
-    ['viral']='1HfnoEhoYzlvo4f6Ap_LZvIrxqzIiKrv-'  # same as human
+    ['viral_vipr']='1qww_AlNRyBDkdLwTueTgscN_k59z0M_f'  # same as human
+    ['fungi']='1d2Cfag32KR1sPm5YfVHgBNYlvJzS9_Kw'  # same as human
+    ['BWAindex']='1FgDSPJqM015qQdHCD0dVocCVb3stNK-d'
+    ['protozoa']='1SYXGrHNJwrE5CTaWfkfxrYeZ4L5dMNQa'  # same as human
+    ['metaphlan']='1aa7Ph5CJNRK4ht631jyj9VD-qJVRKDeJ'  # same as human
+    ['repeats']='1frV3ElKdONY6o6bhyP___nV15kVR3Qap'
+    ['ribosomal.DNA']='1bfp6wjWC3W-yf06n_TQG8G-jSPRyaLH4'
+    ['viral']='1nUEtXqnwZi-6Hb7lB6Hs4VGflxDJ7bjJ'  # same as human
 )
 
 declare -A DB_MD5_HUMAN=(
-    ['viral_vipr']='9dce447328dfbc3a62cc7dd5b052242f'
-    ['fungi']='9f2d304fd5c49981682b2bb7a900a30e'
-    ['BWAindex']='4f009e3732d9f513e7b19b58edc41c13'
-    ['protozoa']='23e12115a5e9d526553c901e772731f5'
-    ['metaphlan']='3c9b9d6414d86a0c3d5018aefa5aaec4'
-    ['repeats']='109a97423f505b73a7e55995b827e2fd'
-    ['ribosomal.DNA']='9663a0e1121a0b122c8e23f41c558083'
-    ['viral']='7ce95144827603a64dc5996aa0112cc0'
+    ['viral_vipr']='3b5d1e88e8fd64db2fd997283e06c7ea'
+    ['fungi']='99dff18fae92549b1b7e92fa3fede4ff'
+    ['BWAindex']='1bdaba6c5987a0bdb37657b6fb33a2fc'
+    ['protozoa']='33751a0312882dbbd9699cb53d78459d'
+    ['metaphlan']='a07a407ce7071df373af9d6795704bc9'
+    ['repeats']='c6939256a21dd166c9c38380afbd9f7c'
+    ['ribosomal.DNA']='f339943ddfff31533e749dc28b70065c'
+    ['viral']='6a16fc9726ebad359a6b3719703dba83'
 )
 
 declare -A DB_MD5_MOUSE=(
-    ['viral_vipr']='9dce447328dfbc3a62cc7dd5b052242f'  # same as human
-    ['fungi']='9f2d304fd5c49981682b2bb7a900a30e'  # same as human
-    ['BWAindex']='a5166f9e134582a66030878b0b91aed2'
-    ['protozoa']='23e12115a5e9d526553c901e772731f5'  # same as human
-    ['metaphlan']='3c9b9d6414d86a0c3d5018aefa5aaec4'  # same as human
-    ['repeats']='223777c32bfdf8cfe43ca8a01499d4ee'
-    ['ribosomal.DNA']='971401e7eae7a721097ae91cb7237b46'
-    ['viral']='7ce95144827603a64dc5996aa0112cc0'  # same as human
+    ['viral_vipr']='3b5d1e88e8fd64db2fd997283e06c7ea'  # same as human
+    ['fungi']='99dff18fae92549b1b7e92fa3fede4ff'  # same as human
+    ['BWAindex']='6acd8bb77687dcd139a27d1bcab72eca'
+    ['protozoa']='33751a0312882dbbd9699cb53d78459d'  # same as human
+    ['metaphlan']='a07a407ce7071df373af9d6795704bc9'  # same as human
+    ['repeats']='8988a4b1c671bcf2bbce8a4b08d564ef'
+    ['ribosomal.DNA']='78b73b3548feb7113cf56a5fd61d3ce2'
+    ['viral']='6a16fc9726ebad359a6b3719703dba83'  # same as human
 )
 
 # ------------------------------------------------------------------------------
@@ -300,7 +300,7 @@ for download in $download_list; do
             | sed -rn 's .*confirm=([0-9A-Za-z_]+).* \1\n p'`
         curl --location --insecure --cookie cookies.txt -o "$download.tar.gz" \
             "https://docs.google.com/uc?export=download&confirm=$confirm_code&id=$db_id"
-        rm cookies.txt
+        rm -f cookies.txt
         if [ `md5sum "$download.tar.gz" | sed 's \(.*\)\ .* \1 '` = "$db_md5" ]; then
             tar -zxvf "$download.tar.gz"
             rm "$download.tar.gz"

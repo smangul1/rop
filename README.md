@@ -1,5 +1,8 @@
 # Read Origin Protocol
 
+**This project is no longer maintained as of January 2020 due to end-of-life for
+Python 2.**
+
 The Read Origin Protocol (ROP) is a computational protocol that aims to
 discover the source of all reads, including those originating from complex RNA
 molecules, recombinant antibodies, and microbial communities. 
