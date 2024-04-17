@@ -17,25 +17,25 @@ echo '--------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 
 declare -A DB_ID_HUMAN=(
-    ['viral_vipr']='1qww_AlNRyBDkdLwTueTgscN_k59z0M_f'
-    ['fungi']='1d2Cfag32KR1sPm5YfVHgBNYlvJzS9_Kw'
-    ['BWAindex']='1kfhZ74tlfhfL4K7jzeIQ7yCuTWlwlleH'
-    ['protozoa']='1SYXGrHNJwrE5CTaWfkfxrYeZ4L5dMNQa'
-    ['metaphlan']='1aa7Ph5CJNRK4ht631jyj9VD-qJVRKDeJ'
-    ['repeats']='1rWHMDr6y51LRh4MLYMiTOh0mqnMxW8Xl'
-    ['ribosomal.DNA']='114Oro_8YRB3j8MT_7meQc5uVL8rIfQd6'
-    ['viral']='1nUEtXqnwZi-6Hb7lB6Hs4VGflxDJ7bjJ'
+    ['viral_vipr']='1ISkC9Z4oYgtxlitMbB-C3T9tZgErjR8_'
+    ['fungi']='1NH4bx1ZpDpiv_wqYcxwR02kBalVdMF2f'
+    ['BWAindex']='13H20BSdp6JMG3BzDSL0JE3m9X12Jaj6n'
+    ['protozoa']='1X5ElXNkkTBxd9Wui6ttvi3LhdcfDzTMc'
+    ['metaphlan']='1RnhchW875-DqED7xkWV5W1oFFESKLE1r'
+    ['repeats']='1W4wMCUSTgVgnUxVocYy1CqCSmEYWJyuF'
+    ['ribosomal.DNA']='1T4JdkSJUZVvOZdZcWgmk_u0XSfLdxqdF'
+    ['viral']='1ZzCuwW-38yU6igoIJYKwi8KFPwSxcvsg'
 )
 
 declare -A DB_ID_MOUSE=(
-    ['viral_vipr']='1qww_AlNRyBDkdLwTueTgscN_k59z0M_f'  # same as human
-    ['fungi']='1d2Cfag32KR1sPm5YfVHgBNYlvJzS9_Kw'  # same as human
-    ['BWAindex']='1FgDSPJqM015qQdHCD0dVocCVb3stNK-d'
-    ['protozoa']='1SYXGrHNJwrE5CTaWfkfxrYeZ4L5dMNQa'  # same as human
-    ['metaphlan']='1aa7Ph5CJNRK4ht631jyj9VD-qJVRKDeJ'  # same as human
-    ['repeats']='1frV3ElKdONY6o6bhyP___nV15kVR3Qap'
-    ['ribosomal.DNA']='1bfp6wjWC3W-yf06n_TQG8G-jSPRyaLH4'
-    ['viral']='1nUEtXqnwZi-6Hb7lB6Hs4VGflxDJ7bjJ'  # same as human
+    ['viral_vipr']='1ISkC9Z4oYgtxlitMbB-C3T9tZgErjR8_'  # same as human
+    ['fungi']='1NH4bx1ZpDpiv_wqYcxwR02kBalVdMF2f'  # same as human
+    ['BWAindex']='1L9fMlRjGcB85_orar1ObK_VVE3IfbUsd'
+    ['protozoa']='1X5ElXNkkTBxd9Wui6ttvi3LhdcfDzTMc'  # same as human
+    ['metaphlan']='1RnhchW875-DqED7xkWV5W1oFFESKLE1r'  # same as human
+    ['repeats']='1z888jreCH3HSUfbn-DvkBdNdeZ34tLLe'
+    ['ribosomal.DNA']='1YtPRdUciVl2K0GybH4VPs_mf-l-LvUsX'
+    ['viral']='1ZzCuwW-38yU6igoIJYKwi8KFPwSxcvsg'  # same as human
 )
 
 declare -A DB_MD5_HUMAN=(
